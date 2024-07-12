@@ -1,0 +1,10 @@
+Vehicle.basilisk_dummy:
+  $base:  Vehicle.v_sport2_quadra_type66_02_player
+  displayName: LocKey#53243
+  manufacturer: Vehicle.Militech
+  icon:
+    atlasResourcePath: base/gameplay/gui/common/icons/weapon_manufacturers.inkatlas
+    atlasPartName: militech_l
+
+Vehicle.vehicle_list.list:
+  - !append Vehicle.basilisk_dummy
