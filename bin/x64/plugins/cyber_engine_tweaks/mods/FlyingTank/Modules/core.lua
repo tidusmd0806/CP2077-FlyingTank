@@ -294,29 +294,29 @@ function Core:SetInputListener()
 		local action_type = action:GetType(action).value
         local action_value = action:GetValue(action)
 
-        if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-            for _, exception in pairs(exception_in_veh_list) do
-                if string.find(action_name, exception) then
-                    consumer:Consume()
-                    return
-                end
-            end
-        elseif (self.event_obj:IsInEntryArea() or self.event_obj:IsInVehicle()) then
-            for _, exception in pairs(exception_common_list) do
-                if string.find(action_name, exception) then
-                    consumer:Consume()
-                    return
-                end
-            end
-        end
-        if self:IsOpenedRadioPopup() then
-            for _, exception in pairs(exception_radio_list) do
-                if string.find(action_name, exception) then
-                    consumer:Consume()
-                    return
-                end
-            end
-        end
+        -- if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
+        --     for _, exception in pairs(exception_in_veh_list) do
+        --         if string.find(action_name, exception) then
+        --             consumer:Consume()
+        --             return
+        --         end
+        --     end
+        -- elseif (self.event_obj:IsInEntryArea() or self.event_obj:IsInVehicle()) then
+        --     for _, exception in pairs(exception_common_list) do
+        --         if string.find(action_name, exception) then
+        --             consumer:Consume()
+        --             return
+        --         end
+        --     end
+        -- end
+        -- if self:IsOpenedRadioPopup() then
+        --     for _, exception in pairs(exception_radio_list) do
+        --         if string.find(action_name, exception) then
+        --             consumer:Consume()
+        --             return
+        --         end
+        --     end
+        -- end
 
         self.log_obj:Record(LogLevel.Debug, "Action Name: " .. action_name .. " Type: " .. action_type .. " Value: " .. action_value)
 
@@ -436,9 +436,9 @@ function Core:StorePlayerAction(action_name, action_type, action_value)
 
     cmd = self:ConvertSpinnerActionList(action_name, action_type, action_value_type)
 
-    if cmd ~= Def.ActionList.Nothing then
-        self.queue_obj:Enqueue(cmd)
-    end
+    -- if cmd ~= Def.ActionList.Nothing then
+    --     self.queue_obj:Enqueue(cmd)
+    -- end
 
 end
 
@@ -447,7 +447,7 @@ function Core:ConvertSpinnerActionList(action_name, action_type, action_value_ty
     local action_command = Def.ActionList.Nothing
     local action_dist = {name = action_name, type = action_type, value = action_value_type}
 
-    if self.event_obj.current_situation == Def.Situation.InVehicle then
+    -- if self.event_obj.current_situation == Def.Situation.InVehicle then
         -- if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_FORWARD_MOVE) then
         --     action_command = Def.ActionList.SpinnerForward
         -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_BACK_MOVE) then
@@ -460,22 +460,22 @@ function Core:ConvertSpinnerActionList(action_name, action_type, action_value_ty
         --     action_command = Def.ActionList.SpinnerRight
         -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_LEFT_MOVE) then
         --     action_command = Def.ActionList.SpinnerLeft
-        if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_UP_MOVE) then
-            action_command = Def.ActionList.SpinnerUp
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_DOWN_MOVE) then
-            action_command = Def.ActionList.SpinnerDown
+        -- if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_UP_MOVE) then
+        --     action_command = Def.ActionList.SpinnerUp
+        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_DOWN_MOVE) then
+        --     action_command = Def.ActionList.SpinnerDown
         -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_EXIT_AV) then
         --     action_command = Def.ActionList.Exit
-        end
-    elseif self.event_obj.current_situation == Def.Situation.Waiting then
-        if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_ENTER_AV) then
-            action_command = Def.ActionList.Enter
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_SELECT_UPPER_CHOICE) then
-            action_command = Def.ActionList.SelectUp
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_SELECT_LOWER_CHOICE) then
-            action_command = Def.ActionList.SelectDown
-        end
-    end
+        -- end
+    -- elseif self.event_obj.current_situation == Def.Situation.Waiting then
+    --     if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_ENTER_AV) then
+    --         action_command = Def.ActionList.Enter
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_SELECT_UPPER_CHOICE) then
+    --         action_command = Def.ActionList.SelectUp
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_SELECT_LOWER_CHOICE) then
+    --         action_command = Def.ActionList.SelectDown
+    --     end
+    -- end
 
     return action_command
 
@@ -504,8 +504,10 @@ function Core:ConvertPressButtonAction(key)
         end
     end
     local action_list = Def.ActionList.Nothing
-    if keybind_name == "toggle_autopilot" then
-        action_list = Def.ActionList.AutoPilot
+    if keybind_name == "move_up" then
+        action_list = Def.ActionList.SpinnerUp
+    elseif keybind_name == "move_down" then
+        action_list = Def.ActionList.SpinnerDown
     elseif keybind_name == "toggle_camera" then
         action_list = Def.ActionList.ChangeCamera
     elseif keybind_name == "toggle_door" then
@@ -526,8 +528,6 @@ function Core:ConvertPressButtonAction(key)
                 end
             end)
         end
-    elseif keybind_name == "toggle_crystal_dome" then
-        action_list = Def.ActionList.ToggleCrystalDome
     end
 
     if action_list ~= Def.ActionList.Nothing then

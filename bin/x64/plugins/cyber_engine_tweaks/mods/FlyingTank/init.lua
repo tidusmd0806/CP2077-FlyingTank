@@ -41,11 +41,11 @@ FlyingTank = {
     input_listener = nil,
     listening_keybind_widget = nil,
     default_keybind_table = {
-        {name = "toggle_autopilot", key = "IK_T", pad = "IK_Pad_DigitRight"},
+        {name = "move_up", key = "IK_C", pad = "IK_Pad_Y_TRIANGLE"},
+        {name = "move_down", key = "IK_Z", pad = "IK_Pad_A_CROSS"},
         {name = "toggle_camera", key = "IK_V", pad = "IK_Pad_DigitDown"},
         {name = "toggle_door", key = "IK_G", pad = "IK_Pad_DigitLeft"},
         {name = "toggle_radio", key = "IK_R", pad = "IK_Pad_DigitUp"},
-        {name = "toggle_crystal_dome", key = "IK_C", pad = "IK_Pad_Y_TRIANGLE"},
     }
 }
 

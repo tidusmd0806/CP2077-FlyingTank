@@ -40,7 +40,7 @@ function Event:Init(av_obj)
 
     if not FlyingTank.is_ready then
         self:SetObserve()
-        self:SetOverride()
+        -- self:SetOverride()
     end
 
 end
@@ -149,7 +149,7 @@ function Event:CheckAllEvents()
         self:CheckLanded()
         self:CheckCommonEvent()
     elseif self.current_situation == Def.Situation.Waiting then
-        self:CheckInEntryArea()
+        -- self:CheckInEntryArea()
         self:CheckInAV()
         self:CheckReturnPurchasedVehicle()
         self:CheckReturnVehicle()
@@ -239,11 +239,11 @@ function Event:CheckInAV()
             SaveLocksManager.RequestSaveLockAdd(CName.new("FlyingTank_IN_AV"))
             self.sound_obj:PlaySound("230_fly_loop")
             self:SetSituation(Def.Situation.InVehicle)
-            self.hud_obj:HideChoice()
-            self.av_obj:ChangeDoorState(Def.DoorOperation.Close)
-            self.hud_obj:ShowMeter()
-            self.hud_obj:ShowCustomHint()
-            self.hud_obj:HideActionButtons()
+            -- self.hud_obj:HideChoice()
+            -- self.av_obj:ChangeDoorState(Def.DoorOperation.Close)
+            -- self.hud_obj:ShowMeter()
+            -- self.hud_obj:ShowCustomHint()
+            -- self.hud_obj:HideActionButtons()
         end
     else
         -- when player take off from AV
@@ -251,9 +251,9 @@ function Event:CheckInAV()
             self.log_obj:Record(LogLevel.Info, "Exit AV")
             self.sound_obj:StopSound("230_fly_loop")
             self:SetSituation(Def.Situation.Waiting)
-            self.hud_obj:HideMeter()
-            self.hud_obj:HideCustomHint()
-            self.hud_obj:ShowActionButtons()
+            -- self.hud_obj:HideMeter()
+            -- self.hud_obj:HideCustomHint()
+            -- self.hud_obj:ShowActionButtons()
             self:StopRadio()
             self:UnsetMappin()
             SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank_IN_AV"))
