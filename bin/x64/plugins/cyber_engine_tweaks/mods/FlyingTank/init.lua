@@ -132,7 +132,7 @@ registerForEvent("onHook", function ()
                     if action == "IACT_Press" then
                         FlyingTank.core_obj:ConvertPressButtonAction(key)
                     elseif action == "IACT_Release" then
-                        FlyingTank.core_obj:ConvertHoldButtonAction(key)
+                        FlyingTank.core_obj:ConvertReleaseButtonAction(key)
                     end
                 end
             end

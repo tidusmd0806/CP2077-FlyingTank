@@ -1,4 +1,4 @@
-local AV = require("Modules/av.lua")
+local Vehicle = require("Modules/vehicle.lua")
 local Event = require("Modules/event.lua")
 local Queue = require("Tools/queue.lua")
 local Utils = require("Tools/utils.lua")
@@ -15,6 +15,8 @@ function Core:New()
     obj.av_obj = nil
     obj.event_obj = nil
     -- static --
+    -- move
+    obj.max_move_count = 100000
     -- lock
     obj.delay_action_time_in_waiting = 0.05
     obj.delay_action_time_in_vehicle = 0.05
@@ -33,6 +35,11 @@ function Core:New()
     obj.default_station_num = 13
     obj.get_track_name_time_resolution = 1
     -- dynamic --
+    -- move
+    obj.is_move_up_button_hold_counter = false
+    obj.move_up_button_hold_count = 0
+    obj.is_move_down_button_hold_counter = false
+    obj.move_down_button_hold_count = 0
     -- lock
     obj.is_locked_action_in_waiting = false
     obj.is_locked_action_in_vehicle = false
@@ -90,7 +97,7 @@ function Core:Init()
 
     self.spinner_input_table = self:GetInputTable(self.spinner_input_path)
 
-    self.av_obj = AV:New(self.all_models)
+    self.av_obj = Vehicle:New(self.all_models)
     self.av_obj:Init()
 
     self.event_obj = Event:New()
@@ -110,7 +117,7 @@ function Core:Init()
 end
 
 function Core:Reset()
-    self.av_obj = AV:New(self.all_models)
+    self.av_obj = Vehicle:New(self.all_models)
     self.av_obj:Init()
     self.event_obj:Init(self.av_obj)
 end
@@ -147,7 +154,7 @@ function Core:SetSummonTrigger()
         local record_id = this:GetActivePlayerVehicle(vehicle_type).recordID
 
         if self.event_obj.ui_obj.dummy_av_record.hash == record_id.hash then
-            self.log_obj:Record(LogLevel.Trace, "Free Summon AV call detected")
+            self.log_obj:Record(LogLevel.Trace, "Free Summon Vehicle call detected")
             FlyingTank.model_index = FlyingTank.user_setting_table.model_index_in_free
             FlyingTank.model_type_index = FlyingTank.user_setting_table.model_type_index_in_free
 
@@ -159,7 +166,7 @@ function Core:SetSummonTrigger()
         local new_record_id = TweakDBID.new(str)
         for _, record in ipairs(self.event_obj.ui_obj.av_record_list) do
             if record.hash == new_record_id.hash then
-                self.log_obj:Record(LogLevel.Trace, "Purchased AV call detected")
+                self.log_obj:Record(LogLevel.Trace, "Purchased Vehicle call detected")
                 for key, value in ipairs(self.av_obj.all_models) do
                     if value.tweakdb_id == record.value then
                         FlyingTank.model_index = key
@@ -436,9 +443,9 @@ function Core:StorePlayerAction(action_name, action_type, action_value)
 
     cmd = self:ConvertSpinnerActionList(action_name, action_type, action_value_type)
 
-    -- if cmd ~= Def.ActionList.Nothing then
-    --     self.queue_obj:Enqueue(cmd)
-    -- end
+    if cmd ~= Def.ActionList.Nothing then
+        self.queue_obj:Enqueue(cmd)
+    end
 
 end
 
@@ -447,19 +454,21 @@ function Core:ConvertSpinnerActionList(action_name, action_type, action_value_ty
     local action_command = Def.ActionList.Nothing
     local action_dist = {name = action_name, type = action_type, value = action_value_type}
 
-    -- if self.event_obj.current_situation == Def.Situation.InVehicle then
-        -- if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_FORWARD_MOVE) then
-        --     action_command = Def.ActionList.SpinnerForward
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_BACK_MOVE) then
-        --     action_command = Def.ActionList.SpinnerBackward
+    if self.event_obj.current_situation == Def.Situation.InVehicle and (self.is_move_up_button_hold_counter or self.is_move_down_button_hold_counter) then
+        if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_FORWARD_MOVE) then
+            action_command = Def.ActionList.SpinnerForward
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_BACK_MOVE) then
+            action_command = Def.ActionList.SpinnerBackward
         -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_RIGHT_ROTATE) then
         --     action_command = Def.ActionList.SpinnerRightRotate
         -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_LEFT_ROTATE) then
         --     action_command = Def.ActionList.SpinnerLeftRotate
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_RIGHT_MOVE) then
-        --     action_command = Def.ActionList.SpinnerRight
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_LEFT_MOVE) then
-        --     action_command = Def.ActionList.SpinnerLeft
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_RIGHT_MOVE) then
+            action_command = Def.ActionList.SpinnerRight
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_LEFT_MOVE) then
+            action_command = Def.ActionList.SpinnerLeft
+        end
+    end
         -- if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_UP_MOVE) then
         --     action_command = Def.ActionList.SpinnerUp
         -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_DOWN_MOVE) then
@@ -481,7 +490,7 @@ function Core:ConvertSpinnerActionList(action_name, action_type, action_value_ty
 
 end
 
-function Core:ConvertHoldButtonAction(key)
+function Core:ConvertReleaseButtonAction(key)
     local keybind_name = ""
     for _, keybind in ipairs(FlyingTank.user_setting_table.keybind_table) do
         if key == keybind.key or key == keybind.pad then
@@ -492,6 +501,12 @@ function Core:ConvertHoldButtonAction(key)
     if keybind_name == "toggle_radio" then
         self.is_radio_button_hold_counter = false
         self.radio_button_hold_count = 0
+    elseif keybind_name == "move_up" then
+        self.is_move_up_button_hold_counter = false
+        self.move_up_button_hold_count = 0
+    elseif keybind_name == "move_down" then
+        self.is_move_down_button_hold_counter = false
+        self.move_down_button_hold_count = 0
     end
 end
 
@@ -505,9 +520,37 @@ function Core:ConvertPressButtonAction(key)
     end
     local action_list = Def.ActionList.Nothing
     if keybind_name == "move_up" then
-        action_list = Def.ActionList.SpinnerUp
+        if not self.is_move_up_button_hold_counter then
+            self.is_move_up_button_hold_counter = true
+            Cron.Every(FlyingTank.time_resolution, {tick=0}, function(timer)
+                timer.tick = timer.tick + 1
+                self.move_up_button_hold_count = timer.tick
+                if timer.tick >= self.max_move_count then
+                    self.is_move_up_button_hold_counter = false
+                    Cron.Halt(timer)
+                elseif not self.is_move_up_button_hold_counter then
+                    Cron.Halt(timer)
+                else
+                    self.queue_obj:Enqueue(Def.ActionList.SpinnerUp)
+                end
+            end)
+        end
     elseif keybind_name == "move_down" then
-        action_list = Def.ActionList.SpinnerDown
+        if not self.is_move_down_button_hold_counter then
+            self.is_move_down_button_hold_counter = true
+            Cron.Every(FlyingTank.time_resolution, {tick=0}, function(timer)
+                timer.tick = timer.tick + 1
+                self.move_down_button_hold_count = timer.tick
+                if timer.tick >= self.max_move_count then
+                    self.is_move_down_button_hold_counter = false
+                    Cron.Halt(timer)
+                elseif not self.is_move_down_button_hold_counter then
+                    Cron.Halt(timer)
+                else
+                    self.queue_obj:Enqueue(Def.ActionList.SpinnerDown)
+                end
+            end)
+        end
     elseif keybind_name == "toggle_camera" then
         action_list = Def.ActionList.ChangeCamera
     elseif keybind_name == "toggle_door" then

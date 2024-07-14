@@ -3,10 +3,10 @@ local Position = require("Modules/position.lua")
 local Engine = require("Modules/engine.lua")
 local Radio = require("Modules/radio.lua")
 local Utils = require("Tools/utils.lua")
-local AV = {}
-AV.__index = AV
+local Vehicle = {}
+Vehicle.__index = Vehicle
 
-function AV:New(all_models)
+function Vehicle:New(all_models)
 	---instance---
 	local obj = {}
 	obj.position_obj = Position:New(all_models)
@@ -14,7 +14,7 @@ function AV:New(all_models)
 	obj.camera_obj = Camera:New(obj.position_obj, all_models)
 	obj.radio_obj = Radio:New(obj.position_obj)
 	obj.log_obj = Log:New()
-	obj.log_obj:SetLevel(LogLevel.Info, "AV")
+	obj.log_obj:SetLevel(LogLevel.Info, "Vehicle")
 	---static---
 	obj.all_models = all_models
 	-- summon
@@ -75,7 +75,7 @@ function AV:New(all_models)
 	return setmetatable(obj, self)
 end
 
-function AV:Init()
+function Vehicle:Init()
 
 	local index = FlyingTank.model_index
 	local type_number = FlyingTank.model_type_index
@@ -102,7 +102,7 @@ function AV:Init()
 
 end
 
-function AV:IsPlayerIn()
+function Vehicle:IsPlayerIn()
 	-- return self.is_player_in
 	if GetMountedVehicle(Game.GetPlayer()) ~= nil then
 		return true
@@ -111,11 +111,11 @@ function AV:IsPlayerIn()
 	end
 end
 
-function AV:IsSpawning()
+function Vehicle:IsSpawning()
 	return self.is_spawning
 end
 
-function AV:IsDespawned()
+function Vehicle:IsDespawned()
 	if self.entity_id == nil then
 		return true
 	else
@@ -123,7 +123,7 @@ function AV:IsDespawned()
 	end
 end
 
-function AV:Spawn(position, angle)
+function Vehicle:Spawn(position, angle)
 
 	if self.entity_id ~= nil then
 		self.log_obj:Record(LogLevel.Info, "Entity already spawned")
@@ -158,7 +158,7 @@ function AV:Spawn(position, angle)
 
 end
 
-function AV:SpawnToSky()
+function Vehicle:SpawnToSky()
 
 	local position = self.position_obj:GetSpawnPosition(self.spawn_distance, 0.0)
 	position.z = position.z + self.spawn_high
@@ -183,7 +183,7 @@ function AV:SpawnToSky()
 
 end
 
-function AV:Despawn()
+function Vehicle:Despawn()
 
 	if self.entity_id == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to despawn")
@@ -196,7 +196,7 @@ function AV:Despawn()
 
 end
 
-function AV:DespawnFromGround()
+function Vehicle:DespawnFromGround()
 
 	Cron.Every(0.01, { tick = 1 }, function(timer)
 		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
@@ -213,7 +213,7 @@ function AV:DespawnFromGround()
 
 end
 
-function AV:ToggleCrystalDome()
+function Vehicle:ToggleCrystalDome()
 
 	local entity = Game.FindEntityByID(self.entity_id)
 	local effect_name
@@ -237,7 +237,7 @@ function AV:ToggleCrystalDome()
 
 end
 
-function AV:UnlockDoor()
+function Vehicle:UnlockDoor()
 	if self.entity_id == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to change door lock")
 		return false
@@ -248,7 +248,7 @@ function AV:UnlockDoor()
 	return true
 end
 
-function AV:LockDoor()
+function Vehicle:LockDoor()
 	if self.entity_id == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to change door lock")
 		return false
@@ -261,7 +261,7 @@ end
 
 ---@param e_veh_door EVehicleDoor
 ---@return string
-function AV:GetDoorState(e_veh_door)
+function Vehicle:GetDoorState(e_veh_door)
 
 	if self.entity_id == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to get door state")
@@ -275,7 +275,7 @@ end
 
 ---@param door_state Def.DoorOperation
 ---@return number
-function AV:ChangeDoorState(door_state)
+function Vehicle:ChangeDoorState(door_state)
 
 	local change_counter = 0
 
@@ -331,7 +331,7 @@ function AV:ChangeDoorState(door_state)
 
 end
 
-function AV:ControlCrystalDome()
+function Vehicle:ControlCrystalDome()
 
 	local e_veh_door = EVehicleDoor.seat_front_left
 	if not self.is_crystal_dome then
@@ -353,10 +353,9 @@ function AV:ControlCrystalDome()
 
 end
 
-function AV:Mount()
+function Vehicle:Mount()
 
 	self.is_landed = false
-	-- self.camera_obj:SetPerspective(self.seat_index)
 
 	local seat_number = self.seat_index
 
@@ -413,15 +412,13 @@ function AV:Mount()
 
 end
 
-function AV:Unmount()
+function Vehicle:Unmount()
 
 	if self.is_ummounting then
 		return false
 	end
 
 	self.is_ummounting = true
-
-	self.camera_obj:ResetPerspective()
 
 	local seat_number = self.seat_index
 	if self.entity_id == nil then
@@ -483,7 +480,7 @@ function AV:Unmount()
 	return true
 end
 
-function AV:Move(x, y, z, roll, pitch, yaw)
+function Vehicle:Move(x, y, z, roll, pitch, yaw)
 
 	if not self.position_obj:SetNextPosition(x, y, z, roll, pitch, yaw, false) then
 		return false
@@ -493,7 +490,7 @@ function AV:Move(x, y, z, roll, pitch, yaw)
 
 end
 
-function AV:Operate(action_commands)
+function Vehicle:Operate(action_commands)
 
 	if #action_commands == 1 and action_commands[1] == Def.ActionList.Nothing then
 		return false
@@ -584,7 +581,7 @@ function AV:Operate(action_commands)
 
 end
 
-function AV:IsEnableFreeze()
+function Vehicle:IsEnableFreeze()
 
     if not FlyingTank.user_setting_table.is_enable_community_spawn then
         return false
@@ -599,18 +596,18 @@ function AV:IsEnableFreeze()
 end
 
 ---@param position Vector4
-function AV:SetMappinDestination(position)
+function Vehicle:SetMappinDestination(position)
 	self.mappin_destination_position = position
 end
 
 ---@param position Vector4
-function AV:SetFavoriteDestination(position)
+function Vehicle:SetFavoriteDestination(position)
 	self.favorite_destination_position = position
 end
 
 ---@param destination_position Vector4
 ---@return boolean
-function AV:SetAutoPilotInfo(destination_position)
+function Vehicle:SetAutoPilotInfo(destination_position)
 
 	local x, y, z = destination_position.x, destination_position.y, destination_position.z
 	if x == 0 and y == 0 and z == 0 then
@@ -656,7 +653,7 @@ function AV:SetAutoPilotInfo(destination_position)
 end
 
 ---@return boolean
-function AV:AutoPilot()
+function Vehicle:AutoPilot()
 
 	self.is_auto_pilot = true
 	local destination_position = Vector4.new(0, 0, 0, 1)
@@ -763,7 +760,7 @@ function AV:AutoPilot()
 end
 
 ---@param dist_vector Vector4
-function AV:AutoLeaving(dist_vector)
+function Vehicle:AutoLeaving(dist_vector)
 
 	self.is_leaving = true
 
@@ -819,7 +816,7 @@ function AV:AutoLeaving(dist_vector)
 end
 
 ---@param hight number
-function AV:AutoLanding(hight)
+function Vehicle:AutoLanding(hight)
 	Cron.Every(FlyingTank.time_resolution, {tick = 1}, function(timer)
 		timer.tick = timer.tick + 1
 		if not self.is_auto_pilot then
@@ -841,7 +838,7 @@ function AV:AutoLanding(hight)
 	end)
 end
 
-function AV:SeccessAutoPilot()
+function Vehicle:SeccessAutoPilot()
 
 	self.is_auto_pilot = false
 	self.is_failture_auto_pilot = false
@@ -850,16 +847,16 @@ function AV:SeccessAutoPilot()
 
 end
 
-function AV:InterruptAutoPilot()
+function Vehicle:InterruptAutoPilot()
 	self.is_auto_pilot = false
 	self.is_failture_auto_pilot = true
 	self.position_obj:ResetStackCount()
 end
 
-function AV:IsFailedAutoPilot()
+function Vehicle:IsFailedAutoPilot()
 	local is_failture_auto_pilot = self.is_failture_auto_pilot
 	self.is_failture_auto_pilot = false
 	return is_failture_auto_pilot
 end
 
-return AV
+return Vehicle
