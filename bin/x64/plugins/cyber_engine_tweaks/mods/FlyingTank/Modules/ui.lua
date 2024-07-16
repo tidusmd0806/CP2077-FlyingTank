@@ -13,7 +13,7 @@ function UI:New()
 	obj.delay_updating_native_settings = 0.1
 	-- dynamic --
 	-- common
-	obj.av_obj = nil
+	obj.vehicle_obj = nil
 	obj.dummy_av_record = nil
 	obj.av_record_list = {}
 	-- garage
@@ -55,8 +55,8 @@ function UI:New()
     return setmetatable(obj, self)
 end
 
-function UI:Init(av_obj)
-	self.av_obj = av_obj
+function UI:Init(vehicle_obj)
+	self.vehicle_obj = vehicle_obj
 	self:SetTweekDB()
 	self:SetDefaultValue()
 	self:CreateNativeSettingsBasePage()
@@ -66,7 +66,7 @@ function UI:SetTweekDB()
 
     self.dummy_av_record = TweakDBID.new(self.dummy_vehicle_record)
 
-	for _, model in ipairs(self.av_obj.all_models) do
+	for _, model in ipairs(self.vehicle_obj.all_models) do
 		local av_record = TweakDBID.new(model.tweakdb_id)
 		table.insert(self.av_record_list, av_record)
 	end
@@ -78,17 +78,17 @@ function UI:SetDefaultValue()
 	self.selected_purchased_vehicle_type_list = {}
 	-- garage
 	for _, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
-		table.insert(self.selected_purchased_vehicle_type_list, self.av_obj.all_models[garage_info.model_index].type[garage_info.type_index])
+		table.insert(self.selected_purchased_vehicle_type_list, self.vehicle_obj.all_models[garage_info.model_index].type[garage_info.type_index])
 	end
 
 	--free summon mode
-	for i, model in ipairs(self.av_obj.all_models) do
+	for i, model in ipairs(self.vehicle_obj.all_models) do
         self.vehicle_model_list[i] = model.name
 	end
 	self.selected_vehicle_model_number = FlyingTank.user_setting_table.model_index_in_free
 	self.selected_vehicle_model_name = self.vehicle_model_list[self.selected_vehicle_model_number]
 
-	for i, type in ipairs(self.av_obj.all_models[self.selected_vehicle_model_number].type) do
+	for i, type in ipairs(self.vehicle_obj.all_models[self.selected_vehicle_model_number].type) do
 		self.vehicle_type_list[i] = type
 	end
 	self.selected_vehicle_type_number = FlyingTank.user_setting_table.model_type_index_in_free
@@ -144,7 +144,6 @@ end
 function UI:ShowSettingMenu()
 
 	self:SetMenuColor()
-    -- ImGui.SetNextWindowSize(1200, 800, ImGuiCond.Appearing)
     ImGui.Begin("FlyingTank Menu")
 
 	if ImGui.BeginTabBar("FlyingTank Menu") then
@@ -196,7 +195,7 @@ function UI:ShowGarage()
 	ImGui.Separator()
 
 	for model_index, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
-		ImGui.Text(self.av_obj.all_models[garage_info.model_index].name)
+		ImGui.Text(self.vehicle_obj.all_models[garage_info.model_index].name)
 		ImGui.SameLine()
 		ImGui.Text(" : ")
 		ImGui.SameLine()
@@ -206,8 +205,8 @@ function UI:ShowGarage()
 			ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_garage_not_purchased"))
 		end
 
-		if ImGui.BeginCombo("##" .. self.av_obj.all_models[garage_info.model_index].name, self.selected_purchased_vehicle_type_list[model_index]) then
-			for index, value in ipairs(self.av_obj.all_models[garage_info.model_index].type) do
+		if ImGui.BeginCombo("##" .. self.vehicle_obj.all_models[garage_info.model_index].name, self.selected_purchased_vehicle_type_list[model_index]) then
+			for index, value in ipairs(self.vehicle_obj.all_models[garage_info.model_index].type) do
 				if self.selected_purchased_vehicle_type_list[model_index] == value.name then
 					selected = true
 				else
@@ -293,7 +292,7 @@ function UI:ShowFreeSummon()
 
 	self.vehicle_type_list = {}
 
-	for i, type in ipairs(self.av_obj.all_models[self.selected_vehicle_model_number].type) do
+	for i, type in ipairs(self.vehicle_obj.all_models[self.selected_vehicle_model_number].type) do
 		self.vehicle_type_list[i] = type
 	end
 
@@ -459,7 +458,7 @@ function UI:ShowAutoPilotSetting()
 				else
 					if not FlyingTank.core_obj.event_obj:IsNotSpawned() then
 						FlyingTank.user_setting_table.favorite_location_list[index].name = self.current_position_name
-						local current_pos = self.av_obj.position_obj:GetPosition()
+						local current_pos = self.vehicle_obj.position_obj:GetPosition()
 						FlyingTank.user_setting_table.favorite_location_list[index].pos = {x=current_pos.x, y=current_pos.y, z=current_pos.z}
 						Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
 					end
@@ -499,7 +498,7 @@ function UI:ShowAutoPilotSetting()
 			ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_not_spawned"))
 		else
 			local current_district_list = FlyingTank.core_obj:GetCurrentDistrict()
-			local entity = Game.FindEntityByID(self.av_obj.entity_id)
+			local entity = Game.FindEntityByID(self.vehicle_obj.entity_id)
 			if entity ~= nil then
 				local current_nearby_ft_index, _ = FlyingTank.core_obj:FindNearestFastTravelPosition(entity:GetWorldPosition())
 				local current_nearby_ft_name = FlyingTank.core_obj:GetNearbyLocation(current_nearby_ft_index)
@@ -599,7 +598,7 @@ function UI:ShowEnviromentSetting()
 			local max_speed_for_freezing = FlyingTank.user_setting_table.max_speed_for_freezing
 			FlyingTank.user_setting_table.max_speed_for_freezing, is_used_slider = ImGui.SliderInt("##max spawn speed", FlyingTank.user_setting_table.max_speed_for_freezing, 0, 400, "%d")
 			if not is_used_slider and FlyingTank.user_setting_table.max_speed_for_freezing ~= max_speed_for_freezing then
-				self.av_obj.max_speed_for_freezing = FlyingTank.user_setting_table.max_speed_for_freezing
+				self.vehicle_obj.max_speed_for_freezing = FlyingTank.user_setting_table.max_speed_for_freezing
 				Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
 			end
 			ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_environment_maximum_update_interval"))
@@ -607,13 +606,13 @@ function UI:ShowEnviromentSetting()
 			local min_spawn_frequency = FlyingTank.user_setting_table.min_spawn_frequency
 			FlyingTank.user_setting_table.max_spawn_frequency, is_used_slider = ImGui.SliderInt("##max spawn frequency", FlyingTank.user_setting_table.max_spawn_frequency, min_spawn_frequency + 1, self.max_spawn_frequency_max, "%d")
 			if not is_used_slider and FlyingTank.user_setting_table.max_spawn_frequency ~= max_spawn_frequency then
-				self.av_obj.max_freeze_count = FlyingTank.user_setting_table.max_spawn_frequency
+				self.vehicle_obj.max_freeze_count = FlyingTank.user_setting_table.max_spawn_frequency
 				Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
 			end
 			ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_environment_minimum_update_interval"))
 			FlyingTank.user_setting_table.min_spawn_frequency, is_used_slider = ImGui.SliderInt("##min spawn frequency", FlyingTank.user_setting_table.min_spawn_frequency, self.min_spawn_frequency_min, max_spawn_frequency - 1, "%d")
 			if not is_used_slider and FlyingTank.user_setting_table.min_spawn_frequency ~= min_spawn_frequency then
-				self.av_obj.min_freeze_count = FlyingTank.user_setting_table.min_spawn_frequency
+				self.vehicle_obj.min_freeze_count = FlyingTank.user_setting_table.min_spawn_frequency
 				Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
 			end
 		end

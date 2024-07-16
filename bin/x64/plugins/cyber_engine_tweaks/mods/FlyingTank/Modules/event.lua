@@ -11,7 +11,7 @@ function Event:New()
     local obj = {}
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Event")
-    obj.av_obj = nil
+    obj.vehicle_obj = nil
     obj.hud_obj = Hud:New()
     obj.ui_obj = Ui:New()
     obj.sound_obj = Sound:New()
@@ -30,13 +30,13 @@ function Event:New()
 
 end
 
-function Event:Init(av_obj)
+function Event:Init(vehicle_obj)
 
-    self.av_obj = av_obj
+    self.vehicle_obj = vehicle_obj
 
-    self.ui_obj:Init(self.av_obj)
-    self.hud_obj:Init(self.av_obj)
-    self.sound_obj:Init(self.av_obj)
+    self.ui_obj:Init(self.vehicle_obj)
+    self.hud_obj:Init(self.vehicle_obj)
+    self.sound_obj:Init(self.vehicle_obj)
 
     if not FlyingTank.is_ready then
         self:SetObserve()
@@ -193,46 +193,46 @@ function Event:CheckAvailableFreeCall()
 end
 
 function Event:CheckCallVehicle()
-    if FlyingTank.core_obj:GetCallStatus() and not self.av_obj:IsSpawning() then
+    if FlyingTank.core_obj:GetCallStatus() and not self.vehicle_obj:IsSpawning() then
         self.log_obj:Record(LogLevel.Trace, "Vehicle call detected")
         self.sound_obj:PlaySound("100_call_vehicle")
         self.sound_obj:PlaySound("210_landing")
         self:SetSituation(Def.Situation.Landing)
-        self.av_obj:SpawnToSky()
+        self.vehicle_obj:SpawnToSky()
     end
 end
 
 function Event:CheckCallPurchasedVehicle()
-    if FlyingTank.core_obj:GetPurchasedCallStatus() and not self.av_obj:IsSpawning() then
+    if FlyingTank.core_obj:GetPurchasedCallStatus() and not self.vehicle_obj:IsSpawning() then
         self.log_obj:Record(LogLevel.Trace, "Purchased vehicle call detected")
         self.sound_obj:PlaySound("100_call_vehicle")
         self.sound_obj:PlaySound("210_landing")
         self:SetSituation(Def.Situation.Landing)
-        self.av_obj:SpawnToSky()
+        self.vehicle_obj:SpawnToSky()
     end
 end
 
 function Event:CheckLanded()
-    if self.av_obj.position_obj:IsCollision() or self.av_obj.is_landed then
+    if self.vehicle_obj.position_obj:IsCollision() or self.vehicle_obj.is_landed then
         self.log_obj:Record(LogLevel.Trace, "Landed detected")
         self.sound_obj:StopSound("210_landing")
         self.sound_obj:PlaySound("110_arrive_vehicle")
         self:SetSituation(Def.Situation.Waiting)
-        self.av_obj:ChangeDoorState(Def.DoorOperation.Open)
+        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Open)
     end
 end
 
 function Event:CheckInEntryArea()
-    if self.av_obj.position_obj:IsPlayerInEntryArea() then
+    if self.vehicle_obj.position_obj:IsPlayerInEntryArea() then
         self.log_obj:Record(LogLevel.Trace, "InEntryArea detected")
-        self.hud_obj:ShowChoice(self.selected_seat_index)
+        -- self.hud_obj:ShowChoice(self.selected_seat_index)
     else
-        self.hud_obj:HideChoice()
+        -- self.hud_obj:HideChoice()
     end
 end
 
 function Event:CheckInAV()
-    if self.av_obj:IsPlayerIn() then
+    if self.vehicle_obj:IsPlayerIn() then
         -- when player take on AV
         if self.current_situation == Def.Situation.Waiting then
             self.log_obj:Record(LogLevel.Info, "Enter In AV")
@@ -240,7 +240,7 @@ function Event:CheckInAV()
             self.sound_obj:PlaySound("230_fly_loop")
             self:SetSituation(Def.Situation.InVehicle)
             -- self.hud_obj:HideChoice()
-            -- self.av_obj:ChangeDoorState(Def.DoorOperation.Close)
+            -- self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
             -- self.hud_obj:ShowMeter()
             -- self.hud_obj:ShowCustomHint()
             -- self.hud_obj:HideActionButtons()
@@ -262,10 +262,10 @@ function Event:CheckInAV()
 end
 
 function Event:CheckCollision()
-    if self.av_obj.is_collision then
+    if self.vehicle_obj.is_collision then
         self.log_obj:Record(LogLevel.Debug, "Collision detected")
-        local material = self.av_obj.position_obj.collision_trace_result.material.value
-        if not self.av_obj.engine_obj:IsInFalling() then
+        local material = self.vehicle_obj.position_obj.collision_trace_result.material.value
+        if not self.vehicle_obj.engine_obj:IsInFalling() then
             if string.find(material, "concrete") then
                 self.sound_obj:PlaySound("331_crash_concrete")
             elseif string.find(material, "metal") then
@@ -285,9 +285,9 @@ function Event:CheckReturnVehicle()
         self.sound_obj:PlaySound("240_leaving")
         self.sound_obj:PlaySound("104_call_vehicle")
         self:SetSituation(Def.Situation.TalkingOff)
-        self.hud_obj:HideChoice()
-        self.av_obj:ChangeDoorState(Def.DoorOperation.Close)
-        self.av_obj:DespawnFromGround()
+        -- self.hud_obj:HideChoice()
+        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
+        self.vehicle_obj:DespawnFromGround()
     end
 end
 
@@ -297,14 +297,14 @@ function Event:CheckReturnPurchasedVehicle()
         self.sound_obj:PlaySound("240_leaving")
         self.sound_obj:PlaySound("104_call_vehicle")
         self:SetSituation(Def.Situation.TalkingOff)
-        self.hud_obj:HideChoice()
-        self.av_obj:ChangeDoorState(Def.DoorOperation.Close)
-        self.av_obj:DespawnFromGround()
+        -- self.hud_obj:HideChoice()
+        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
+        self.vehicle_obj:DespawnFromGround()
     end
 end
 
 function Event:CheckDespawn()
-    if self.av_obj:IsDespawned() then
+    if self.vehicle_obj:IsDespawned() then
         self.log_obj:Record(LogLevel.Trace, "Despawn detected")
         self.sound_obj:StopSound("240_leaving")
         self:SetSituation(Def.Situation.Normal)
@@ -323,14 +323,14 @@ function Event:CheckAutoModeChange()
 end
 
 function Event:CheckFailAutoPilot()
-    if self.av_obj:IsFailedAutoPilot() then
+    if self.vehicle_obj:IsFailedAutoPilot() then
         self.hud_obj:ShowInterruptAutoPilotDisplay()
     end
 end
 
 function Event:CheckCustomMappinPosition()
 
-    if self.av_obj.is_auto_pilot then
+    if self.vehicle_obj.is_auto_pilot then
         return
     end
     local success, mappin = pcall(function() return FlyingTank.core_obj.mappin_controller:GetMappin() end)
@@ -360,7 +360,7 @@ function Event:CheckLockedSave()
 end
 
 function Event:StopRadio()
-    self.av_obj.radio_obj:Stop()
+    self.vehicle_obj.radio_obj:Stop()
 end
 
 function Event:UnsetMappin()
@@ -389,7 +389,7 @@ function Event:IsWaiting()
 end
 
 function Event:IsInEntryArea()
-    if self.current_situation == Def.Situation.Waiting and self.av_obj.position_obj:IsPlayerInEntryArea() then
+    if self.current_situation == Def.Situation.Waiting and self.vehicle_obj.position_obj:IsPlayerInEntryArea() then
         return true
     else
         return false
@@ -398,7 +398,7 @@ function Event:IsInEntryArea()
 end
 
 function Event:IsInVehicle()
-    if self.current_situation == Def.Situation.InVehicle and self.av_obj:IsPlayerIn() then
+    if self.current_situation == Def.Situation.InVehicle and self.vehicle_obj:IsPlayerIn() then
         return true
     else
         return false
@@ -406,7 +406,7 @@ function Event:IsInVehicle()
 end
 
 function Event:IsAutoMode()
-    if self.av_obj.is_auto_pilot then
+    if self.vehicle_obj.is_auto_pilot then
         return true
     else
         return false
@@ -427,32 +427,32 @@ end
 
 function Event:ChangeDoor()
     if self.current_situation == Def.Situation.InVehicle then
-        self.av_obj:ChangeDoorState(Def.DoorOperation.Change)
+        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Change)
     end
 end
 
 function Event:EnterVehicle()
     if self:IsInEntryArea()then
-        self.av_obj:Mount()
+        self.vehicle_obj:Mount()
     end
 end
 
 function Event:ExitVehicle()
     if self:IsInVehicle() then
-        self.av_obj:Unmount()
+        self.vehicle_obj:Unmount()
     end
 end
 
 function Event:ToggleAutoMode()
     if self:IsInVehicle() then
-        if not self.av_obj.is_auto_pilot then
+        if not self.vehicle_obj.is_auto_pilot then
             self.hud_obj:ShowAutoModeDisplay()
             self.is_locked_operation = true
-            self.av_obj:AutoPilot()
-        elseif not self.av_obj.is_leaving then
+            self.vehicle_obj:AutoPilot()
+        elseif not self.vehicle_obj.is_leaving then
             self.hud_obj:ShowDriveModeDisplay()
             self.is_locked_operation = false
-            self.av_obj:InterruptAutoPilot()
+            self.vehicle_obj:InterruptAutoPilot()
         end
     end
 end
@@ -464,7 +464,7 @@ function Event:ShowRadioPopup()
 end
 
 function Event:SelectChoice(direction)
-    local max_seat_index = #self.av_obj.all_models[FlyingTank.model_index].actual_allocated_seat
+    local max_seat_index = #self.vehicle_obj.all_models[FlyingTank.model_index].actual_allocated_seat
     if self:IsInEntryArea() then
         if direction == Def.ActionList.SelectUp then
             self.selected_seat_index = self.selected_seat_index - 1
@@ -481,7 +481,7 @@ function Event:SelectChoice(direction)
             self.log_obj:Record(LogLevel.Critical, "Invalid direction detected")
             return
         end
-        self.av_obj.seat_index = self.selected_seat_index
+        self.vehicle_obj.seat_index = self.selected_seat_index
     end
 end
 

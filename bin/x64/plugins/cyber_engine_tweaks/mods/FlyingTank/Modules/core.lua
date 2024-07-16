@@ -12,7 +12,7 @@ function Core:New()
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Core")
     obj.queue_obj = Queue:New()
-    obj.av_obj = nil
+    obj.vehicle_obj = nil
     obj.event_obj = nil
     -- static --
     -- move
@@ -22,7 +22,7 @@ function Core:New()
     obj.delay_action_time_in_vehicle = 0.05
     -- import path
     obj.av_model_path = "Data/default_model.json"
-    obj.spinner_input_path = "Data/spinner_input.json"
+    obj.tank_input_path = "Data/tank_input.json"
     -- input setting
     obj.axis_dead_zone = 0.5
     obj.relative_dead_zone = 0.01
@@ -46,7 +46,7 @@ function Core:New()
     -- model table
     obj.all_models = nil
     -- input table
-    obj.spinner_input_table = {}
+    obj.tank_input_table = {}
     obj.relative_table = {}
     obj.hold_time_resolution = 0.1
     obj.radio_hold_complete_time_count = 5
@@ -95,13 +95,13 @@ function Core:Init()
     self:SetTranslationNameList()
     self:StoreTranslationtableList()
 
-    self.spinner_input_table = self:GetInputTable(self.spinner_input_path)
+    self.tank_input_table = self:GetInputTable(self.tank_input_path)
 
-    self.av_obj = Vehicle:New(self.all_models)
-    self.av_obj:Init()
+    self.vehicle_obj = Vehicle:New(self.all_models)
+    self.vehicle_obj:Init()
 
     self.event_obj = Event:New()
-    self.event_obj:Init(self.av_obj)
+    self.event_obj:Init(self.vehicle_obj)
 
     Cron.Every(FlyingTank.time_resolution, function()
         self.event_obj:CheckAllEvents()
@@ -117,9 +117,9 @@ function Core:Init()
 end
 
 function Core:Reset()
-    self.av_obj = Vehicle:New(self.all_models)
-    self.av_obj:Init()
-    self.event_obj:Init(self.av_obj)
+    self.vehicle_obj = Vehicle:New(self.all_models)
+    self.vehicle_obj:Init()
+    self.event_obj:Init(self.vehicle_obj)
 end
 
 function Core:LoadSetting()
@@ -158,7 +158,7 @@ function Core:SetSummonTrigger()
             FlyingTank.model_index = FlyingTank.user_setting_table.model_index_in_free
             FlyingTank.model_type_index = FlyingTank.user_setting_table.model_type_index_in_free
 
-            self.av_obj:Init()
+            self.vehicle_obj:Init()
             self.is_vehicle_call = true
             return false
         end
@@ -167,11 +167,11 @@ function Core:SetSummonTrigger()
         for _, record in ipairs(self.event_obj.ui_obj.av_record_list) do
             if record.hash == new_record_id.hash then
                 self.log_obj:Record(LogLevel.Trace, "Purchased Vehicle call detected")
-                for key, value in ipairs(self.av_obj.all_models) do
+                for key, value in ipairs(self.vehicle_obj.all_models) do
                     if value.tweakdb_id == record.value then
                         FlyingTank.model_index = key
                         FlyingTank.model_type_index = FlyingTank.user_setting_table.garage_info_list[key].type_index
-                        self.av_obj:Init()
+                        self.vehicle_obj:Init()
                         break
                     end
                 end
@@ -278,19 +278,19 @@ function Core:SetInputListener()
 
     local player = Game.GetPlayer()
 
-    player:UnregisterInputListener(player, "dav_spinner_forward_backward")
-    player:UnregisterInputListener(player, "dav_spinner_left_right")
-    player:UnregisterInputListener(player, "dav_spinner_up")
-    player:UnregisterInputListener(player, "dav_spinner_down")
-    player:UnregisterInputListener(player, "dav_get_on")
-    player:UnregisterInputListener(player, "dav_get_off")
+    -- player:UnregisterInputListener(player, "dav_spinner_forward_backward")
+    -- player:UnregisterInputListener(player, "dav_spinner_left_right")
+    -- player:UnregisterInputListener(player, "dav_spinner_up")
+    -- player:UnregisterInputListener(player, "dav_spinner_down")
+    -- player:UnregisterInputListener(player, "dav_get_on")
+    -- player:UnregisterInputListener(player, "dav_get_off")
 
-    player:RegisterInputListener(player, "dav_spinner_forward_backward")
-    player:RegisterInputListener(player, "dav_spinner_left_right")
-    player:RegisterInputListener(player, "dav_spinner_up")
-    player:RegisterInputListener(player, "dav_spinner_down")
-    player:RegisterInputListener(player, "dav_get_on")
-    player:RegisterInputListener(player, "dav_get_off")
+    -- player:RegisterInputListener(player, "dav_spinner_forward_backward")
+    -- player:RegisterInputListener(player, "dav_spinner_left_right")
+    -- player:RegisterInputListener(player, "dav_spinner_up")
+    -- player:RegisterInputListener(player, "dav_spinner_down")
+    -- player:RegisterInputListener(player, "dav_get_on")
+    -- player:RegisterInputListener(player, "dav_get_off")
 
     local exception_common_list = Utils:ReadJson("Data/exception_common_input.json")
     local exception_in_veh_list = Utils:ReadJson("Data/exception_in_veh_input.json")
@@ -441,7 +441,7 @@ function Core:StorePlayerAction(action_name, action_type, action_value)
 
     local cmd = 0
 
-    cmd = self:ConvertSpinnerActionList(action_name, action_type, action_value_type)
+    cmd = self:ConvertTankActionList(action_name, action_type, action_value_type)
 
     if cmd ~= Def.ActionList.Nothing then
         self.queue_obj:Enqueue(cmd)
@@ -449,42 +449,26 @@ function Core:StorePlayerAction(action_name, action_type, action_value)
 
 end
 
-function Core:ConvertSpinnerActionList(action_name, action_type, action_value_type)
+function Core:ConvertTankActionList(action_name, action_type, action_value_type)
 
     local action_command = Def.ActionList.Nothing
     local action_dist = {name = action_name, type = action_type, value = action_value_type}
 
     if self.event_obj.current_situation == Def.Situation.InVehicle and (self.is_move_up_button_hold_counter or self.is_move_down_button_hold_counter) then
-        if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_FORWARD_MOVE) then
+        if Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_FORWARD_MOVE) then
             action_command = Def.ActionList.SpinnerForward
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_BACK_MOVE) then
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_BACK_MOVE) then
             action_command = Def.ActionList.SpinnerBackward
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_RIGHT_ROTATE) then
-        --     action_command = Def.ActionList.SpinnerRightRotate
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_LEFT_ROTATE) then
-        --     action_command = Def.ActionList.SpinnerLeftRotate
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_RIGHT_MOVE) then
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_MOVE) then
             action_command = Def.ActionList.SpinnerRight
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_LEFT_MOVE) then
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_MOVE) then
             action_command = Def.ActionList.SpinnerLeft
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_ROTATE) then
+            action_command = Def.ActionList.SpinnerRightRotate
+        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_ROTATE) then
+            action_command = Def.ActionList.SpinnerLeftRotate
         end
     end
-        -- if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_UP_MOVE) then
-        --     action_command = Def.ActionList.SpinnerUp
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_DOWN_MOVE) then
-        --     action_command = Def.ActionList.SpinnerDown
-        -- elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_AV_EXIT_AV) then
-        --     action_command = Def.ActionList.Exit
-        -- end
-    -- elseif self.event_obj.current_situation == Def.Situation.Waiting then
-    --     if Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_ENTER_AV) then
-    --         action_command = Def.ActionList.Enter
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_SELECT_UPPER_CHOICE) then
-    --         action_command = Def.ActionList.SelectUp
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.spinner_input_table.KEY_WORLD_SELECT_LOWER_CHOICE) then
-    --         action_command = Def.ActionList.SelectDown
-    --     end
-    -- end
 
     return action_command
 
@@ -608,9 +592,9 @@ function Core:OperateAerialVehicle(actions)
 
     if not self.is_locked_operation then
         if self.event_obj:IsInVehicle() then
-            self.av_obj:Operate(actions)
+            self.vehicle_obj:Operate(actions)
         elseif self.event_obj:IsWaiting() then
-            self.av_obj:Operate({Def.ActionList.Nothing})
+            self.vehicle_obj:Operate({Def.ActionList.Nothing})
         end
     end
 
@@ -675,7 +659,7 @@ end
 
 function Core:ToggleCamera()
     if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        self.av_obj.camera_obj:Toggle()
+        self.vehicle_obj.camera_obj:Toggle()
     end
 end
 
@@ -687,7 +671,7 @@ end
 
 function Core:ToggleCrystalDome()
     if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        self.av_obj:ToggleCrystalDome()
+        self.vehicle_obj:ToggleCrystalDome()
     end
 end
 
@@ -726,7 +710,7 @@ function Core:SetCustomMappin(mappin)
 end
 
 function Core:SetDistinationMappin()
-    self.av_obj:SetMappinDestination(self.current_custom_mappin_position)
+    self.vehicle_obj:SetMappinDestination(self.current_custom_mappin_position)
     self.ft_index_nearest_mappin, self.ft_to_mappin_distance = self:FindNearestFastTravelPosition(self.current_custom_mappin_position)
 end
 
@@ -737,7 +721,7 @@ function Core:SetFavoriteMappin(pos)
         self.log_obj:Record(LogLevel.Trace, "Invalid Mappin Position")
         return
     end
-    self.av_obj:SetFavoriteDestination(position)
+    self.vehicle_obj:SetFavoriteDestination(position)
     self:CreateFavoriteMappin(position)
     if not self.is_custom_mappin then
         self.ft_index_nearest_favorite, self.ft_to_favorite_distance = self:FindNearestFastTravelPosition(position)
@@ -923,9 +907,9 @@ function Core:SetRadioPopupController()
             self.current_station_index = this.selectedItem:GetStationData().record:Index()
             if self.current_station_index >= 0 and self.current_station_index <= self.default_station_num then
                 self.current_radio_volume = this.radioVolumeSettingsController.value:GetText()
-                self.av_obj.radio_obj:Update(self.current_station_index, self.current_radio_volume)
+                self.vehicle_obj.radio_obj:Update(self.current_station_index, self.current_radio_volume)
             else
-                self.av_obj.radio_obj:Stop()
+                self.vehicle_obj.radio_obj:Stop()
             end
         end
     end)
@@ -936,9 +920,9 @@ function Core:SetRadioPopupController()
                 local prev_radio_volume = self.current_radio_volume
                 self.current_radio_volume = this.value:GetText()
                 if prev_radio_volume ~= "0%" then
-                    self.av_obj.radio_obj:SetVolumeFromString(self.current_radio_volume)
+                    self.vehicle_obj.radio_obj:SetVolumeFromString(self.current_radio_volume)
                 elseif self.current_station_index >= 0 and self.current_station_index <= self.default_station_num then
-                    self.av_obj.radio_obj:Update(self.current_station_index, self.current_radio_volume)
+                    self.vehicle_obj.radio_obj:Update(self.current_station_index, self.current_radio_volume)
                 end
             end
         end
@@ -948,7 +932,7 @@ function Core:SetRadioPopupController()
         if self.event_obj:IsInVehicle() then
             self.is_opened_radio_popup = true
             Cron.Every(self.get_track_name_time_resolution, {tick = 1}, function(timer)
-                local lockey = self.av_obj.radio_obj:GetTrackName()
+                local lockey = self.vehicle_obj.radio_obj:GetTrackName()
                 if lockey ~= nil and this.trackName ~= nil then
                     this.trackName:SetLocalizationKey(lockey)
                 end
@@ -970,11 +954,11 @@ function Core:ToggleRadio()
 
     if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
         if self.current_station_index >= 0 and self.current_station_index <= self.default_station_num then
-            if self.av_obj.radio_obj:IsPlaying() then
-                self.av_obj.radio_obj:Stop()
+            if self.vehicle_obj.radio_obj:IsPlaying() then
+                self.vehicle_obj.radio_obj:Stop()
             else
                 -- self.current_station_index = math.random(0, self.default_station_num)
-                self.av_obj.radio_obj:Update(self.current_station_index, self.current_radio_volume)
+                self.vehicle_obj.radio_obj:Update(self.current_station_index, self.current_radio_volume)
             end
         else
             self.log_obj:Record(LogLevel.Info, "Selected station is RadioEXT Station")

@@ -12,7 +12,7 @@ function HUD:New()
     --static --
     obj.speed_meter_refresh_rate = 0.05
     -- dynamic --
-    obj.av_obj = nil
+    obj.vehicle_obj = nil
     obj.interaction_ui_base = nil
     obj.interaction_hub = nil
     obj.choice_title = "AV"
@@ -31,9 +31,9 @@ function HUD:New()
     return setmetatable(obj, self)
 end
 
-function HUD:Init(av_obj)
+function HUD:Init(vehicle_obj)
 
-    self.av_obj = av_obj
+    self.vehicle_obj = vehicle_obj
 
     if not FlyingTank.is_ready then
         self:SetOverride()
@@ -48,7 +48,7 @@ function HUD:SetOverride()
     if not FlyingTank.is_ready then
         -- Overside choice ui (refer to https://www.nexusmods.com/cyberpunk2077/mods/7299)
         Override("InteractionUIBase", "OnDialogsData", function(_, value, wrapped_method)
-            if self.av_obj.position_obj:IsPlayerInEntryArea() then
+            if self.vehicle_obj.position_obj:IsPlayerInEntryArea() then
                 local data = FromVariant(value)
                 local hubs = data.choiceHubs
                 table.insert(hubs, self.interaction_hub)
@@ -60,7 +60,7 @@ function HUD:SetOverride()
         end)
 
         Override("InteractionUIBase", "OnDialogsSelectIndex", function(_, index, wrapped_method)
-            if self.av_obj.position_obj:IsPlayerInEntryArea() then
+            if self.vehicle_obj.position_obj:IsPlayerInEntryArea() then
                 wrapped_method(self.selected_choice_index - 1)
             else
                 self.selected_choice_index = index + 1
@@ -69,7 +69,7 @@ function HUD:SetOverride()
         end)
 
         Override("dialogWidgetGameController", "OnDialogsActivateHub", function(_, id, wrapped_metthod) -- Avoid interaction getting overriden by game
-            if self.av_obj.position_obj:IsPlayerInEntryArea() then
+            if self.vehicle_obj.position_obj:IsPlayerInEntryArea() then
                 local id_
                 if self.interaction_hub == nil then
                     id_ = id
@@ -105,18 +105,18 @@ function HUD:SetObserve()
         end)
 
         -- hide unnecessary input hint
-        Observe("UISystem", "QueueEvent", function(this, event)
-            if FlyingTank.core_obj.event_obj:IsInEntryArea() or FlyingTank.core_obj.event_obj:IsInVehicle() then
-                if event:ToString() == "gameuiUpdateInputHintEvent" then
-                    if event.data.source == CName.new("VehicleDriver") then
-                        local delete_hint_source_event = DeleteInputHintBySourceEvent.new()
-                        delete_hint_source_event.targetHintContainer = CName.new("GameplayInputHelper")
-                        delete_hint_source_event.source = CName.new("VehicleDriver")
-                        Game.GetUISystem():QueueEvent(delete_hint_source_event)
-                    end
-                end
-            end
-        end)
+        -- Observe("UISystem", "QueueEvent", function(this, event)
+        --     if FlyingTank.core_obj.event_obj:IsInEntryArea() or FlyingTank.core_obj.event_obj:IsInVehicle() then
+        --         if event:ToString() == "gameuiUpdateInputHintEvent" then
+        --             if event.data.source == CName.new("VehicleDriver") then
+        --                 local delete_hint_source_event = DeleteInputHintBySourceEvent.new()
+        --                 delete_hint_source_event.targetHintContainer = CName.new("GameplayInputHelper")
+        --                 delete_hint_source_event.source = CName.new("VehicleDriver")
+        --                 Game.GetUISystem():QueueEvent(delete_hint_source_event)
+        --             end
+        --         end
+        --     end
+        -- end)
 
         Observe('PopupsManager', 'OnPlayerAttach', function(this)
             self.popup_manager = this
@@ -128,7 +128,7 @@ end
 
 function HUD:GetChoiceTitle()
     local index = FlyingTank.model_index
-    return GetLocalizedText("LocKey#" .. tostring(self.av_obj.all_models[index].display_name_lockey))
+    return GetLocalizedText("LocKey#" .. tostring(self.vehicle_obj.all_models[index].display_name_lockey))
 end
 
 function HUD:SetChoiceList()
@@ -148,11 +148,11 @@ function HUD:SetChoiceList()
     caption_part:AddPartFromRecord(icon)
     choice_type:SetType(gameinteractionsChoiceType.Selected)
 
-    for index = 1, #self.av_obj.active_seat do
+    for index = 1, #self.vehicle_obj.active_seat do
         local choice = gameinteractionsvisListChoiceData.new()
 
         local lockey_enter = GetLocalizedText("LocKey#81569") or "Enter"
-        choice.localizedName = lockey_enter .. "[" .. self.av_obj.all_models[model_index].active_seat[index] .. "]"
+        choice.localizedName = lockey_enter .. "[" .. self.vehicle_obj.all_models[model_index].active_seat[index] .. "]"
         choice.inputActionName = CName.new("None")
         choice.captionParts = caption_part
         choice.type = choice_type
@@ -163,40 +163,40 @@ function HUD:SetChoiceList()
     self.interaction_hub = hub
 end
 
-function HUD:ShowChoice(selected_index)
+-- function HUD:ShowChoice(selected_index)
 
-    self.selected_choice_index = selected_index
+--     self.selected_choice_index = selected_index
 
-    self:SetChoiceList()
+--     self:SetChoiceList()
 
-    local ui_interaction_define = GetAllBlackboardDefs().UIInteractions
-    local interaction_blackboard = Game.GetBlackboardSystem():Get(ui_interaction_define)
+--     local ui_interaction_define = GetAllBlackboardDefs().UIInteractions
+--     local interaction_blackboard = Game.GetBlackboardSystem():Get(ui_interaction_define)
 
-    interaction_blackboard:SetInt(ui_interaction_define.ActiveChoiceHubID, self.interaction_hub.id)
-    local data = interaction_blackboard:GetVariant(ui_interaction_define.DialogChoiceHubs)
-    self.dialogIsScrollable = true
-    self.interaction_ui_base:OnDialogsSelectIndex(selected_index - 1)
-    self.interaction_ui_base:OnDialogsData(data)
-    self.interaction_ui_base:OnInteractionsChanged()
-    self.interaction_ui_base:UpdateListBlackboard()
-    self.interaction_ui_base:OnDialogsActivateHub(self.interaction_hub.id)
+--     interaction_blackboard:SetInt(ui_interaction_define.ActiveChoiceHubID, self.interaction_hub.id)
+--     local data = interaction_blackboard:GetVariant(ui_interaction_define.DialogChoiceHubs)
+--     self.dialogIsScrollable = true
+--     self.interaction_ui_base:OnDialogsSelectIndex(selected_index - 1)
+--     self.interaction_ui_base:OnDialogsData(data)
+--     self.interaction_ui_base:OnInteractionsChanged()
+--     self.interaction_ui_base:UpdateListBlackboard()
+--     self.interaction_ui_base:OnDialogsActivateHub(self.interaction_hub.id)
 
-end
+-- end
 
-function HUD:HideChoice()
+-- function HUD:HideChoice()
 
-    self.interaction_hub = nil
+--     self.interaction_hub = nil
 
-    local ui_interaction_define = GetAllBlackboardDefs().UIInteractions;
-    local interaction_blackboard = Game.GetBlackboardSystem():Get(ui_interaction_define)
+--     local ui_interaction_define = GetAllBlackboardDefs().UIInteractions;
+--     local interaction_blackboard = Game.GetBlackboardSystem():Get(ui_interaction_define)
 
-    local data = interaction_blackboard:GetVariant(ui_interaction_define.DialogChoiceHubs)
-    if self.interaction_ui_base == nil then
-        return
-    end
-    self.interaction_ui_base:OnDialogsData(data)
+--     local data = interaction_blackboard:GetVariant(ui_interaction_define.DialogChoiceHubs)
+--     if self.interaction_ui_base == nil then
+--         return
+--     end
+--     self.interaction_ui_base:OnDialogsData(data)
 
-end
+-- end
 
 function HUD:ShowMeter()
 
@@ -209,29 +209,29 @@ function HUD:ShowMeter()
         self.is_speed_meter_shown = true
         Cron.Every(self.speed_meter_refresh_rate, {tick = 0}, function(timer)
             local meter_value = 0    
-            if self.av_obj.is_auto_pilot then
+            if self.vehicle_obj.is_auto_pilot then
                 inkTextRef.SetText(self.hud_car_controller.SpeedUnits, FlyingTank.core_obj:GetTranslationText("hud_meter_auto_pilot_display"))
-                meter_value = math.floor(Vector4.Distance(self.av_obj.auto_pilot_info.dist_pos, Game.GetPlayer():GetWorldPosition()))
+                meter_value = math.floor(Vector4.Distance(self.vehicle_obj.auto_pilot_info.dist_pos, Game.GetPlayer():GetWorldPosition()))
             else
                 if FlyingTank.user_setting_table.is_unit_km_per_hour then
                     inkTextRef.SetText(self.hud_car_controller.SpeedUnits, FlyingTank.core_obj:GetTranslationText("hud_meter_kph"))
-                    meter_value = math.floor(self.av_obj.engine_obj.current_speed * (3600 / 1000))
+                    meter_value = math.floor(self.vehicle_obj.engine_obj.current_speed * (3600 / 1000))
                 else
                     inkTextRef.SetText(self.hud_car_controller.SpeedUnits,  FlyingTank.core_obj:GetTranslationText("hud_meter_mph"))
-                    meter_value = math.floor(self.av_obj.engine_obj.current_speed * (3600 / 1609))
+                    meter_value = math.floor(self.vehicle_obj.engine_obj.current_speed * (3600 / 1609))
                 end
             end
             inkTextRef.SetText(self.hud_car_controller.SpeedValue, meter_value)
 
             local power_level = 0
-            if self.av_obj.is_auto_pilot then
-                local distance = Vector4.Distance(self.av_obj.auto_pilot_info.dist_pos, self.av_obj.auto_pilot_info.start_pos)
+            if self.vehicle_obj.is_auto_pilot then
+                local distance = Vector4.Distance(self.vehicle_obj.auto_pilot_info.dist_pos, self.vehicle_obj.auto_pilot_info.start_pos)
                 power_level = math.floor((1.01 - (meter_value / distance)) * 10)
             else
                 if FlyingTank.user_setting_table.flight_mode == Def.FlightMode.Heli then
-                    power_level = math.floor((self.av_obj.engine_obj.lift_force - self.av_obj.engine_obj.min_lift_force) / ((self.av_obj.engine_obj.max_lift_force - self.av_obj.engine_obj.min_lift_force) / 10))
+                    power_level = math.floor((self.vehicle_obj.engine_obj.lift_force - self.vehicle_obj.engine_obj.min_lift_force) / ((self.vehicle_obj.engine_obj.max_lift_force - self.vehicle_obj.engine_obj.min_lift_force) / 10))
                 elseif FlyingTank.user_setting_table.flight_mode == Def.FlightMode.Spinner then 
-                    power_level = math.floor(self.av_obj.engine_obj.spinner_horizenal_force / (self.av_obj.engine_obj.max_spinner_horizenal_force / 10))
+                    power_level = math.floor(self.vehicle_obj.engine_obj.spinner_horizenal_force / (self.vehicle_obj.engine_obj.max_spinner_horizenal_force / 10))
                 end
             end
             self.hud_car_controller:OnRpmValueChanged(power_level)
@@ -345,10 +345,10 @@ function HUD:ShowAutoPilotInfo()
         local switch = ""
         local location = ""
         local type = ""
-        if self.av_obj.is_auto_pilot then
+        if self.vehicle_obj.is_auto_pilot then
             switch = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_on")
-            location = FlyingTank.core_obj.av_obj.auto_pilot_info.location
-            type = FlyingTank.core_obj.av_obj.auto_pilot_info.type
+            location = FlyingTank.core_obj.vehicle_obj.auto_pilot_info.location
+            type = FlyingTank.core_obj.vehicle_obj.auto_pilot_info.type
         else
             switch = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_off")
             if FlyingTank.core_obj:IsCustomMappin() then

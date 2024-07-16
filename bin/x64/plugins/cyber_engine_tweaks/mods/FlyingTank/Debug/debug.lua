@@ -128,15 +128,15 @@ end
 function Debug:ImGuiAVPosition()
     self.is_im_gui_av_position = ImGui.Checkbox("[ImGui] AV Position Angle", self.is_im_gui_av_position)
     if self.is_im_gui_av_position then
-        if self.core_obj.av_obj.position_obj.entity == nil then
+        if self.core_obj.vehicle_obj.position_obj.entity == nil then
             return
         end
-        local x = string.format("%.2f", self.core_obj.av_obj.position_obj:GetPosition().x)
-        local y = string.format("%.2f", self.core_obj.av_obj.position_obj:GetPosition().y)
-        local z = string.format("%.2f", self.core_obj.av_obj.position_obj:GetPosition().z)
-        local roll = string.format("%.2f", self.core_obj.av_obj.position_obj:GetEulerAngles().roll)
-        local pitch = string.format("%.2f", self.core_obj.av_obj.position_obj:GetEulerAngles().pitch)
-        local yaw = string.format("%.2f", self.core_obj.av_obj.position_obj:GetEulerAngles().yaw)
+        local x = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetPosition().x)
+        local y = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetPosition().y)
+        local z = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetPosition().z)
+        local roll = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetEulerAngles().roll)
+        local pitch = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetEulerAngles().pitch)
+        local yaw = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetEulerAngles().yaw)
         ImGui.Text("X: " .. x .. ", Y: " .. y .. ", Z: " .. z)
         ImGui.Text("Roll:" .. roll .. ", Pitch:" .. pitch .. ", Yaw:" .. yaw)
     end
@@ -145,13 +145,13 @@ end
 function Debug:ImGuiHeliInfo()
     self.is_im_gui_heli_info = ImGui.Checkbox("[ImGui] Heli Info", self.is_im_gui_heli_info)
     if self.is_im_gui_heli_info then
-        if self.core_obj.av_obj.position_obj.entity == nil then
+        if self.core_obj.vehicle_obj.position_obj.entity == nil then
             return
         end
-        local f = string.format("%.2f", self.core_obj.av_obj.engine_obj.lift_force)
-        local v_x = string.format("%.2f", self.core_obj.av_obj.engine_obj.horizenal_x_speed)
-        local v_y = string.format("%.2f", self.core_obj.av_obj.engine_obj.horizenal_y_speed)
-        local v_z = string.format("%.2f", self.core_obj.av_obj.engine_obj.vertical_speed)
+        local f = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.lift_force)
+        local v_x = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_x_speed)
+        local v_y = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_y_speed)
+        local v_z = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.vertical_speed)
         ImGui.Text("F: " .. f .. ", v_x: " .. v_x .. ", v_y: " .. v_y .. ", v_z: " .. v_z)
     end
 end
@@ -159,15 +159,15 @@ end
 function Debug:ImGuiSpinnerInfo()
     self.is_im_gui_spinner_info = ImGui.Checkbox("[ImGui] Spinner Info", self.is_im_gui_spinner_info)
     if self.is_im_gui_spinner_info then
-        if self.core_obj.av_obj.position_obj.entity == nil then
+        if self.core_obj.vehicle_obj.position_obj.entity == nil then
             return
         end
-        local f_h = string.format("%.2f", self.core_obj.av_obj.engine_obj.spinner_horizenal_force)
-        local f_v = string.format("%.2f", self.core_obj.av_obj.engine_obj.spinner_vertical_force)
-        local v_x = string.format("%.2f", self.core_obj.av_obj.engine_obj.horizenal_x_speed)
-        local v_y = string.format("%.2f", self.core_obj.av_obj.engine_obj.horizenal_y_speed)
-        local v_z = string.format("%.2f", self.core_obj.av_obj.engine_obj.vertical_speed)
-        local v_angle = string.format("%.2f", self.core_obj.av_obj.engine_obj.spinner_speed_angle * 180 / Pi())
+        local f_h = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.spinner_horizenal_force)
+        local f_v = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.spinner_vertical_force)
+        local v_x = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_x_speed)
+        local v_y = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_y_speed)
+        local v_z = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.vertical_speed)
+        local v_angle = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.spinner_speed_angle * 180 / Pi())
         ImGui.Text("F_h: " .. f_h .. ", F_v : " .. f_v)
         ImGui.Text("v_x: " .. v_x .. ", v_y: " .. v_y .. ", v_z: " .. v_z .. ", v_angle: " .. v_angle)
     end
@@ -176,8 +176,8 @@ end
 function Debug:ImGuiCurrentEngineInfo()
     self.is_im_gui_engine_info = ImGui.Checkbox("[ImGui] Current Engine Info", self.is_im_gui_engine_info)
     if self.is_im_gui_engine_info then
-        local v = string.format("%.2f", self.core_obj.av_obj.engine_obj.current_speed)
-        ImGui.Text("Current Power Mode : " .. self.core_obj.av_obj.engine_obj.current_mode .. ", Current Speed : " .. v .. " , Clock: " .. self.core_obj.av_obj.engine_obj.clock)
+        local v = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.current_speed)
+        ImGui.Text("Current Power Mode : " .. self.core_obj.vehicle_obj.engine_obj.current_mode .. ", Current Speed : " .. v .. " , Clock: " .. self.core_obj.vehicle_obj.engine_obj.clock)
     end
 end
 
@@ -279,37 +279,37 @@ function Debug:ImGuiChangeAutoPilotSetting()
     self.is_im_gui_change_auto_setting = ImGui.Checkbox("[ImGui] Change AP Profile", self.is_im_gui_change_auto_setting)
     if self.is_im_gui_change_auto_setting then
         if ImGui.Button("Update Profile") then
-            local autopilot_profile = Utils:ReadJson(FlyingTank.core_obj.av_obj.profile_path)
+            local autopilot_profile = Utils:ReadJson(FlyingTank.core_obj.vehicle_obj.profile_path)
             local speed_level = FlyingTank.user_setting_table.autopilot_speed_level
-            FlyingTank.core_obj.av_obj.auto_pilot_speed = autopilot_profile[speed_level].speed
-            FlyingTank.core_obj.av_obj.avoidance_range = autopilot_profile[speed_level].avoidance_range
-            FlyingTank.core_obj.av_obj.max_avoidance_speed = autopilot_profile[speed_level].max_avoidance_speed
-            FlyingTank.core_obj.av_obj.sensing_constant = autopilot_profile[speed_level].sensing_constant
-            FlyingTank.core_obj.av_obj.autopilot_turn_speed = autopilot_profile[speed_level].turn_speed
-            FlyingTank.core_obj.av_obj.autopilot_land_offset = autopilot_profile[speed_level].land_offset
-            FlyingTank.core_obj.av_obj.autopilot_down_time_count = autopilot_profile[speed_level].down_time_count
-            FlyingTank.core_obj.av_obj.autopilot_leaving_hight = autopilot_profile[speed_level].leaving_hight
-            FlyingTank.core_obj.av_obj.position_obj:SetSensorPairVectorNum(autopilot_profile[speed_level].sensor_pair_vector_num)
-            FlyingTank.core_obj.av_obj.position_obj:SetJudgedStackLength(autopilot_profile[speed_level].judged_stack_length)
+            FlyingTank.core_obj.vehicle_obj.auto_pilot_speed = autopilot_profile[speed_level].speed
+            FlyingTank.core_obj.vehicle_obj.avoidance_range = autopilot_profile[speed_level].avoidance_range
+            FlyingTank.core_obj.vehicle_obj.max_avoidance_speed = autopilot_profile[speed_level].max_avoidance_speed
+            FlyingTank.core_obj.vehicle_obj.sensing_constant = autopilot_profile[speed_level].sensing_constant
+            FlyingTank.core_obj.vehicle_obj.autopilot_turn_speed = autopilot_profile[speed_level].turn_speed
+            FlyingTank.core_obj.vehicle_obj.autopilot_land_offset = autopilot_profile[speed_level].land_offset
+            FlyingTank.core_obj.vehicle_obj.autopilot_down_time_count = autopilot_profile[speed_level].down_time_count
+            FlyingTank.core_obj.vehicle_obj.autopilot_leaving_hight = autopilot_profile[speed_level].leaving_hight
+            FlyingTank.core_obj.vehicle_obj.position_obj:SetSensorPairVectorNum(autopilot_profile[speed_level].sensor_pair_vector_num)
+            FlyingTank.core_obj.vehicle_obj.position_obj:SetJudgedStackLength(autopilot_profile[speed_level].judged_stack_length)
         end
         ImGui.Text("Speed Level : " .. FlyingTank.user_setting_table.autopilot_speed_level)
-        ImGui.Text("speed : " .. FlyingTank.core_obj.av_obj.auto_pilot_speed .. ", avoidance : " .. FlyingTank.core_obj.av_obj.avoidance_range .. ", max_avoidance : " .. FlyingTank.core_obj.av_obj.max_avoidance_speed .. ", sensing : " .. FlyingTank.core_obj.av_obj.sensing_constant .. ", stack_len : " .. FlyingTank.core_obj.av_obj.position_obj.judged_stack_length)
-        ImGui.Text("turn : " .. FlyingTank.core_obj.av_obj.autopilot_turn_speed .. ", land : " .. FlyingTank.core_obj.av_obj.autopilot_land_offset .. ", down_t : " .. FlyingTank.core_obj.av_obj.autopilot_down_time_count .. ", hight : " .. FlyingTank.core_obj.av_obj.autopilot_leaving_hight .. ", sensor_num : " .. FlyingTank.core_obj.av_obj.position_obj.sensor_pair_vector_num)
+        ImGui.Text("speed : " .. FlyingTank.core_obj.vehicle_obj.auto_pilot_speed .. ", avoidance : " .. FlyingTank.core_obj.vehicle_obj.avoidance_range .. ", max_avoidance : " .. FlyingTank.core_obj.vehicle_obj.max_avoidance_speed .. ", sensing : " .. FlyingTank.core_obj.vehicle_obj.sensing_constant .. ", stack_len : " .. FlyingTank.core_obj.vehicle_obj.position_obj.judged_stack_length)
+        ImGui.Text("turn : " .. FlyingTank.core_obj.vehicle_obj.autopilot_turn_speed .. ", land : " .. FlyingTank.core_obj.vehicle_obj.autopilot_land_offset .. ", down_t : " .. FlyingTank.core_obj.vehicle_obj.autopilot_down_time_count .. ", hight : " .. FlyingTank.core_obj.vehicle_obj.autopilot_leaving_hight .. ", sensor_num : " .. FlyingTank.core_obj.vehicle_obj.position_obj.sensor_pair_vector_num)
     end
 end
 
 function Debug:ImGuiRadioInfo()
     self.is_im_gui_radio_info = ImGui.Checkbox("[ImGui] Radio Info", self.is_im_gui_radio_info)
     if self.is_im_gui_radio_info then
-        local volume = self.core_obj.av_obj.radio_obj:GetVolume()
-        local entity_num = #self.core_obj.av_obj.radio_obj.radio_entity_list
-        local station_index = self.core_obj.av_obj.radio_obj:GetPlayingStationIndex()
+        local volume = self.core_obj.vehicle_obj.radio_obj:GetVolume()
+        local entity_num = #self.core_obj.vehicle_obj.radio_obj.radio_entity_list
+        local station_index = self.core_obj.vehicle_obj.radio_obj:GetPlayingStationIndex()
         local station_name = CName("No Play")
         if station_index >= 0 then
             station_name = RadioStationDataProvider.GetStationNameByIndex(station_index)
         end
-        local track_name = GetLocalizedText(LocKeyToString(self.core_obj.av_obj.radio_obj:GetTrackName()))
-        local is_playing = self.core_obj.av_obj.radio_obj.is_playing
+        local track_name = GetLocalizedText(LocKeyToString(self.core_obj.vehicle_obj.radio_obj:GetTrackName()))
+        local is_playing = self.core_obj.vehicle_obj.radio_obj.is_playing
         local is_opened_radio_popup = self.core_obj.is_opened_radio_popup
         local radio_port_index = self.core_obj.current_station_index
         local radio_port_volume = self.core_obj.current_radio_volume
@@ -338,13 +338,13 @@ function Debug:ImGuiMeasurement()
         ImGui.PopStyleVar(2)
         ImGui.PopStyleColor(1)
         local look_at_pos = Game.GetTargetingSystem():GetLookAtPosition(Game.GetPlayer())
-        if self.core_obj.av_obj.position_obj.entity == nil then
+        if self.core_obj.vehicle_obj.position_obj.entity == nil then
             return
         end
-        local origin = self.core_obj.av_obj.position_obj:GetPosition()
-        local right = self.core_obj.av_obj.position_obj.entity:GetWorldRight()
-        local forward = self.core_obj.av_obj.position_obj.entity:GetWorldForward()
-        local up = self.core_obj.av_obj.position_obj.entity:GetWorldUp()
+        local origin = self.core_obj.vehicle_obj.position_obj:GetPosition()
+        local right = self.core_obj.vehicle_obj.position_obj.entity:GetWorldRight()
+        local forward = self.core_obj.vehicle_obj.position_obj.entity:GetWorldForward()
+        local up = self.core_obj.vehicle_obj.position_obj.entity:GetWorldUp()
         local relative = Vector4.new(look_at_pos.x - origin.x, look_at_pos.y - origin.y, look_at_pos.z - origin.z, 1)
         local x = Vector4.Dot(relative, right)
         local y = Vector4.Dot(relative, forward)
@@ -390,7 +390,7 @@ function Debug:ImGuiExcuteFunction()
     end
     ImGui.SameLine()
     if ImGui.Button("TF2") then
-        FlyingTank.core_obj.av_obj.radio_obj:Update(5, "100%")
+        FlyingTank.core_obj.vehicle_obj.radio_obj:Update(5, "100%")
         print("Excute Test Function 2")
     end
     ImGui.SameLine()
