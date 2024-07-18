@@ -9,12 +9,13 @@ function UI:New()
     obj.log_obj:SetLevel(LogLevel.Info, "UI")
 	-- static --
 	-- record name
-    obj.dummy_vehicle_record = "Vehicle.basilisk_dummy"
+    obj.dummy_basilisk_aldecaldos_record = "Vehicle.basilisk_aldecaldos"
+	obj.dummy_basilisk_militech_record = "Vehicle.basilisk_militech"
 	obj.delay_updating_native_settings = 0.1
 	-- dynamic --
 	-- common
 	obj.vehicle_obj = nil
-	obj.dummy_av_record = nil
+	obj.dummy_basilisk_aldecaldos_record_id = nil
 	obj.av_record_list = {}
 	-- garage
 	obj.selected_purchased_vehicle_type_list = {}
@@ -64,7 +65,8 @@ end
 
 function UI:SetTweekDB()
 
-    self.dummy_av_record = TweakDBID.new(self.dummy_vehicle_record)
+    self.dummy_basilisk_aldecaldos_record_id = TweakDBID.new(self.dummy_basilisk_aldecaldos_record)
+	self.dummy_basilisk_militech_record_id = TweakDBID.new(self.dummy_basilisk_militech_record)
 
 	for _, model in ipairs(self.vehicle_obj.all_models) do
 		local av_record = TweakDBID.new(model.tweakdb_id)
@@ -82,20 +84,20 @@ function UI:SetDefaultValue()
 	end
 
 	--free summon mode
-	for i, model in ipairs(self.vehicle_obj.all_models) do
-        self.vehicle_model_list[i] = model.name
-	end
-	self.selected_vehicle_model_number = FlyingTank.user_setting_table.model_index_in_free
-	self.selected_vehicle_model_name = self.vehicle_model_list[self.selected_vehicle_model_number]
+	-- for i, model in ipairs(self.vehicle_obj.all_models) do
+    --     self.vehicle_model_list[i] = model.name
+	-- end
+	-- self.selected_vehicle_model_number = FlyingTank.user_setting_table.model_index_in_free
+	-- self.selected_vehicle_model_name = self.vehicle_model_list[self.selected_vehicle_model_number]
 
-	for i, type in ipairs(self.vehicle_obj.all_models[self.selected_vehicle_model_number].type) do
-		self.vehicle_type_list[i] = type
-	end
-	self.selected_vehicle_type_number = FlyingTank.user_setting_table.model_type_index_in_free
-	self.selected_vehicle_type_name = self.vehicle_type_list[self.selected_vehicle_type_number]
+	-- for i, type in ipairs(self.vehicle_obj.all_models[self.selected_vehicle_model_number].type) do
+	-- 	self.vehicle_type_list[i] = type
+	-- end
+	-- self.selected_vehicle_type_number = FlyingTank.user_setting_table.model_type_index_in_free
+	-- self.selected_vehicle_type_name = self.vehicle_type_list[self.selected_vehicle_type_number]
 
-	self.current_vehicle_model_name = self.vehicle_model_list[self.selected_vehicle_model_number]
-	self.current_vehicle_type_name = self.vehicle_type_list[self.selected_vehicle_type_number]
+	-- self.current_vehicle_model_name = self.vehicle_model_list[self.selected_vehicle_model_number]
+	-- self.current_vehicle_type_name = self.vehicle_type_list[self.selected_vehicle_type_number]
 
 	-- auto pilot setting
 	self:CreateStringHistory()
@@ -323,20 +325,20 @@ function UI:ShowFreeSummon()
 		ImGui.EndCombo()
 	end
 
-	if FlyingTank.user_setting_table.model_index_in_free ~= self.selected_vehicle_model_number or FlyingTank.user_setting_table.model_type_index_in_free ~= self.selected_vehicle_type_number then
-		self:SetFreeSummonParameters()
-	end
+	-- if FlyingTank.user_setting_table.model_index_in_free ~= self.selected_vehicle_model_number or FlyingTank.user_setting_table.model_type_index_in_free ~= self.selected_vehicle_type_number then
+	-- 	self:SetFreeSummonParameters()
+	-- end
 
 end
 
 function UI:ShowAutoPilotSetting()
 
 	ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_main"))
-	local is_autopilot_info_panel = FlyingTank.user_setting_table.is_autopilot_info_panel
-	FlyingTank.user_setting_table.is_autopilot_info_panel = ImGui.Checkbox(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_enable_panel"), FlyingTank.user_setting_table.is_autopilot_info_panel)
-	if is_autopilot_info_panel ~= FlyingTank.user_setting_table.is_autopilot_info_panel then
-		Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-	end
+	-- local is_autopilot_info_panel = FlyingTank.user_setting_table.is_autopilot_info_panel
+	-- FlyingTank.user_setting_table.is_autopilot_info_panel = ImGui.Checkbox(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_enable_panel"), FlyingTank.user_setting_table.is_autopilot_info_panel)
+	-- if is_autopilot_info_panel ~= FlyingTank.user_setting_table.is_autopilot_info_panel then
+	-- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
+	-- end
 
 	if not FlyingTank.core_obj.event_obj:IsNotSpawned() then
 		ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_free_summon_warning_message_in_summoning_1"))
@@ -685,8 +687,8 @@ end
 
 function UI:SetFreeSummonParameters()
 
-	FlyingTank.user_setting_table.model_index_in_free = self.selected_vehicle_model_number
-	FlyingTank.user_setting_table.model_type_index_in_free = self.selected_vehicle_type_number
+	-- FlyingTank.user_setting_table.model_index_in_free = self.selected_vehicle_model_number
+	-- FlyingTank.user_setting_table.model_type_index_in_free = self.selected_vehicle_type_number
 	FlyingTank.core_obj:Reset()
 
 	self.current_vehicle_model_name = self.vehicle_model_list[self.selected_vehicle_model_number]

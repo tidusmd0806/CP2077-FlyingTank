@@ -69,7 +69,7 @@ FlyingTank.user_setting_table = {
         {name = "Not Registered", pos = {x=0,y=0,z=0}, is_selected = false},
     },
     autopilot_speed_level = Def.AutopilotSpeedLevel.Normal,
-    is_autopilot_info_panel = true,
+    -- is_autopilot_info_panel = true,
     is_enable_history = true,
     --- control
     flight_mode = Def.FlightMode.Spinner,
@@ -100,12 +100,27 @@ end)
 -- set custom vehicle record
 registerForEvent("onTweak",function ()
 
+    -- Icon
+    TweakDB:CloneRecord("UIIcon.basilisk_dummy", "UIIcon.quadra_sport_r7_chiaroscuro")
+    TweakDB:SetFlat(TweakDBID.new("UIIcon.basilisk_dummy.atlasResourcePathacturer"), "base/gameplay/gui/common/icons/weapon_manufacturers.inkatlas")
+    TweakDB:SetFlat(TweakDBID.new("UIIcon.basilisk_dummy.icon.atlasPartName"), "militech_l")
+
+    -- Vehicle Parameters
     TweakDB:CloneRecord("Vehicle.v_militech_basilisk_inline5_fly", "Vehicle.v_militech_basilisk_inline5")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankGravityMul"), 0)
 
     -- Custom Aldecaldos Basilisk Record
     TweakDB:CloneRecord("Vehicle.v_militech_basilisk_fly", "Vehicle.v_militech_basilisk")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_fly.tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
+
+    -- TweakDB:CloneRecord("Vehicle.basilisk_dummy", "Vehicle.v_sport2_quadra_type66_02_player")
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.displayName"), LocKey(53243))
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.manufacturer"), "Vehicle.Militech")
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.icon"), "UIIcon.basilisk_dummy")
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerAtlasPath"), "base/gameplay/gui/common/icons/codex/assets_fullscreen16.inkatlas")
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerPartName"), "v_militech_basilisk_full")
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerPrice"), 1)
+    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerCred"), 20)
 
     -- Custom Militech Basilisk Record
     TweakDB:CloneRecord("Vehicle.v_militech_basilisk_militech_fly", "Vehicle.v_militech_basilisk_militech")
@@ -176,7 +191,7 @@ registerForEvent("onDraw", function()
         end
         FlyingTank.core_obj.event_obj.ui_obj:ShowSettingMenu()
     end
-    FlyingTank.core_obj.event_obj.hud_obj:ShowAutoPilotInfo()
+    -- FlyingTank.core_obj.event_obj.hud_obj:ShowAutoPilotInfo()
 
 end)
 

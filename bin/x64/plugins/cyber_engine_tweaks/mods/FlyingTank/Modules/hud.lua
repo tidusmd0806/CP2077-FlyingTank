@@ -324,74 +324,74 @@ function HUD:ShowInterruptAutoPilotDisplay()
     GameHUD.ShowWarning(text, 2)
 end
 
-function HUD:ShowAutoPilotInfo()
-    if (FlyingTank.user_setting_table.is_autopilot_info_panel and not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() and FlyingTank.core_obj.event_obj:IsInVehicle()) or self.is_forced_autopilot_panel then
+-- function HUD:ShowAutoPilotInfo()
+--     if (FlyingTank.user_setting_table.is_autopilot_info_panel and not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() and FlyingTank.core_obj.event_obj:IsInVehicle()) or self.is_forced_autopilot_panel then
 
-		local screen_w, screen_h = GetDisplayResolution()
-        local window_w = screen_w * 0.25
-        local window_w_margin = screen_w * 0.01
-        local window_h_margin = screen_h * 0.1
+-- 		local screen_w, screen_h = GetDisplayResolution()
+--         local window_w = screen_w * 0.25
+--         local window_w_margin = screen_w * 0.01
+--         local window_h_margin = screen_h * 0.1
 
-		ImGui.SetNextWindowPos(window_w_margin, screen_h - window_h_margin)
-        ImGui.SetNextWindowSize(window_w, 0)
+-- 		ImGui.SetNextWindowPos(window_w_margin, screen_h - window_h_margin)
+--         ImGui.SetNextWindowSize(window_w, 0)
 
-		ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 8)
-		ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 8, 7)
-		ImGui.PushStyleColor(ImGuiCol.WindowBg, 0xaa000000)
-		ImGui.PushStyleColor(ImGuiCol.Border, 0x8ffefd01)
+-- 		ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 8)
+-- 		ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 8, 7)
+-- 		ImGui.PushStyleColor(ImGuiCol.WindowBg, 0xaa000000)
+-- 		ImGui.PushStyleColor(ImGuiCol.Border, 0x8ffefd01)
 
-		ImGui.Begin('AutoPilotInfo', ImGuiWindowFlags.NoDecoration)
+-- 		ImGui.Begin('AutoPilotInfo', ImGuiWindowFlags.NoDecoration)
 
-        local switch = ""
-        local location = ""
-        local type = ""
-        if self.vehicle_obj.is_auto_pilot then
-            switch = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_on")
-            location = FlyingTank.core_obj.vehicle_obj.auto_pilot_info.location
-            type = FlyingTank.core_obj.vehicle_obj.auto_pilot_info.type
-        else
-            switch = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_off")
-            if FlyingTank.core_obj:IsCustomMappin() then
-                local dist_near_ft_index = FlyingTank.core_obj:GetFTIndexNearbyMappin()
-                local dist_district_list = FlyingTank.core_obj:GetNearbyDistrictList(dist_near_ft_index)
-                if dist_district_list ~= nil then
-                    for index, district in ipairs(dist_district_list) do
-                        location = location .. district
-                        if index ~= #dist_district_list then
-                            location = location .. "/"
-                        end
-                    end
-                end
-                local nearby_location = FlyingTank.core_obj:GetNearbyLocation(dist_near_ft_index)
-                if nearby_location ~= nil then
-                    location = location .. "/" .. nearby_location
-                    local custom_ft_distance = FlyingTank.core_obj:GetFT2MappinDistance()
-                    if custom_ft_distance ~= FlyingTank.core_obj.huge_distance then
-                        location = location .. "[" .. tostring(math.floor(custom_ft_distance)) .. "m]"
-                    end
-                end
-                type = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_selection_custom_mappin")
-            else
-                location = FlyingTank.user_setting_table.favorite_location_list[FlyingTank.core_obj.event_obj.ui_obj.selected_auto_pilot_favorite_index].name
-                type = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_selection_favorite")
-            end
-        end
-        ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_title"))
-        ImGui.SameLine()
-        ImGui.TextColored(0.058, 1, 0.937, 1, switch)
-        ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_distination"))
-        ImGui.SameLine()
-        ImGui.TextColored(0.058, 1, 0.937, 1, location)
-        ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_selection"))
-        ImGui.SameLine()
-        ImGui.TextColored(0.058, 1, 0.937, 1, type)
+--         local switch = ""
+--         local location = ""
+--         local type = ""
+--         if self.vehicle_obj.is_auto_pilot then
+--             switch = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_on")
+--             location = FlyingTank.core_obj.vehicle_obj.auto_pilot_info.location
+--             type = FlyingTank.core_obj.vehicle_obj.auto_pilot_info.type
+--         else
+--             switch = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_off")
+--             if FlyingTank.core_obj:IsCustomMappin() then
+--                 local dist_near_ft_index = FlyingTank.core_obj:GetFTIndexNearbyMappin()
+--                 local dist_district_list = FlyingTank.core_obj:GetNearbyDistrictList(dist_near_ft_index)
+--                 if dist_district_list ~= nil then
+--                     for index, district in ipairs(dist_district_list) do
+--                         location = location .. district
+--                         if index ~= #dist_district_list then
+--                             location = location .. "/"
+--                         end
+--                     end
+--                 end
+--                 local nearby_location = FlyingTank.core_obj:GetNearbyLocation(dist_near_ft_index)
+--                 if nearby_location ~= nil then
+--                     location = location .. "/" .. nearby_location
+--                     local custom_ft_distance = FlyingTank.core_obj:GetFT2MappinDistance()
+--                     if custom_ft_distance ~= FlyingTank.core_obj.huge_distance then
+--                         location = location .. "[" .. tostring(math.floor(custom_ft_distance)) .. "m]"
+--                     end
+--                 end
+--                 type = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_selection_custom_mappin")
+--             else
+--                 location = FlyingTank.user_setting_table.favorite_location_list[FlyingTank.core_obj.event_obj.ui_obj.selected_auto_pilot_favorite_index].name
+--                 type = FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_selection_favorite")
+--             end
+--         end
+--         ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_title"))
+--         ImGui.SameLine()
+--         ImGui.TextColored(0.058, 1, 0.937, 1, switch)
+--         ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_distination"))
+--         ImGui.SameLine()
+--         ImGui.TextColored(0.058, 1, 0.937, 1, location)
+--         ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("hud_auto_pilot_panel_selection"))
+--         ImGui.SameLine()
+--         ImGui.TextColored(0.058, 1, 0.937, 1, type)
 
-		ImGui.End()
+-- 		ImGui.End()
 
-		ImGui.PopStyleColor(2)
-		ImGui.PopStyleVar(2)
-	end
-end
+-- 		ImGui.PopStyleColor(2)
+-- 		ImGui.PopStyleVar(2)
+-- 	end
+-- end
 
 function HUD:ShowRadioPopup()
     if self.popup_manager ~= nil then

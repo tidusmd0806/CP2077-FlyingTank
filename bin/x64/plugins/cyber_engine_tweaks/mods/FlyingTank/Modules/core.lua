@@ -153,32 +153,40 @@ function Core:SetSummonTrigger()
     Override("VehicleSystem", "SpawnPlayerVehicle", function(this, vehicle_type, wrapped_method)
         local record_id = this:GetActivePlayerVehicle(vehicle_type).recordID
 
-        if self.event_obj.ui_obj.dummy_av_record.hash == record_id.hash then
-            self.log_obj:Record(LogLevel.Trace, "Free Summon Vehicle call detected")
-            FlyingTank.model_index = FlyingTank.user_setting_table.model_index_in_free
-            FlyingTank.model_type_index = FlyingTank.user_setting_table.model_type_index_in_free
+        if self.event_obj.ui_obj.dummy_basilisk_aldecaldos_record_id.hash == record_id.hash then
+            self.log_obj:Record(LogLevel.Trace, "Summon Basilisk Aldecaldos")
+            FlyingTank.model_index = 1
+            FlyingTank.model_type_index = 1
+
+            self.vehicle_obj:Init()
+            self.is_vehicle_call = true
+            return false
+        elseif self.event_obj.ui_obj.dummy_basilisk_militech_record_id.hash == record_id.hash then
+            self.log_obj:Record(LogLevel.Trace, "Summon Basilisk Militech")
+            FlyingTank.model_index = 2
+            FlyingTank.model_type_index = 1
 
             self.vehicle_obj:Init()
             self.is_vehicle_call = true
             return false
         end
-        local str = string.gsub(record_id.value, "_dummy", "")
-        local new_record_id = TweakDBID.new(str)
-        for _, record in ipairs(self.event_obj.ui_obj.av_record_list) do
-            if record.hash == new_record_id.hash then
-                self.log_obj:Record(LogLevel.Trace, "Purchased Vehicle call detected")
-                for key, value in ipairs(self.vehicle_obj.all_models) do
-                    if value.tweakdb_id == record.value then
-                        FlyingTank.model_index = key
-                        FlyingTank.model_type_index = FlyingTank.user_setting_table.garage_info_list[key].type_index
-                        self.vehicle_obj:Init()
-                        break
-                    end
-                end
-                self.is_purchased_vehicle_call = true
-                return false
-            end
-        end
+        -- local str = string.gsub(record_id.value, "_dummy", "")
+        -- local new_record_id = TweakDBID.new(str)
+        -- for _, record in ipairs(self.event_obj.ui_obj.av_record_list) do
+        --     if record.hash == new_record_id.hash then
+        --         self.log_obj:Record(LogLevel.Trace, "Purchased Vehicle call detected")
+        --         for key, value in ipairs(self.vehicle_obj.all_models) do
+        --             if value.tweakdb_id == record.value then
+        --                 FlyingTank.model_index = key
+        --                 FlyingTank.model_type_index = FlyingTank.user_setting_table.garage_info_list[key].type_index
+        --                 self.vehicle_obj:Init()
+        --                 break
+        --             end
+        --         end
+        --         self.is_purchased_vehicle_call = true
+        --         return false
+        --     end
+        -- end
         local res = wrapped_method(vehicle_type)
         self.is_vehicle_call = false
         self.is_purchased_vehicle_call = false
@@ -188,7 +196,8 @@ function Core:SetSummonTrigger()
 end
 
 function Core:ActivateDummySummon(is_avtive)
-    Game.GetVehicleSystem():EnablePlayerVehicle(self.event_obj.ui_obj.dummy_vehicle_record, is_avtive, true)
+    Game.GetVehicleSystem():EnablePlayerVehicle(self.event_obj.ui_obj.dummy_basilisk_aldecaldos_record, is_avtive, true)
+    Game.GetVehicleSystem():EnablePlayerVehicle(self.event_obj.ui_obj.dummy_basilisk_militech_record, is_avtive, true)
 end
 
 function Core:GetCallStatus()
