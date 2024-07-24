@@ -28,9 +28,6 @@ function Core:New()
     obj.relative_dead_zone = 0.01
     obj.relative_resolution = 0.1
     obj.hold_progress = 0.9
-    -- custom mappin
-    obj.huge_distance = 1000000
-    obj.max_mappin_history = 10
     -- radio
     obj.default_station_num = 13
     obj.get_track_name_time_resolution = 1
@@ -42,7 +39,6 @@ function Core:New()
     obj.move_down_button_hold_count = 0
     -- lock
     obj.is_locked_action_in_waiting = false
-    obj.is_locked_action_in_vehicle = false
     -- model table
     obj.all_models = nil
     -- input table
@@ -62,16 +58,6 @@ function Core:New()
     obj.current_purchased_vehicle_count = 0
     obj.is_vehicle_call = false
     obj.is_purchased_vehicle_call = false
-    -- custom mappin
-    obj.current_custom_mappin_position = Vector4.new(0, 0, 0, 1)
-    obj.fast_travel_position_list = {}
-    obj.ft_index_nearest_mappin = 1
-    obj.ft_to_mappin_distance = obj.huge_distance
-    obj.ft_index_nearest_favorite = 1
-    obj.ft_to_favorite_distance = obj.huge_distance
-    obj.mappin_controller = nil
-    obj.dist_mappin_id = nil
-    obj.is_custom_mappin = false
     -- radio
     obj.current_station_index = -1
     obj.current_radio_volume = 50
@@ -87,7 +73,7 @@ function Core:Init()
         return
     end
 
-    self:InitGarageInfo()
+    -- self:InitGarageInfo()
 
     -- set initial user setting
     self.initial_user_setting_table = FlyingTank.user_setting_table
@@ -110,7 +96,6 @@ function Core:Init()
 
     -- set observer
     self:SetInputListener()
-    self:SetMappinController()
     self:SetSummonTrigger()
     self:SetRadioPopupController()
 
@@ -139,7 +124,7 @@ end
 function Core:ResetSetting()
 
     FlyingTank.user_setting_table = self.initial_user_setting_table
-    self:UpdateGarageInfo(true)
+    -- self:UpdateGarageInfo(true)
     for key, _ in ipairs(FlyingTank.user_setting_table.garage_info_list) do
         FlyingTank.user_setting_table.garage_info_list[key].type_index = 1
     end
@@ -153,7 +138,7 @@ function Core:SetSummonTrigger()
     Override("VehicleSystem", "SpawnPlayerVehicle", function(this, vehicle_type, wrapped_method)
         local record_id = this:GetActivePlayerVehicle(vehicle_type).recordID
 
-        if self.event_obj.ui_obj.dummy_basilisk_aldecaldos_record_id.hash == record_id.hash then
+        if TweakDBID.new(FlyingTank.basilisk_aldecaldos_record).hash == record_id.hash then
             self.log_obj:Record(LogLevel.Trace, "Summon Basilisk Aldecaldos")
             FlyingTank.model_index = 1
             FlyingTank.model_type_index = 1
@@ -161,7 +146,7 @@ function Core:SetSummonTrigger()
             self.vehicle_obj:Init()
             self.is_vehicle_call = true
             return false
-        elseif self.event_obj.ui_obj.dummy_basilisk_militech_record_id.hash == record_id.hash then
+        elseif TweakDBID.new(FlyingTank.basilisk_militech_record).hash == record_id.hash then
             self.log_obj:Record(LogLevel.Trace, "Summon Basilisk Militech")
             FlyingTank.model_index = 2
             FlyingTank.model_type_index = 1
@@ -196,8 +181,8 @@ function Core:SetSummonTrigger()
 end
 
 function Core:ActivateDummySummon(is_avtive)
-    Game.GetVehicleSystem():EnablePlayerVehicle(self.event_obj.ui_obj.dummy_basilisk_aldecaldos_record, is_avtive, true)
-    Game.GetVehicleSystem():EnablePlayerVehicle(self.event_obj.ui_obj.dummy_basilisk_militech_record, is_avtive, true)
+    Game.GetVehicleSystem():EnablePlayerVehicle(FlyingTank.basilisk_aldecaldos_record, is_avtive, true)
+    Game.GetVehicleSystem():EnablePlayerVehicle(FlyingTank.basilisk_militech_record, is_avtive, true)
 end
 
 function Core:GetCallStatus()
@@ -287,20 +272,6 @@ function Core:SetInputListener()
 
     local player = Game.GetPlayer()
 
-    -- player:UnregisterInputListener(player, "dav_spinner_forward_backward")
-    -- player:UnregisterInputListener(player, "dav_spinner_left_right")
-    -- player:UnregisterInputListener(player, "dav_spinner_up")
-    -- player:UnregisterInputListener(player, "dav_spinner_down")
-    -- player:UnregisterInputListener(player, "dav_get_on")
-    -- player:UnregisterInputListener(player, "dav_get_off")
-
-    -- player:RegisterInputListener(player, "dav_spinner_forward_backward")
-    -- player:RegisterInputListener(player, "dav_spinner_left_right")
-    -- player:RegisterInputListener(player, "dav_spinner_up")
-    -- player:RegisterInputListener(player, "dav_spinner_down")
-    -- player:RegisterInputListener(player, "dav_get_on")
-    -- player:RegisterInputListener(player, "dav_get_off")
-
     local exception_common_list = Utils:ReadJson("Data/exception_common_input.json")
     local exception_in_veh_list = Utils:ReadJson("Data/exception_in_veh_input.json")
     local exception_radio_list = Utils:ReadJson("Data/exception_radio_input.json")
@@ -353,62 +324,62 @@ function Core:GetAllModel()
 
 end
 
-function Core:InitGarageInfo()
+-- function Core:InitGarageInfo()
 
-    FlyingTank.user_setting_table.garage_info_list = {}
+--     FlyingTank.user_setting_table.garage_info_list = {}
 
-    for index, model in ipairs(self.all_models) do
-        local garage_info = {name = "", model_index = 1, type_index = 1, is_purchased = false}
-        garage_info.name = model.tweakdb_id
-        garage_info.model_index = index
-        table.insert(FlyingTank.user_setting_table.garage_info_list, garage_info)
-    end
+--     for index, model in ipairs(self.all_models) do
+--         local garage_info = {name = "", model_index = 1, type_index = 1, is_purchased = false}
+--         garage_info.name = model.tweakdb_id
+--         garage_info.model_index = index
+--         table.insert(FlyingTank.user_setting_table.garage_info_list, garage_info)
+--     end
 
-end
+-- end
 
-function Core:UpdateGarageInfo(is_force_update)
+-- function Core:UpdateGarageInfo(is_force_update)
 
-    local list = Game.GetVehicleSystem():GetPlayerUnlockedVehicles()
-    if (self.current_purchased_vehicle_count == #list or #list == 0) and not is_force_update then
-        return
-    else
-        self.current_purchased_vehicle_count = #list
-    end
+--     local list = Game.GetVehicleSystem():GetPlayerUnlockedVehicles()
+--     if (self.current_purchased_vehicle_count == #list or #list == 0) and not is_force_update then
+--         return
+--     else
+--         self.current_purchased_vehicle_count = #list
+--     end
 
-    for _, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
-        garage_info.is_purchased = false
-    end
+--     for _, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
+--         garage_info.is_purchased = false
+--     end
 
-    for _, purchased_vehicle in ipairs(list) do
-        if string.match(purchased_vehicle.recordID.value, "_dummy") then
-            local purchased_vehicle_name = string.gsub(purchased_vehicle.recordID.value, "_dummy", "")
-            for index, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
-                if garage_info.name == purchased_vehicle_name then
-                    FlyingTank.user_setting_table.garage_info_list[index].is_purchased = true
-                    break
-                end
-            end
-        end
-    end
+--     for _, purchased_vehicle in ipairs(list) do
+--         if string.match(purchased_vehicle.recordID.value, "_dummy") then
+--             local purchased_vehicle_name = string.gsub(purchased_vehicle.recordID.value, "_dummy", "")
+--             for index, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
+--                 if garage_info.name == purchased_vehicle_name then
+--                     FlyingTank.user_setting_table.garage_info_list[index].is_purchased = true
+--                     break
+--                 end
+--             end
+--         end
+--     end
 
-	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
+-- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
 
-end
+-- end
 
-function Core:ChangeGarageAVType(name, type_index)
+-- function Core:ChangeGarageAVType(name, type_index)
 
-    self:UpdateGarageInfo(false)
+--     self:UpdateGarageInfo(false)
 
-    for idx, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
-        if garage_info.name == name then
-            FlyingTank.user_setting_table.garage_info_list[idx].type_index = type_index
-            break
-        end
-    end
+--     for idx, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
+--         if garage_info.name == name then
+--             FlyingTank.user_setting_table.garage_info_list[idx].type_index = type_index
+--             break
+--         end
+--     end
 
-	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
+-- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
 
-end
+-- end
 
 function Core:GetInputTable(input_path)
 
@@ -544,8 +515,6 @@ function Core:ConvertPressButtonAction(key)
                 end
             end)
         end
-    elseif keybind_name == "toggle_camera" then
-        action_list = Def.ActionList.ChangeCamera
     elseif keybind_name == "toggle_door" then
         action_list = Def.ActionList.ChangeDoor1
     elseif keybind_name == "toggle_radio" then
@@ -611,302 +580,22 @@ end
 
 function Core:SetEvent(action)
 
-    if self.event_obj.current_situation == Def.Situation.Waiting and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        if self.is_locked_action_in_waiting then
-            return
-        end
-        if action == Def.ActionList.Enter then
-            self.event_obj:EnterVehicle()
-        elseif action == Def.ActionList.SelectUp then
-            self.is_locked_action_in_waiting = true
-            self.event_obj:SelectChoice(Def.ActionList.SelectUp)
-        elseif action == Def.ActionList.SelectDown then
-            self.is_locked_action_in_waiting = true
-            self.event_obj:SelectChoice(Def.ActionList.SelectDown)
-        end
-        Cron.After(self.delay_action_time_in_waiting, function()
-            self.is_locked_action_in_waiting = false
-        end)
-    elseif self.event_obj.current_situation == Def.Situation.InVehicle then
-        if self.is_locked_action_in_vehicle then
-            return
-        end
-        if action == Def.ActionList.Exit then
-            self:ExitVehicle()
-        elseif action == Def.ActionList.ChangeCamera then
-            self.is_locked_action_in_vehicle = true
-            self:ToggleCamera()
-        elseif action == Def.ActionList.ChangeDoor1 then
+    if self.event_obj.current_situation == Def.Situation.InVehicle then
+        if action == Def.ActionList.ChangeDoor1 then
             self:ToggleDoors()
-        elseif action == Def.ActionList.AutoPilot then
-            self:ToggleAutopilot()
         elseif action == Def.ActionList.ToggleRadio then
             self:ToggleRadio()
         elseif action == Def.ActionList.OpenRadio then
             self:OpenRadioPort()
-        elseif action == Def.ActionList.ToggleCrystalDome then
-            self:ToggleCrystalDome()
         end
-        Cron.After(self.delay_action_time_in_vehicle, function()
-            self.is_locked_action_in_vehicle = false
-        end)
     end
 
-end
-
-function Core:ExitVehicle()
-    if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        self.event_obj:ExitVehicle()
-    end
-end
-
-function Core:ToggleAutopilot()
-    if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        self.event_obj:ToggleAutoMode()
-    end
-end
-
-function Core:ToggleCamera()
-    if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        self.vehicle_obj.camera_obj:Toggle()
-    end
 end
 
 function Core:ToggleDoors()
     if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
         self.event_obj:ChangeDoor()
     end
-end
-
-function Core:ToggleCrystalDome()
-    if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        self.vehicle_obj:ToggleCrystalDome()
-    end
-end
-
-function Core:SetMappinController()
-
-    ObserveAfter("BaseMappinBaseController", "UpdateRootState", function(this)
-        local mappin = this:GetMappin()
-        if mappin:GetVariant() == gamedataMappinVariant.CustomPositionVariant then
-            self.mappin_controller = this
-        end
-   end)
-
-end
-
----@return boolean
-function Core:IsCustomMappin()
-    return self.is_custom_mappin
-end
-
----@param mappin IMappin 
-function Core:SetCustomMappin(mappin)
-
-    local mappin_position = self.current_custom_mappin_position
-    if self.event_obj:IsInVehicle() then
-        self.log_obj:Record(LogLevel.Info, "Custom Mappin is set")
-        local mappin_pos = mappin:GetWorldPosition()
-        self.current_custom_mappin_position = mappin_pos
-        if Vector4.Distance(mappin_position, mappin_pos) == 0 then
-            self.log_obj:Record(LogLevel.Trace, "Same Mappin is selected")
-            return
-        end
-        self.is_custom_mappin = true
-        self:SetDistinationMappin()
-    end
-
-end
-
-function Core:SetDistinationMappin()
-    self.vehicle_obj:SetMappinDestination(self.current_custom_mappin_position)
-    self.ft_index_nearest_mappin, self.ft_to_mappin_distance = self:FindNearestFastTravelPosition(self.current_custom_mappin_position)
-end
-
-function Core:SetFavoriteMappin(pos)
-    local position = Vector4.new(pos.x, pos.y, pos.z, 1)
-    -- self.current_custom_mappin_position = position
-    if position:IsZero() then
-        self.log_obj:Record(LogLevel.Trace, "Invalid Mappin Position")
-        return
-    end
-    self.vehicle_obj:SetFavoriteDestination(position)
-    self:CreateFavoriteMappin(position)
-    if not self.is_custom_mappin then
-        self.ft_index_nearest_favorite, self.ft_to_favorite_distance = self:FindNearestFastTravelPosition(position)
-    end
-end
-
----@param position Vector4
-function Core:CreateFavoriteMappin(position)
-
-    self:RemoveFavoriteMappin()
-    if self.event_obj:IsInVehicle() then
-        local mappin_data = MappinData.new()
-        mappin_data.mappinType = TweakDBID.new('Mappins.DefaultStaticMappin')
-        mappin_data.variant = gamedataMappinVariant.ExclamationMarkVariant
-        mappin_data.visibleThroughWalls = true
-        self.dist_mappin_id = Game.GetMappinSystem():RegisterMappin(mappin_data, position)
-    end
-
-end
-
-function Core:RemoveFavoriteMappin()
-
-    if self.dist_mappin_id ~= nil then
-        Game.GetMappinSystem():UnregisterMappin(self.dist_mappin_id)
-        self.dist_mappin_id = nil
-    end
-
-end
-
-function Core:SetAutoPilotHistory()
-
-    repeat
-        if #FlyingTank.user_setting_table.mappin_history >= self.max_mappin_history then
-            table.remove(FlyingTank.user_setting_table.mappin_history)
-        end
-    until #FlyingTank.user_setting_table.mappin_history < self.max_mappin_history
-
-    local history_info = {}
-    history_info.district = self:GetCurrentDistrict()
-    if self.is_custom_mappin then
-        history_info.location = self:GetNearbyLocation(self.ft_index_nearest_mappin)
-        history_info.distance = self:GetFT2MappinDistance()
-    else
-        history_info.location = self:GetNearbyLocation(self.ft_index_nearest_favorite)
-        history_info.distance = self:GetFT2FavoriteDistance()
-    end
-    history_info.position = {x = self.current_custom_mappin_position.x, y = self.current_custom_mappin_position.y, z = self.current_custom_mappin_position.z}
-    table.insert(FlyingTank.user_setting_table.mappin_history, 1, history_info)
-
-    Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-
-end
-
-function Core:SetFastTravelPosition()
-
-    self.fast_travel_position_list = {}
-    local fast_travel_list = Game.GetScriptableSystemsContainer():Get('FastTravelSystem'):GetFastTravelPoints()
-
-    local mappin_type = gamemappinsMappinTargetType.Map
-    local mappin_list = Game.GetMappinSystem():GetMappins(mappin_type)
-
-    for _, fast_travel in ipairs(fast_travel_list) do
-        local position_name = GetLocalizedText(fast_travel:GetPointDisplayName())
-        local record_id = fast_travel:GetPointRecord()
-        local district_list = {}
-        local district_record = nil
-        local fast_travel_record = TweakDB:GetRecord(record_id)
-        if fast_travel_record == nil then
-            self.log_obj:Record(LogLevel.Error, "Fast Travel Record is nil")
-        else
-            district_record = fast_travel_record:District()
-        end
-        if district_record ~= nil then
-            repeat
-                table.insert(district_list, 1, GetLocalizedText(district_record:LocalizedName()))
-                district_record = district_record:ParentDistrict()
-            until district_record == nil
-        else
-            table.insert(district_list, " ")
-        end
-
-        local position = nil
-        for index, mappin in ipairs(mappin_list) do
-            if mappin.id.value == fast_travel.mappinID.value then
-                position = mappin.worldPosition -- Vector4
-                table.remove(mappin_list, index)
-                break
-            end
-        end
-        if position ~= nil then
-            local position_info = {name = position_name, district = district_list, pos = position}
-            table.insert(self.fast_travel_position_list, position_info)
-        end
-    end
-
-end
-
----@return number
-function Core:GetFTIndexNearbyMappin()
-    return self.ft_index_nearest_mappin
-end
-
----@return number
-function Core:GetFTIndexNearbyFavorite()
-    return self.ft_index_nearest_favorite
-end
-
----@param current_pos Vector4
----@return number, number
-function Core:FindNearestFastTravelPosition(current_pos)
-
-    local ft_index = 1
-    local ft_distance = self.huge_distance
-    for index, position_info in ipairs(self.fast_travel_position_list) do
-        local distance = Vector4.Distance(current_pos, position_info.pos)
-        if distance < ft_distance then
-            ft_distance = distance
-            ft_index = index
-        end
-    end
-    return ft_index, ft_distance
-
-end
-
----@param index number
----@return table | nil
-function Core:GetNearbyDistrictList(index)
-
-    if self.fast_travel_position_list[index] == nil then
-        return nil
-    else
-        return self.fast_travel_position_list[index].district
-    end
-
-end
-
----@param index number
----@return string | nil
-function Core:GetNearbyLocation(index)
-
-    if self.fast_travel_position_list[index] == nil then
-        return nil
-    else
-        return self.fast_travel_position_list[index].name
-    end
-
-end
-
----@return number
-function Core:GetFT2MappinDistance()
-    return self.ft_to_mappin_distance
-end
-
----@return number
-function Core:GetFT2FavoriteDistance()
-    return self.ft_to_favorite_distance
-end
-
----@return table
-function Core:GetCurrentDistrict()
-
-    local current_district_list = {}
-    local district_manager = Game.GetScriptableSystemsContainer():Get('PreventionSystem').districtManager
-    local district = district_manager:GetCurrentDistrict()
-    if district == nil then
-        return current_district_list
-    end
-    local district_record = district:GetDistrictRecord()
-    if district_record ~= nil then
-        repeat
-            table.insert(current_district_list, 1, GetLocalizedText(district_record:LocalizedName()))
-            district_record = district_record:ParentDistrict()
-        until district_record == nil
-    end
-    return current_district_list
-
 end
 
 function Core:SetRadioPopupController()

@@ -25,6 +25,11 @@ FlyingTank = {
     -- grobal index
     model_index = 1,
 	model_type_index = 1,
+    -- vehicle record
+    basilisk_aldecaldos_fly_record = "Vehicle.v_militech_basilisk_fly",
+    basilisk_militech_fly_record = "Vehicle.v_militech_basilisk_militech_fly",
+    basilisk_aldecaldos_record = "Vehicle.basilisk_aldecaldos",
+    basilisk_militech_record = "Vehicle.basilisk_militech",
     -- version check
     cet_required_version = 32.1, -- 1.32.1
     cet_recommended_version = 32.2, -- 1.32.2
@@ -43,7 +48,6 @@ FlyingTank = {
     default_keybind_table = {
         {name = "move_up", key = "IK_C", pad = "IK_Pad_Y_TRIANGLE"},
         {name = "move_down", key = "IK_Z", pad = "IK_Pad_A_CROSS"},
-        {name = "toggle_camera", key = "IK_V", pad = "IK_Pad_DigitDown"},
         {name = "toggle_door", key = "IK_G", pad = "IK_Pad_DigitLeft"},
         {name = "toggle_radio", key = "IK_R", pad = "IK_Pad_DigitUp"},
     }
@@ -58,19 +62,6 @@ FlyingTank.user_setting_table = {
     is_free_summon_mode = true,
     model_index_in_free = 1,
     model_type_index_in_free = 1,
-    --- autopilot
-    mappin_history = {},
-    favorite_location_list = {
-        {name = "Unselected", pos = {x=0,y=0,z=0}, is_selected = true},
-        {name = "Not Registered", pos = {x=0,y=0,z=0}, is_selected = false},
-        {name = "Not Registered", pos = {x=0,y=0,z=0}, is_selected = false},
-        {name = "Not Registered", pos = {x=0,y=0,z=0}, is_selected = false},
-        {name = "Not Registered", pos = {x=0,y=0,z=0}, is_selected = false},
-        {name = "Not Registered", pos = {x=0,y=0,z=0}, is_selected = false},
-    },
-    autopilot_speed_level = Def.AutopilotSpeedLevel.Normal,
-    -- is_autopilot_info_panel = true,
-    is_enable_history = true,
     --- control
     flight_mode = Def.FlightMode.Spinner,
     heli_horizenal_boost_ratio = 5.0,
@@ -84,7 +75,6 @@ FlyingTank.user_setting_table = {
     is_mute_flight = false,
     --- general
     language_index = 1,
-    is_unit_km_per_hour = false,
     --- input
     keybind_table = FlyingTank.default_keybind_table
 }
@@ -110,20 +100,11 @@ registerForEvent("onTweak",function ()
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankGravityMul"), 0)
 
     -- Custom Aldecaldos Basilisk Record
-    TweakDB:CloneRecord("Vehicle.v_militech_basilisk_fly", "Vehicle.v_militech_basilisk")
+    TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_fly.tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
-    -- TweakDB:CloneRecord("Vehicle.basilisk_dummy", "Vehicle.v_sport2_quadra_type66_02_player")
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.displayName"), LocKey(53243))
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.manufacturer"), "Vehicle.Militech")
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.icon"), "UIIcon.basilisk_dummy")
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerAtlasPath"), "base/gameplay/gui/common/icons/codex/assets_fullscreen16.inkatlas")
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerPartName"), "v_militech_basilisk_full")
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerPrice"), 1)
-    -- TweakDB:SetFlat(TweakDBID.new("Vehicle.basilisk_dummy.dealerCred"), 20)
-
     -- Custom Militech Basilisk Record
-    TweakDB:CloneRecord("Vehicle.v_militech_basilisk_militech_fly", "Vehicle.v_militech_basilisk_militech")
+    TweakDB:CloneRecord(FlyingTank.basilisk_militech_fly_record, "Vehicle.v_militech_basilisk_militech")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_militech_fly.tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
 end)
@@ -176,7 +157,7 @@ registerForEvent('onInit', function()
 
     FlyingTank.is_ready = true
 
-    print('Drive an Aerial Vehicle Mod is ready!')
+    print('Flying Tank Mod is ready!')
 
 end)
 
@@ -191,7 +172,6 @@ registerForEvent("onDraw", function()
         end
         FlyingTank.core_obj.event_obj.ui_obj:ShowSettingMenu()
     end
-    -- FlyingTank.core_obj.event_obj.hud_obj:ShowAutoPilotInfo()
 
 end)
 
@@ -240,7 +220,6 @@ function FlyingTank:CheckNativeSettings()
         return
     end
     FlyingTank.is_valid_native_settings = true
-    return
 
 end
 

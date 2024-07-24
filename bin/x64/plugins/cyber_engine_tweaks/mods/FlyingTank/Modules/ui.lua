@@ -8,14 +8,13 @@ function UI:New()
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "UI")
 	-- static --
-	-- record name
-    obj.dummy_basilisk_aldecaldos_record = "Vehicle.basilisk_aldecaldos"
-	obj.dummy_basilisk_militech_record = "Vehicle.basilisk_militech"
+	-- native settings
 	obj.delay_updating_native_settings = 0.1
 	-- dynamic --
 	-- common
 	obj.vehicle_obj = nil
 	obj.dummy_basilisk_aldecaldos_record_id = nil
+	obj.dummy_basilisk_militech_record_id = nil
 	obj.av_record_list = {}
 	-- garage
 	obj.selected_purchased_vehicle_type_list = {}
@@ -65,8 +64,8 @@ end
 
 function UI:SetTweekDB()
 
-    self.dummy_basilisk_aldecaldos_record_id = TweakDBID.new(self.dummy_basilisk_aldecaldos_record)
-	self.dummy_basilisk_militech_record_id = TweakDBID.new(self.dummy_basilisk_militech_record)
+    self.dummy_basilisk_aldecaldos_record_id = TweakDBID.new(FlyingTank.basilisk_aldecaldos_record)
+	self.dummy_basilisk_militech_record_id = TweakDBID.new(FlyingTank.basilisk_militech_record)
 
 	for _, model in ipairs(self.vehicle_obj.all_models) do
 		local av_record = TweakDBID.new(model.tweakdb_id)
@@ -100,16 +99,16 @@ function UI:SetDefaultValue()
 	-- self.current_vehicle_type_name = self.vehicle_type_list[self.selected_vehicle_type_number]
 
 	-- auto pilot setting
-	self:CreateStringHistory()
-	self.selected_auto_pilot_history_index = 1
-	self.selected_auto_pilot_history_name = self.history_list[self.selected_auto_pilot_history_index]
-	for index, favorite_info in ipairs(FlyingTank.user_setting_table.favorite_location_list) do
-		if favorite_info.is_selected then
-			self.selected_auto_pilot_favorite_index = index
-			break
-		end
-	end
-	FlyingTank.core_obj:SetFavoriteMappin(FlyingTank.user_setting_table.favorite_location_list[self.selected_auto_pilot_favorite_index].pos)
+	-- self:CreateStringHistory()
+	-- self.selected_auto_pilot_history_index = 1
+	-- self.selected_auto_pilot_history_name = self.history_list[self.selected_auto_pilot_history_index]
+	-- for index, favorite_info in ipairs(FlyingTank.user_setting_table.favorite_location_list) do
+	-- 	if favorite_info.is_selected then
+	-- 		self.selected_auto_pilot_favorite_index = index
+	-- 		break
+	-- 	end
+	-- end
+	-- FlyingTank.core_obj:SetFavoriteMappin(FlyingTank.user_setting_table.favorite_location_list[self.selected_auto_pilot_favorite_index].pos)
 
 	-- control
 	self.selected_flight_mode = FlyingTank.user_setting_table.flight_mode
@@ -150,18 +149,13 @@ function UI:ShowSettingMenu()
 
 	if ImGui.BeginTabBar("FlyingTank Menu") then
 
-		if ImGui.BeginTabItem(FlyingTank.core_obj:GetTranslationText("ui_tab_garage")) then
-			self:ShowGarage()
-			ImGui.EndTabItem()
-		end
+		-- if ImGui.BeginTabItem(FlyingTank.core_obj:GetTranslationText("ui_tab_garage")) then
+		-- 	self:ShowGarage()
+		-- 	ImGui.EndTabItem()
+		-- end
 
 		if ImGui.BeginTabItem(FlyingTank.core_obj:GetTranslationText("ui_tab_free_summon")) then
 			self:ShowFreeSummon()
-			ImGui.EndTabItem()
-		end
-
-		if ImGui.BeginTabItem(FlyingTank.core_obj:GetTranslationText("ui_tab_auto_pilot_setting")) then
-			self:ShowAutoPilotSetting()
 			ImGui.EndTabItem()
 		end
 
@@ -328,202 +322,6 @@ function UI:ShowFreeSummon()
 	-- if FlyingTank.user_setting_table.model_index_in_free ~= self.selected_vehicle_model_number or FlyingTank.user_setting_table.model_type_index_in_free ~= self.selected_vehicle_type_number then
 	-- 	self:SetFreeSummonParameters()
 	-- end
-
-end
-
-function UI:ShowAutoPilotSetting()
-
-	ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_main"))
-	-- local is_autopilot_info_panel = FlyingTank.user_setting_table.is_autopilot_info_panel
-	-- FlyingTank.user_setting_table.is_autopilot_info_panel = ImGui.Checkbox(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_enable_panel"), FlyingTank.user_setting_table.is_autopilot_info_panel)
-	-- if is_autopilot_info_panel ~= FlyingTank.user_setting_table.is_autopilot_info_panel then
-	-- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-	-- end
-
-	if not FlyingTank.core_obj.event_obj:IsNotSpawned() then
-		ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_free_summon_warning_message_in_summoning_1"))
-		ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_free_summon_warning_message_in_summoning_2"))
-	else
-		local is_used_slider = false
-		ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_speed_level"))
-		if FlyingTank.user_setting_table.autopilot_speed_level == Def.AutopilotSpeedLevel.Slow then
-			ImGui.SameLine()
-			ImGui.TextColored(0, 1, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_speed_slow"))
-		elseif FlyingTank.user_setting_table.autopilot_speed_level == Def.AutopilotSpeedLevel.Normal then
-			ImGui.SameLine()
-			ImGui.TextColored(0, 1, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_speed_normal"))
-		elseif FlyingTank.user_setting_table.autopilot_speed_level == Def.AutopilotSpeedLevel.Fast then
-			ImGui.SameLine()
-			ImGui.TextColored(0, 1, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_speed_fast"))
-		end
-		FlyingTank.user_setting_table.autopilot_speed_level, is_used_slider = ImGui.SliderInt("##Autopilot Speed Level", FlyingTank.user_setting_table.autopilot_speed_level, 1, 3, "%d")
-		if is_used_slider then
-			Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-		end
-	end
-
-	ImGui.Spacing()
-	ImGui.Separator()
-
-	ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_mappin"))
-	if FlyingTank.core_obj:IsCustomMappin() then
-		ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_district_info"))
-		local dist_near_ft_index = FlyingTank.core_obj:GetFTIndexNearbyMappin()
-		local dist_district_list = FlyingTank.core_obj:GetNearbyDistrictList(dist_near_ft_index)
-		if dist_district_list ~= nil then
-			for _, district in ipairs(dist_district_list) do
-				ImGui.SameLine()
-				ImGui.TextColored(0, 1, 0, 1, district)
-			end
-		end
-		ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_location_info"))
-		local nearby_location = FlyingTank.core_obj:GetNearbyLocation(dist_near_ft_index)
-		if nearby_location ~= nil then
-			ImGui.SameLine()
-			ImGui.TextColored(0, 1, 0, 1, nearby_location)
-			ImGui.SameLine()
-			local custom_ft_distance = FlyingTank.core_obj:GetFT2MappinDistance()
-			if custom_ft_distance ~= FlyingTank.core_obj.huge_distance then
-				ImGui.TextColored(0, 1, 0, 1, "[" .. tostring(math.floor(custom_ft_distance)) .. "m]")
-			end
-		end
-	else
-		ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_not_put_mappin"))
-	end
-
-	ImGui.Spacing()
-	ImGui.Separator()
-
-	local selected_auto_pilot_favorite_index = self.selected_auto_pilot_favorite_index
-	local selected = false
-	ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_favorite_list"))
-	if ImGui.BeginCombo("##Favorite List", FlyingTank.user_setting_table.favorite_location_list[self.selected_auto_pilot_favorite_index].name) then
-		for index, favorite_info in ipairs(FlyingTank.user_setting_table.favorite_location_list) do
-			if favorite_info.is_selected then
-				selected = true
-			else
-				selected = false
-			end
-			if(ImGui.Selectable("[" .. tostring(index - 1) .. "]" .. favorite_info.name, selected)) then
-				self.selected_auto_pilot_favorite_index = index
-				if selected_auto_pilot_favorite_index ~= self.selected_auto_pilot_favorite_index then
-					for fav_index, _ in ipairs(FlyingTank.user_setting_table.favorite_location_list) do
-						FlyingTank.user_setting_table.favorite_location_list[fav_index].is_selected = false
-						if fav_index == index then
-							FlyingTank.user_setting_table.favorite_location_list[fav_index].is_selected = true
-							FlyingTank.core_obj:SetFavoriteMappin(FlyingTank.user_setting_table.favorite_location_list[fav_index].pos)
-							Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-						end
-					end
-				end
-				local location_name = FlyingTank.user_setting_table.favorite_location_list[index].name
-				FlyingTank.user_setting_table.favorite_location_list[index].name = ImGui.InputText("##Rename", FlyingTank.user_setting_table.favorite_location_list[index].name, 100)
-				if location_name ~= FlyingTank.user_setting_table.favorite_location_list[index].name then
-					Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-				end
-			end
-		end
-		ImGui.EndCombo()
-	end
-
-	ImGui.Spacing()
-	ImGui.Separator()
-
-	local is_enable_history = FlyingTank.user_setting_table.is_enable_history
-	FlyingTank.user_setting_table.is_enable_history = ImGui.Checkbox(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_enable_history"), FlyingTank.user_setting_table.is_enable_history)
-	if is_enable_history ~= FlyingTank.user_setting_table.is_enable_history then
-		Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-	end
-	local is_not_enable_history = not FlyingTank.user_setting_table.is_enable_history
-	local is_not_enable_history_pre = not FlyingTank.user_setting_table.is_enable_history
-	is_not_enable_history = ImGui.Checkbox(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_enable_current_pos"), is_not_enable_history)
-	if is_not_enable_history_pre ~= is_not_enable_history then
-		FlyingTank.user_setting_table.is_enable_history = not is_not_enable_history
-		Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-	end
-
-	ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_register_fav"))
-
-	ImGui.SameLine()
-
-	for index, _ in ipairs(FlyingTank.user_setting_table.favorite_location_list) do
-		if index ~= 1 then
-			if ImGui.Button(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_register_favorite_" .. tostring(index - 1))) then
-				if FlyingTank.user_setting_table.is_enable_history then
-					if #self.history_list ~= 0 then
-						local history_string = self.selected_auto_pilot_history_name
-						history_string = string.sub(history_string, 4)
-						FlyingTank.user_setting_table.favorite_location_list[index].name = history_string
-						FlyingTank.user_setting_table.favorite_location_list[index].pos = FlyingTank.user_setting_table.mappin_history[self.selected_auto_pilot_history_index].position
-						Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-					end
-				else
-					if not FlyingTank.core_obj.event_obj:IsNotSpawned() then
-						FlyingTank.user_setting_table.favorite_location_list[index].name = self.current_position_name
-						local current_pos = self.vehicle_obj.position_obj:GetPosition()
-						FlyingTank.user_setting_table.favorite_location_list[index].pos = {x=current_pos.x, y=current_pos.y, z=current_pos.z}
-						Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-					end
-				end
-			end
-			if index ~= #FlyingTank.user_setting_table.favorite_location_list then
-				ImGui.SameLine()
-			end
-		end
-	end
-
-	ImGui.Spacing()
-	ImGui.Separator()
-
-	if FlyingTank.user_setting_table.is_enable_history then
-		self:CreateStringHistory()
-		ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_history"))
-		local selected = false
-		if ImGui.BeginListBox("##History") then
-			for index = #self.history_list, 1, -1 do
-				local history_string = self.history_list[index]
-				if self.selected_auto_pilot_history_name == history_string then
-					selected = true
-				else
-					selected = false
-				end
-				if(ImGui.Selectable(history_string, selected)) then
-					self.selected_auto_pilot_history_name = history_string
-					self.selected_auto_pilot_history_index = index
-				end
-			end
-			ImGui.EndListBox()
-		end
-	else
-		ImGui.TextColored(0.8, 0.8, 0.5, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_current_position"))
-		if FlyingTank.core_obj.event_obj:IsNotSpawned() then
-			ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_not_spawned"))
-		else
-			local current_district_list = FlyingTank.core_obj:GetCurrentDistrict()
-			local entity = Game.FindEntityByID(self.vehicle_obj.entity_id)
-			if entity ~= nil then
-				local current_nearby_ft_index, _ = FlyingTank.core_obj:FindNearestFastTravelPosition(entity:GetWorldPosition())
-				local current_nearby_ft_name = FlyingTank.core_obj:GetNearbyLocation(current_nearby_ft_index)
-				ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_district_info"))
-				self.current_position_name = ""
-				if current_district_list ~= nil then
-					for _, district in ipairs(current_district_list) do
-						ImGui.SameLine()
-						ImGui.TextColored(0, 1, 0, 1, district)
-						self.current_position_name = self.current_position_name .. district .. "/"
-					end
-				end
-				ImGui.Text(FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_location_info"))
-				if current_nearby_ft_name ~= nil then
-					ImGui.SameLine()
-					ImGui.TextColored(0, 1, 0, 1, current_nearby_ft_name)
-					self.current_position_name = self.current_position_name .. current_nearby_ft_name
-				end
-			else
-				ImGui.TextColored(1, 0, 0, 1, FlyingTank.core_obj:GetTranslationText("ui_auto_pilot_setting_not_spawned"))
-			end
-		end
-	end
 
 end
 
@@ -735,13 +533,13 @@ function UI:CreateNativeSettingsPage()
 		end)
 	end)
 	table.insert(self.option_table_list, option_table)
-	option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_unit"), FlyingTank.core_obj:GetTranslationText("native_settings_general_unit_description"), FlyingTank.user_setting_table.is_unit_km_per_hour, false, function(state)
-		FlyingTank.user_setting_table.is_unit_km_per_hour = state
-		Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-		Cron.After(self.delay_updating_native_settings, function()
-			self:UpdateNativeSettingsPage()
-		end)
-	end)
+	-- option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_unit"), FlyingTank.core_obj:GetTranslationText("native_settings_general_unit_description"), FlyingTank.user_setting_table.is_unit_km_per_hour, false, function(state)
+	-- 	FlyingTank.user_setting_table.is_unit_km_per_hour = state
+	-- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
+	-- 	Cron.After(self.delay_updating_native_settings, function()
+	-- 		self:UpdateNativeSettingsPage()
+	-- 	end)
+	-- end)
 	table.insert(self.option_table_list, option_table)
 	for index, keybind_list in ipairs(FlyingTank.user_setting_table.keybind_table) do
 		option_table = FlyingTank.NativeSettings.addKeyBinding("/FlyingTank/keybinds", FlyingTank.core_obj:GetTranslationText("native_settings_keybinds_" .. keybind_list.name), FlyingTank.core_obj:GetTranslationText("native_settings_keybinds_" .. keybind_list.name .. "_description"), keybind_list.key, FlyingTank.default_keybind_table[index].key, false, function(key)
