@@ -55,9 +55,7 @@ function Core:New()
     obj.language_name_list = {}
     obj.translation_table_list = {}
     -- summon
-    obj.current_purchased_vehicle_count = 0
     obj.is_vehicle_call = false
-    obj.is_purchased_vehicle_call = false
     -- radio
     obj.current_station_index = -1
     obj.current_radio_volume = 50
@@ -72,8 +70,6 @@ function Core:Init()
         self.log_obj:Record(LogLevel.Error, "Model is nil")
         return
     end
-
-    -- self:InitGarageInfo()
 
     -- set initial user setting
     self.initial_user_setting_table = FlyingTank.user_setting_table
@@ -124,11 +120,6 @@ end
 function Core:ResetSetting()
 
     FlyingTank.user_setting_table = self.initial_user_setting_table
-    -- self:UpdateGarageInfo(true)
-    for key, _ in ipairs(FlyingTank.user_setting_table.garage_info_list) do
-        FlyingTank.user_setting_table.garage_info_list[key].type_index = 1
-    end
-    Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
     self:Reset()
 
 end
@@ -155,45 +146,16 @@ function Core:SetSummonTrigger()
             self.is_vehicle_call = true
             return false
         end
-        -- local str = string.gsub(record_id.value, "_dummy", "")
-        -- local new_record_id = TweakDBID.new(str)
-        -- for _, record in ipairs(self.event_obj.ui_obj.av_record_list) do
-        --     if record.hash == new_record_id.hash then
-        --         self.log_obj:Record(LogLevel.Trace, "Purchased Vehicle call detected")
-        --         for key, value in ipairs(self.vehicle_obj.all_models) do
-        --             if value.tweakdb_id == record.value then
-        --                 FlyingTank.model_index = key
-        --                 FlyingTank.model_type_index = FlyingTank.user_setting_table.garage_info_list[key].type_index
-        --                 self.vehicle_obj:Init()
-        --                 break
-        --             end
-        --         end
-        --         self.is_purchased_vehicle_call = true
-        --         return false
-        --     end
-        -- end
         local res = wrapped_method(vehicle_type)
         self.is_vehicle_call = false
-        self.is_purchased_vehicle_call = false
         return res
     end)
 
 end
 
-function Core:ActivateDummySummon(is_avtive)
-    Game.GetVehicleSystem():EnablePlayerVehicle(FlyingTank.basilisk_aldecaldos_record, is_avtive, true)
-    Game.GetVehicleSystem():EnablePlayerVehicle(FlyingTank.basilisk_militech_record, is_avtive, true)
-end
-
 function Core:GetCallStatus()
     local call_status = self.is_vehicle_call
     self.is_vehicle_call = false
-    return call_status
-end
-
-function Core:GetPurchasedCallStatus()
-    local call_status = self.is_purchased_vehicle_call
-    self.is_purchased_vehicle_call = false
     return call_status
 end
 
@@ -324,63 +286,6 @@ function Core:GetAllModel()
 
 end
 
--- function Core:InitGarageInfo()
-
---     FlyingTank.user_setting_table.garage_info_list = {}
-
---     for index, model in ipairs(self.all_models) do
---         local garage_info = {name = "", model_index = 1, type_index = 1, is_purchased = false}
---         garage_info.name = model.tweakdb_id
---         garage_info.model_index = index
---         table.insert(FlyingTank.user_setting_table.garage_info_list, garage_info)
---     end
-
--- end
-
--- function Core:UpdateGarageInfo(is_force_update)
-
---     local list = Game.GetVehicleSystem():GetPlayerUnlockedVehicles()
---     if (self.current_purchased_vehicle_count == #list or #list == 0) and not is_force_update then
---         return
---     else
---         self.current_purchased_vehicle_count = #list
---     end
-
---     for _, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
---         garage_info.is_purchased = false
---     end
-
---     for _, purchased_vehicle in ipairs(list) do
---         if string.match(purchased_vehicle.recordID.value, "_dummy") then
---             local purchased_vehicle_name = string.gsub(purchased_vehicle.recordID.value, "_dummy", "")
---             for index, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
---                 if garage_info.name == purchased_vehicle_name then
---                     FlyingTank.user_setting_table.garage_info_list[index].is_purchased = true
---                     break
---                 end
---             end
---         end
---     end
-
--- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-
--- end
-
--- function Core:ChangeGarageAVType(name, type_index)
-
---     self:UpdateGarageInfo(false)
-
---     for idx, garage_info in ipairs(FlyingTank.user_setting_table.garage_info_list) do
---         if garage_info.name == name then
---             FlyingTank.user_setting_table.garage_info_list[idx].type_index = type_index
---             break
---         end
---     end
-
--- 	Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
-
--- end
-
 function Core:GetInputTable(input_path)
 
     local input = Utils:ReadJson(input_path)
@@ -434,21 +339,21 @@ function Core:ConvertTankActionList(action_name, action_type, action_value_type)
     local action_command = Def.ActionList.Nothing
     local action_dist = {name = action_name, type = action_type, value = action_value_type}
 
-    if self.event_obj.current_situation == Def.Situation.InVehicle and (self.is_move_up_button_hold_counter or self.is_move_down_button_hold_counter) then
-        if Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_FORWARD_MOVE) then
-            action_command = Def.ActionList.SpinnerForward
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_BACK_MOVE) then
-            action_command = Def.ActionList.SpinnerBackward
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_MOVE) then
-            action_command = Def.ActionList.SpinnerRight
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_MOVE) then
-            action_command = Def.ActionList.SpinnerLeft
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_ROTATE) then
-            action_command = Def.ActionList.SpinnerRightRotate
-        elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_ROTATE) then
-            action_command = Def.ActionList.SpinnerLeftRotate
-        end
-    end
+    -- if self.event_obj.current_situation == Def.Situation.InVehicle and (self.is_move_up_button_hold_counter or self.is_move_down_button_hold_counter) then
+    --     if Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_FORWARD_MOVE) then
+    --         action_command = Def.ActionList.SpinnerForward
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_BACK_MOVE) then
+    --         action_command = Def.ActionList.SpinnerBackward
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_MOVE) then
+    --         action_command = Def.ActionList.SpinnerRight
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_MOVE) then
+    --         action_command = Def.ActionList.SpinnerLeft
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_ROTATE) then
+    --         action_command = Def.ActionList.SpinnerRightRotate
+    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_ROTATE) then
+    --         action_command = Def.ActionList.SpinnerLeftRotate
+    --     end
+    -- end
 
     return action_command
 
@@ -495,7 +400,7 @@ function Core:ConvertPressButtonAction(key)
                 elseif not self.is_move_up_button_hold_counter then
                     Cron.Halt(timer)
                 else
-                    self.queue_obj:Enqueue(Def.ActionList.SpinnerUp)
+                    self.queue_obj:Enqueue(Def.ActionList.Up)
                 end
             end)
         end
@@ -511,7 +416,7 @@ function Core:ConvertPressButtonAction(key)
                 elseif not self.is_move_down_button_hold_counter then
                     Cron.Halt(timer)
                 else
-                    self.queue_obj:Enqueue(Def.ActionList.SpinnerDown)
+                    self.queue_obj:Enqueue(Def.ActionList.Down)
                 end
             end)
         end
@@ -551,7 +456,7 @@ function Core:GetActions()
 
     while not self.queue_obj:IsEmpty() do
         local action = self.queue_obj:Dequeue()
-        if action >= Def.ActionList.Enter then
+        if action >= Def.ActionList.ChangeDoor then
             self:SetEvent(action)
         else
             table.insert(move_actions, action)

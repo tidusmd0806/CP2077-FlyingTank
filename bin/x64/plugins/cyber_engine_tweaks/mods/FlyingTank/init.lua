@@ -17,8 +17,8 @@ FlyingTank = {
     -- system
     is_ready = false,
     time_resolution = 0.01,
-    is_debug_mode = false,
-    is_opening_overlay = false,
+    is_debug_mode = true,
+    -- is_opening_overlay = false,
     -- common
     user_setting_path = "Data/user_setting.json",
     language_path = "Language",
@@ -55,37 +55,16 @@ FlyingTank = {
 
 -- initial settings
 FlyingTank.user_setting_table = {
+    -- info
     version = FlyingTank.version,
-    --- garage
-    garage_info_list = {},
-    --- free summon mode
-    is_free_summon_mode = true,
-    model_index_in_free = 1,
-    model_type_index_in_free = 1,
-    --- control
-    flight_mode = Def.FlightMode.Spinner,
-    heli_horizenal_boost_ratio = 5.0,
-    is_disable_spinner_roll_tilt = false,
-    --- environment
-    is_enable_community_spawn = true,
-    max_speed_for_freezing = 150,
-    max_spawn_frequency = 20,
-    min_spawn_frequency = 10,
-    is_mute_all = false,
-    is_mute_flight = false,
     --- general
     language_index = 1,
+    is_activate_vehicle_switch = false,
+    is_mute_all = false, -- hidden
+    is_mute_flight = false, -- hidden
     --- input
     keybind_table = FlyingTank.default_keybind_table
 }
-
-registerForEvent("onOverlayOpen",function ()
-	FlyingTank.is_opening_overlay = true
-end)
-
-registerForEvent("onOverlayClose",function ()
-	FlyingTank.is_opening_overlay = false
-end)
 
 -- set custom vehicle record
 registerForEvent("onTweak",function ()
@@ -98,6 +77,9 @@ registerForEvent("onTweak",function ()
     -- Vehicle Parameters
     TweakDB:CloneRecord("Vehicle.v_militech_basilisk_inline5_fly", "Vehicle.v_militech_basilisk_inline5")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankGravityMul"), 0)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankMaxSpeed"), 100) -- do not increase over 100
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankAcceleration"), 50)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankDeceleration"), 30)
 
     -- Custom Aldecaldos Basilisk Record
     TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")
@@ -162,17 +144,9 @@ registerForEvent('onInit', function()
 end)
 
 registerForEvent("onDraw", function()
-
     if FlyingTank.is_debug_mode then
         FlyingTank.debug_obj:ImGuiMain()
     end
-    if FlyingTank.is_opening_overlay then
-        if FlyingTank.core_obj == nil or FlyingTank.core_obj.event_obj == nil or FlyingTank.core_obj.event_obj.ui_obj == nil then
-            return
-        end
-        FlyingTank.core_obj.event_obj.ui_obj:ShowSettingMenu()
-    end
-
 end)
 
 registerForEvent('onUpdate', function(delta)

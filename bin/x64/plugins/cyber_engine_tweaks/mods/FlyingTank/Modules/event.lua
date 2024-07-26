@@ -18,7 +18,6 @@ function Event:New()
     -- set default parameters
     obj.is_initial_load = false
     obj.current_situation = Def.Situation.Idel
-    obj.is_unlocked_dummy_av = false
     obj.is_in_menu = false
     obj.is_in_popup = false
     obj.is_in_photo = false
@@ -79,7 +78,6 @@ function Event:SetObserve()
             FlyingTank.core_obj:Reset()
         end
 
-        self.is_unlocked_dummy_av = Game.GetVehicleSystem():IsVehiclePlayerUnlocked(TweakDBID.new(FlyingTank.basilisk_aldecaldos_record))
         self.current_situation = Def.Situation.Normal
 
     end)
@@ -126,17 +124,13 @@ end
 function Event:CheckAllEvents()
 
     if self.current_situation == Def.Situation.Normal then
-        self:CheckCallPurchasedVehicle()
         self:CheckCallVehicle()
-        -- self:CheckGarage()
-        self:CheckAvailableFreeCall()
         self:CheckCommonEvent()
     elseif self.current_situation == Def.Situation.Landing then
         self:CheckLanded()
         self:CheckCommonEvent()
     elseif self.current_situation == Def.Situation.Waiting then
         self:CheckInAV()
-        self:CheckReturnPurchasedVehicle()
         self:CheckReturnVehicle()
         self:CheckCommonEvent()
     elseif self.current_situation == Def.Situation.InVehicle then
@@ -157,36 +151,9 @@ function Event:CheckCommonEvent()
 
 end
 
-function Event:CheckGarage()
-    -- FlyingTank.core_obj:UpdateGarageInfo(false)
-end
-
-function Event:CheckAvailableFreeCall()
-
-    if self:IsAvailableFreeCall() and not self.is_unlocked_dummy_av then
-        self.log_obj:Record(LogLevel.Info, "Unlock dummy vehicle for free call")
-        self.is_unlocked_dummy_av = true
-        FlyingTank.core_obj:ActivateDummySummon(true)
-    elseif not self:IsAvailableFreeCall() and self.is_unlocked_dummy_av then
-        self.log_obj:Record(LogLevel.Info, "Lock dummy vehicle for free call")
-        self.is_unlocked_dummy_av = false
-        FlyingTank.core_obj:ActivateDummySummon(false)
-    end
-end
-
 function Event:CheckCallVehicle()
     if FlyingTank.core_obj:GetCallStatus() and not self.vehicle_obj:IsSpawning() then
         self.log_obj:Record(LogLevel.Trace, "Vehicle call detected")
-        self.sound_obj:PlaySound("100_call_vehicle")
-        self.sound_obj:PlaySound("210_landing")
-        self:SetSituation(Def.Situation.Landing)
-        self.vehicle_obj:SpawnToSky()
-    end
-end
-
-function Event:CheckCallPurchasedVehicle()
-    if FlyingTank.core_obj:GetPurchasedCallStatus() and not self.vehicle_obj:IsSpawning() then
-        self.log_obj:Record(LogLevel.Trace, "Purchased vehicle call detected")
         self.sound_obj:PlaySound("100_call_vehicle")
         self.sound_obj:PlaySound("210_landing")
         self:SetSituation(Def.Situation.Landing)
@@ -255,18 +222,6 @@ function Event:CheckReturnVehicle()
     end
 end
 
-function Event:CheckReturnPurchasedVehicle()
-    if FlyingTank.core_obj:GetPurchasedCallStatus() then
-        self.log_obj:Record(LogLevel.Trace, "Purchased vehicle return detected")
-        self.sound_obj:PlaySound("240_leaving")
-        self.sound_obj:PlaySound("104_call_vehicle")
-        self:SetSituation(Def.Situation.TalkingOff)
-        -- self.hud_obj:HideChoice()
-        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
-        self.vehicle_obj:DespawnFromGround()
-    end
-end
-
 function Event:CheckDespawn()
     if self.vehicle_obj:IsDespawned() then
         self.log_obj:Record(LogLevel.Trace, "Despawn detected")
@@ -289,13 +244,8 @@ function Event:StopRadio()
     self.vehicle_obj.radio_obj:Stop()
 end
 
-function Event:UnsetMappin()
-    FlyingTank.core_obj.is_custom_mappin = false
-    FlyingTank.core_obj:RemoveFavoriteMappin()
-end
-
 function Event:IsAvailableFreeCall()
-    return FlyingTank.user_setting_table.is_free_summon_mode
+    return true
 end
 
 function Event:IsNotSpawned()

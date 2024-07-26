@@ -44,18 +44,9 @@ function Debug:ImGuiMain()
     self:ImGuiSituation()
     self:ImGuiPlayerPosition()
     self:ImGuiAVPosition()
-    self:ImGuiHeliInfo()
-    self:ImGuiSpinnerInfo()
-    self:ImGuiCurrentEngineInfo()
     self:ImGuiSoundCheck()
-    self:ImGuiModelTypeStatus()
-    self:ImGuiMappinPosition()
-    self:ImGuiAutoPilotStatus()
-    self:ImGuiToggleAutoPilotPanel()
-    self:ImGuiChangeAutoPilotSetting()
     self:ImGuiRadioInfo()
     self:ImGuiMeasurement()
-    self:ImGuiToggleGarageVehicle()
     self:ImGuiExcuteFunction()
 
     ImGui.End()
@@ -173,14 +164,6 @@ function Debug:ImGuiSpinnerInfo()
     end
 end
 
-function Debug:ImGuiCurrentEngineInfo()
-    self.is_im_gui_engine_info = ImGui.Checkbox("[ImGui] Current Engine Info", self.is_im_gui_engine_info)
-    if self.is_im_gui_engine_info then
-        local v = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.current_speed)
-        ImGui.Text("Current Power Mode : " .. self.core_obj.vehicle_obj.engine_obj.current_mode .. ", Current Speed : " .. v .. " , Clock: " .. self.core_obj.vehicle_obj.engine_obj.clock)
-    end
-end
-
 function Debug:ImGuiSoundCheck()
     self.is_im_gui_sound_check = ImGui.Checkbox("[ImGui] Sound Check", self.is_im_gui_sound_check)
     if self.is_im_gui_sound_check then
@@ -199,19 +182,6 @@ function Debug:ImGuiSoundCheck()
 
         if ImGui.Button("Stop", 150, 60) then
             self.core_obj.event_obj.sound_obj:StopSound(self.selected_sound)
-        end
-    end
-end
-
-function Debug:ImGuiModelTypeStatus()
-    self.is_im_gui_model_type_status = ImGui.Checkbox("[ImGui] Model Index Status", self.is_im_gui_model_type_status)
-    if self.is_im_gui_model_type_status then
-        local model_index = FlyingTank.model_index
-        local model_type_index = FlyingTank.model_type_index
-        ImGui.Text("Model Index : " .. model_index .. ", Model Type Index : " .. model_type_index)
-        local garage_info_list = FlyingTank.user_setting_table.garage_info_list
-        for _, value in pairs(garage_info_list) do
-            ImGui.Text("name : " .. value.name .. ", model_index : " .. value.model_index .. ", model_type_index : " .. value.type_index .. ", is_unlocked : " .. tostring(value.is_purchased))
         end
     end
 end
@@ -268,33 +238,6 @@ function Debug:ImGuiAutoPilotStatus()
                 ImGui.Text("[" .. i .. "] : nil")
             end
         end
-    end
-end
-
-function Debug:ImGuiToggleAutoPilotPanel()
-    FlyingTank.core_obj.event_obj.hud_obj.is_forced_autopilot_panel = ImGui.Checkbox("[ImGui] Enable Autopilot Panel", FlyingTank.core_obj.event_obj.hud_obj.is_forced_autopilot_panel)
-end
-
-function Debug:ImGuiChangeAutoPilotSetting()
-    self.is_im_gui_change_auto_setting = ImGui.Checkbox("[ImGui] Change AP Profile", self.is_im_gui_change_auto_setting)
-    if self.is_im_gui_change_auto_setting then
-        if ImGui.Button("Update Profile") then
-            local autopilot_profile = Utils:ReadJson(FlyingTank.core_obj.vehicle_obj.profile_path)
-            local speed_level = FlyingTank.user_setting_table.autopilot_speed_level
-            FlyingTank.core_obj.vehicle_obj.auto_pilot_speed = autopilot_profile[speed_level].speed
-            FlyingTank.core_obj.vehicle_obj.avoidance_range = autopilot_profile[speed_level].avoidance_range
-            FlyingTank.core_obj.vehicle_obj.max_avoidance_speed = autopilot_profile[speed_level].max_avoidance_speed
-            FlyingTank.core_obj.vehicle_obj.sensing_constant = autopilot_profile[speed_level].sensing_constant
-            FlyingTank.core_obj.vehicle_obj.autopilot_turn_speed = autopilot_profile[speed_level].turn_speed
-            FlyingTank.core_obj.vehicle_obj.autopilot_land_offset = autopilot_profile[speed_level].land_offset
-            FlyingTank.core_obj.vehicle_obj.autopilot_down_time_count = autopilot_profile[speed_level].down_time_count
-            FlyingTank.core_obj.vehicle_obj.autopilot_leaving_hight = autopilot_profile[speed_level].leaving_hight
-            FlyingTank.core_obj.vehicle_obj.position_obj:SetSensorPairVectorNum(autopilot_profile[speed_level].sensor_pair_vector_num)
-            FlyingTank.core_obj.vehicle_obj.position_obj:SetJudgedStackLength(autopilot_profile[speed_level].judged_stack_length)
-        end
-        ImGui.Text("Speed Level : " .. FlyingTank.user_setting_table.autopilot_speed_level)
-        ImGui.Text("speed : " .. FlyingTank.core_obj.vehicle_obj.auto_pilot_speed .. ", avoidance : " .. FlyingTank.core_obj.vehicle_obj.avoidance_range .. ", max_avoidance : " .. FlyingTank.core_obj.vehicle_obj.max_avoidance_speed .. ", sensing : " .. FlyingTank.core_obj.vehicle_obj.sensing_constant .. ", stack_len : " .. FlyingTank.core_obj.vehicle_obj.position_obj.judged_stack_length)
-        ImGui.Text("turn : " .. FlyingTank.core_obj.vehicle_obj.autopilot_turn_speed .. ", land : " .. FlyingTank.core_obj.vehicle_obj.autopilot_land_offset .. ", down_t : " .. FlyingTank.core_obj.vehicle_obj.autopilot_down_time_count .. ", hight : " .. FlyingTank.core_obj.vehicle_obj.autopilot_leaving_hight .. ", sensor_num : " .. FlyingTank.core_obj.vehicle_obj.position_obj.sensor_pair_vector_num)
     end
 end
 

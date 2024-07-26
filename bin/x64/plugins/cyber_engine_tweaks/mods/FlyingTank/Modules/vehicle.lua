@@ -17,9 +17,9 @@ function Vehicle:New(all_models)
 	obj.all_models = all_models
 	-- summon
 	obj.spawn_distance = 5.5
-	obj.spawn_high = 50
+	obj.spawn_high = 1
 	obj.spawn_wait_count = 150
-	obj.down_time_count = 300
+	obj.down_time_count = 30
 	obj.land_offset = -1.0
 	obj.door_open_time = 1.0
 	-- collision
@@ -35,6 +35,9 @@ function Vehicle:New(all_models)
 	obj.active_door = nil
 	obj.seat_index = 1
 	obj.is_crystal_dome = false
+	-- speed
+	obj.previous_pos = nil
+	obj.current_speed = 0
 	-- collision
 	obj.is_collision = false
 	obj.colison_count = 0
@@ -120,6 +123,19 @@ function Vehicle:Spawn(position, angle)
 			self.is_spawning = false
 			self.position_obj:SetEntity(entity)
 			self.engine_obj:Init()
+
+			self.previous_pos = self.position_obj:GetPosition()
+			self.previous_pos.z = 0
+			Cron.Every(0.1, {tick = 1}, function(timer)
+				local current_pos = self.position_obj:GetPosition()
+				current_pos.z = 0
+				self.current_speed = Vector4.Distance(current_pos, self.previous_pos) / 0.1
+				self.previous_pos = current_pos
+				if self.entity_id == nil then
+					self.log_obj:Record(LogLevel.Trace, "No entity to get speed")
+					Cron.Halt(timer)
+				end
+			end)
 			Cron.Halt(timer)
 		end
 	end)
@@ -180,30 +196,6 @@ function Vehicle:DespawnFromGround()
 			end
 		end
 	end)
-
-end
-
-function Vehicle:ToggleCrystalDome()
-
-	local entity = Game.FindEntityByID(self.entity_id)
-	local effect_name
-	if entity == nil then
-		self.log_obj:Record(LogLevel.Warning, "No entity to change crystal dome")
-		return false
-	elseif self.vehicle_model_tweakdb_id ~= "Vehicle.av_rayfield_excalibur_dav"
-			and self.vehicle_model_tweakdb_id ~= "Vehicle.av_militech_manticore_dav" then
-		self.log_obj:Record(LogLevel.Trace, "This vehicle does not have a crystal dome")
-		return false
-	end
-	if not self.is_crystal_dome then
-		effect_name = CName.new("crystal_dome_start")
-		self.is_crystal_dome = true
-	else
-		effect_name = CName.new("crystal_dome_stop")
-		self.is_crystal_dome = false
-	end
-	GameObjectEffectHelper.StartEffectEvent(entity, effect_name, false)
-	return true
 
 end
 
@@ -301,155 +293,6 @@ function Vehicle:ChangeDoorState(door_state)
 
 end
 
-function Vehicle:ControlCrystalDome()
-
-	local e_veh_door = EVehicleDoor.seat_front_left
-	if not self.is_crystal_dome then
-		Cron.Every(1, {tick = 1}, function(timer)
-			if self:GetDoorState(e_veh_door) == "Closed" then
-				if self.vehicle_model_tweakdb_id == "Vehicle.av_rayfield_excalibur_dav" then
-					Cron.After(3.0, function()
-						self:ToggleCrystalDome()
-					end)
-				else
-					self:ToggleCrystalDome()
-				end
-				Cron.Halt(timer)
-			end
-		end)
-	elseif self.is_crystal_dome then
-		self:ToggleCrystalDome()
-	end
-
-end
-
-function Vehicle:Mount()
-
-	self.is_landed = false
-
-	local seat_number = self.seat_index
-
-	self.log_obj:Record(LogLevel.Debug, "Mount Aerial Vehicle : " .. seat_number)
-	if self.entity_id == nil then
-		self.log_obj:Record(LogLevel.Warning, "No entity to mount")
-		return false
-	end
-	local entity = Game.FindEntityByID(self.entity_id)
-	local player = Game.GetPlayer()
-	local ent_id = entity:GetEntityID()
-	local seat = self.active_seat[seat_number]
-
-
-	local data = NewObject('handle:gameMountEventData')
-	data.isInstant = false
-	data.slotName = seat
-	data.mountParentEntityId = ent_id
-	data.entryAnimName = "stand__2h_on_sides__01__to__sit_couch__AV_excalibur__01__turn270__getting_into_AV__01"
-
-
-	local slot_id = NewObject('gamemountingMountingSlotId')
-	slot_id.id = seat
-
-	local mounting_info = NewObject('gamemountingMountingInfo')
-	mounting_info.childId = player:GetEntityID()
-	mounting_info.parentId = ent_id
-	mounting_info.slotId = slot_id
-
-	local mounting_request = NewObject('handle:gamemountingMountingRequest')
-	mounting_request.lowLevelMountingInfo = mounting_info
-	mounting_request.mountData = data
-
-	Game.GetMountingFacility():Mount(mounting_request)
-
-	self.position_obj:ChangePosition()
-
-	if not self.is_crystal_dome then
-		self:ControlCrystalDome()
-	end
-
-	-- return position near mounted vehicle	
-	Cron.Every(0.01, {tick = 1}, function(timer)
-		local entity = player:GetMountedVehicle()
-		if entity ~= nil then
-			Cron.After(1.5, function()
-				self.is_player_in = true
-			end)
-			Cron.Halt(timer)
-		end
-	end)
-
-	return true
-
-end
-
-function Vehicle:Unmount()
-
-	if self.is_ummounting then
-		return false
-	end
-
-	self.is_ummounting = true
-
-	local seat_number = self.seat_index
-	if self.entity_id == nil then
-		self.log_obj:Record(LogLevel.Warning, "No entity to unmount")
-		return false
-	end
-	local entity = Game.FindEntityByID(self.entity_id)
-	local player = Game.GetPlayer()
-	local ent_id = entity:GetEntityID()
-	local seat = self.active_seat[seat_number]
-
-	local data = NewObject('handle:gameMountEventData')
-	data.isInstant = true
-	data.slotName = seat
-	data.mountParentEntityId = ent_id
-	data.entryAnimName = "forcedTransition"
-
-	local slotID = NewObject('gamemountingMountingSlotId')
-	slotID.id = seat
-
-	local mounting_info = NewObject('gamemountingMountingInfo')
-	mounting_info.childId = player:GetEntityID()
-	mounting_info.parentId = ent_id
-	mounting_info.slotId = slotID
-
-	local mount_event = NewObject('handle:gamemountingUnmountingRequest')
-	mount_event.lowLevelMountingInfo = mounting_info
-	mount_event.mountData = data
-
-	if self.is_crystal_dome then
-		self:ControlCrystalDome()
-	end
-
-	-- if all door are open, wait time is short
-	local open_door_wait = self.door_open_time
-	if self:ChangeDoorState(Def.DoorOperation.Open) == 0 then
-		open_door_wait = 0.1
-	end
-
-	Cron.After(open_door_wait, function()
-
-		Game.GetMountingFacility():Unmount(mount_event)
-
-		-- set entity id to position object
-		Cron.Every(0.01, {tick = 1}, function(timer)
-			local entity = Game.FindEntityByID(self.entity_id)
-			if entity ~= nil then
-				local angle = entity:GetWorldOrientation():ToEulerAngles()
-				angle.yaw = angle.yaw + 90
-				local position = self.position_obj:GetExitPosition()
-				Game.GetTeleportationFacility():Teleport(player, Vector4.new(position.x, position.y, position.z, 1.0), angle)
-				self.is_player_in = false
-				self.is_ummounting = false
-				Cron.Halt(timer)
-			end
-		end)
-	end)
-
-	return true
-end
-
 function Vehicle:Move(x, y, z, roll, pitch, yaw)
 
 	if not self.position_obj:SetNextPosition(x, y, z, roll, pitch, yaw, false) then
@@ -465,10 +308,13 @@ function Vehicle:Operate(action_commands)
 	if #action_commands == 1 and action_commands[1] == Def.ActionList.Nothing then
 		return false
 	end
+	if self.current_speed > 5 then
+		return false
+	end
 	local x_total, y_total, z_total, roll_total, pitch_total, yaw_total = 0, 0, 0, 0, 0, 0
 	self.log_obj:Record(LogLevel.Debug, "Operation Count:" .. #action_commands)
 	for _, action_command in ipairs(action_commands) do
-		if action_command >= Def.ActionList.Enter then
+		if action_command >= Def.ActionList.ChangeDoor then
 			self.log_obj:Record(LogLevel.Critical, "Invalid Event Command:" .. action_command)
 			return false
 		end
@@ -499,35 +345,10 @@ function Vehicle:Operate(action_commands)
 		return false
 	end
 
-	local speed_count = self.max_freeze_count
-	local level_speed_unit = self.max_speed_for_freezing / self.freeze_stage_num
-	local speed_count_unit = math.ceil((self.max_freeze_count - self.min_freeze_count) / self.freeze_stage_num)
-	for level = 1, self.freeze_stage_num do
-		if self.engine_obj:GetSpeed() < level_speed_unit * level then
-			speed_count = self.min_freeze_count + speed_count_unit * (level - 1)
-			break
-		end
-	end
-
-	local is_freeze = false
-	-- Freeze for spawning vehicle and pedistrian
-	if self.freeze_count < 1 and self:IsEnableFreeze() then
-		self.freeze_count = self.freeze_count + 1
-		is_freeze = true
-	elseif self.freeze_count >= speed_count then
-		self.freeze_count = 0
-	elseif self.freeze_count >= 1 then
-		self.freeze_count = self.freeze_count + 1
-	end
-
-	if FlyingTank.user_setting_table.is_disable_spinner_roll_tilt then
-		roll_total = 0
-	end
-
 	local res = self.position_obj:SetNextPosition(x_total, y_total, z_total, roll_total, pitch_total, yaw_total, is_freeze)
 
 	if res == Def.TeleportResult.Collision then
-		self.engine_obj:SetSpeedAfterRebound()
+		self.engine_obj:SetSpeedAfterRebound(self.current_speed)
 		self.is_collision = true
 		self.colison_count = self.colison_count + 1
 		if self.colison_count > self.max_collision_count then
@@ -548,20 +369,6 @@ function Vehicle:Operate(action_commands)
 	self.colison_count = 0
 
 	return true
-
-end
-
-function Vehicle:IsEnableFreeze()
-
-    if not FlyingTank.user_setting_table.is_enable_community_spawn then
-        return false
-    end
-
-    if self.engine_obj:GetSpeed() < self.max_speed_for_freezing then
-        return true
-    else
-        return false
-    end
 
 end
 

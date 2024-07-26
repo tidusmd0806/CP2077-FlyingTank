@@ -13,15 +13,11 @@ function HUD:New()
     obj.speed_meter_refresh_rate = 0.05
     -- dynamic --
     obj.vehicle_obj = nil
-	obj.hud_car_controller = nil
+	-- obj.hud_car_controller = nil
 
-    obj.is_speed_meter_shown = false
+    -- obj.is_speed_meter_shown = false
     obj.key_input_show_hint_event = nil
     obj.key_input_hide_hint_event = nil
-
-    obj.selected_choice_index = 1
-
-    obj.is_forced_autopilot_panel = false
 
     obj.popup_manager = nil
 
