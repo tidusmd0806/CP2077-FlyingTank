@@ -57,6 +57,10 @@ function Debug:SetObserver()
 
     if not self.is_set_observer then
         -- reserved
+        Observe('gameuiPanzerHUDGameController', 'OnInitialize', function(this)
+            print("HUD: gameuiPanzerHUDGameController OnInitialize")
+            self.hud_tank_controller = this
+        end)
     end
     self.is_set_observer = true
 
@@ -299,159 +303,72 @@ function Debug:ImGuiMeasurement()
     end
 end
 
-function Debug:ImGuiToggleGarageVehicle()
-    if ImGui.Button("av1") then
-        self.is_exist_av_1 = not self.is_exist_av_1
-        Game.GetVehicleSystem():EnablePlayerVehicle("Vehicle.av_rayfield_excalibur_dav_dummy", self.is_exist_av_1, true)
-    end
-    ImGui.SameLine()
-    if ImGui.Button("av2") then
-        self.is_exist_av_2 = not self.is_exist_av_2
-        Game.GetVehicleSystem():EnablePlayerVehicle("Vehicle.av_militech_manticore_dav_dummy", self.is_exist_av_2, true)
-    end
-    ImGui.SameLine()
-    if ImGui.Button("av3") then
-        self.is_exist_av_3 = not self.is_exist_av_3
-        Game.GetVehicleSystem():EnablePlayerVehicle("Vehicle.av_zetatech_atlus_dav_dummy", self.is_exist_av_3, true)
-    end
-    ImGui.SameLine()
-    if ImGui.Button("av4") then
-        self.is_exist_av_4 = not self.is_exist_av_4
-        Game.GetVehicleSystem():EnablePlayerVehicle("Vehicle.av_zetatech_surveyor_dav_dummy", self.is_exist_av_4, true)
-    end
-    ImGui.SameLine()
-    if ImGui.Button("av5") then
-        self.is_exist_av_5 = not self.is_exist_av_5
-        Game.GetVehicleSystem():EnablePlayerVehicle("Vehicle.q000_nomad_border_patrol_heli_dav_dummy", self.is_exist_av_5, true)
-    end
-end
-
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
-        self.component:Activate(0, false)
+        -- atitude
+        local root_widget = self.hud_tank_controller.root
+        local child_widget = root_widget:GetWidget(CName.new("ruler_right"))
+        local child_widget_2 = child_widget:GetWidget(CName.new("value"))
+        local num = math.random(0, 1000)
+        child_widget_2:SetText(tostring(num))
         print("Excute Test Function 1")
     end
     ImGui.SameLine()
     if ImGui.Button("TF2") then
-        FlyingTank.core_obj.vehicle_obj.radio_obj:Update(5, "100%")
+        local root_widget = self.hud_tank_controller.root
+        local child_widget = root_widget:GetWidget(CName.new("boost"))
+        local child_widget_header = child_widget:GetWidget(CName.new("header"))
+        local child_widget_bar = child_widget:GetWidget(CName.new("inkMaskWidget48"))
+        local child_widget_bar_base = child_widget:GetWidget(0)
+        local child_widget_bar_max = child_widget:GetWidget(5)
+        child_widget_header:SetText("aaa")
+        local num = math.random(0, 35)
+        child_widget_bar:SetMargin(-1801.25 - num * 10, 895, 0, 0)
+        local color = HDRColor.new()
+        color.Red = 1.369
+        color.Green = 0.965
+        color.Blue = 1.000
+        color.Alpha = 1.000
+        child_widget_bar_base:SetTintColor(color) -- default : 0.369, 0.965, 1.000, 1.000
+        child_widget_bar_max:SetText(tostring(num))
         print("Excute Test Function 2")
     end
     ImGui.SameLine()
     if ImGui.Button("TF3") then
-        GetMountedVehicle(GetPlayer()):ToggleRadioReceiver(false)
-        print(GetPlayer():GetPocketRadio():IsActive())
-        print(GetPlayer():GetPocketRadio():IsRestricted())
+        local root_widget = self.hud_tank_controller.root
+        local child_widget = root_widget:GetWidget(CName.new("missile"))
+        local child_widget_header = child_widget:GetWidget(CName.new("header"))
+        local child_widget_text_1 = child_widget:GetWidget(3)
+        local child_widget_text_2 = child_widget:GetWidget(CName.new("0"))
+        child_widget_header:SetText("bbb")
+        child_widget_text_1:SetText("ccc")
+        child_widget_text_2:SetText("ddd")
         print("Excute Test Function 3")
     end
     ImGui.SameLine()
     if ImGui.Button("TF4") then
-        local player = Game.GetPlayer()
-        local ent_id = self.metro_entity:GetEntityID()
-        local seat = "Passengers"
-        local data = NewObject('handle:gameMountEventData')
-        data.isInstant = false
-        data.slotName = seat
-        data.mountParentEntityId = ent_id
-
-
-        local slot_id = NewObject('gamemountingMountingSlotId')
-        slot_id.id = seat
-
-        local mounting_info = NewObject('gamemountingMountingInfo')
-        mounting_info.childId = player:GetEntityID()
-        mounting_info.parentId = ent_id
-        mounting_info.slotId = slot_id
-
-        local mounting_request = NewObject('handle:gamemountingMountingRequest')
-        mounting_request.lowLevelMountingInfo = mounting_info
-        mounting_request.mountData = data
-
-        Game.GetMountingFacility():Mount(mounting_request)
+        local root_widget = self.hud_tank_controller.root
+        local child_widget = root_widget:GetWidget(CName.new("ruler_yaw"))
+        local child_widget_header = child_widget:GetWidget(CName.new("yaw_descr"))
+        child_widget_header:SetText("eee")
+        local child_widget_2 = child_widget:GetWidget(CName.new("yaw_hori"))
+        local child_widget_3 = child_widget_2:GetWidget(CName.new("yawCounter"))
+        local num = math.random(-100, 100)
+        child_widget_3:SetText(tostring(num))
         print("Excute Test Function 4")
     end
     ImGui.SameLine()
     if ImGui.Button("TF5") then
-        local player = Game.GetPlayer()
-        self.metro_entity = GetMountedVehicle(player)
-        Game.GetWorkspotSystem():UnmountFromVehicle(self.metro_entity, player, false, Vector4.new(0, 0, 0, 1), Quaternion.new(0, 0, 0, 1), "Passengers")
+        local root_widget = self.hud_tank_controller.root
+        local child_widget_r = root_widget:GetWidget(CName.new("intake_fans-r"))
+        local child_widget_right = child_widget_r:GetWidget(CName.new("R-percent"))
+        local num = math.random(0, 100)
+        child_widget_right:SetText(tostring(num) .. "%")
+        local child_widget_l = root_widget:GetWidget(CName.new("intake_fans-l"))
+        local child_widget_left = child_widget_l:GetWidget(CName.new("L-percent"))
+        local num = math.random(0, 100)
+        child_widget_left:SetText(tostring(num) .. "%")
         print("Excute Test Function 5")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF6") then
-        local player = Game.GetPlayer()
-        Game.GetWorkspotSystem():StopInDevice(player)
-        print("Excute Test Function 6")
-    end
-    if ImGui.Button("TF7") then
-        local player = Game.GetPlayer()
-        self.metro_entity = GetMountedVehicle(player)
-        local ent_id = self.metro_entity:GetEntityID()
-        local seat = "Passengers"
-
-        local data = NewObject('handle:gameMountEventData')
-        data.isInstant = true
-        data.slotName = seat
-        data.mountParentEntityId = ent_id
-        data.entryAnimName = "forcedTransition"
-
-        local slotID = NewObject('gamemountingMountingSlotId')
-        slotID.id = seat
-
-        local mounting_info = NewObject('gamemountingMountingInfo')
-        mounting_info.childId = player:GetEntityID()
-        mounting_info.parentId = ent_id
-        mounting_info.slotId = slotID
-
-        local mount_event = NewObject('handle:gamemountingUnmountingRequest')
-        mount_event.lowLevelMountingInfo = mounting_info
-        mount_event.mountData = data
-
-		Game.GetMountingFacility():Unmount(mount_event)
-        print("Excute Test Function 7")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF8") then
-        local name = CName.new("ue_metro_next_station")
-        Game.GetQuestsSystem():SetFact(name, 1)
-        print("Excute Test Function 8")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF9") then
-        Cron.Every(0.01, {tick = 1}, function(timer)
-            timer.tick = timer.tick + 1
-            local player = Game.GetPlayer()
-            local pos = player:GetWorldPosition()
-            local angle = player:GetWorldOrientation():ToEulerAngles()
-            local forward = player:GetWorldForward()
-            local length = 0.1
-            local new_pos = Vector4.new(pos.x + forward.x * length, pos.y + forward.y * length, pos.z + forward.z * length, pos.w)
-            Game.GetTeleportationFacility():Teleport(player, new_pos, angle)
-            if timer.tick > 1000 then
-                Cron.Halt(timer)
-            end
-        end)
-        print("Excute Test Function 9")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF10") then
-        local spawnTransform = WorldTransform.new()
-        local entityID = exEntitySpawner.Spawn("base\\entities\\cameras\\photo_mode_camera.ent", spawnTransform, '')
-        Cron.Every(0.1, {tick = 1}, function(timer)
-            local entity = Game.FindEntityByID(entityID)
-            timer.tick = timer.tick + 1
-            if entity then
-                self.handle = entity
-                self.hash = tostring(entity:GetEntityID().hash)
-                print("Spawned camera entity: " .. self.hash)
-                self.component = entity:FindComponentByName("FreeCamera2447")
-
-                Cron.Halt(timer)
-            elseif timer.tick > 20 then
-                print("Failed to spawn camera")
-                Cron.Halt(timer)
-            end
-        end)
-        print("Excute Test Function 10")
     end
 end
 
