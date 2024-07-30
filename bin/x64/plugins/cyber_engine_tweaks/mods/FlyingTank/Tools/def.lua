@@ -6,8 +6,9 @@ Def.ActionList = {
     Nothing = 0,
     Up = 1,
     Down = 2,
-    Incline = 3,
-    Decline = 4,
+    PitchUp = 3,
+    PitchDown = 4,
+    PitchReset = 5,
     ----------
 	ChangeDoor = 100,
     ToggleRadio = 101,

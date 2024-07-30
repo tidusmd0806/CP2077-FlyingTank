@@ -11,7 +11,8 @@
         "actual_allocated_door": ["seat_front_left"],
         "active_seat": ["Front Left Seat"],
         "actual_allocated_seat": ["seat_front_left"],
-        "up_down_speed": 25,
+        "up_down_speed": 20,
+        "pitch_speed": 10,
         "rebound_constant": 0.5,
         "shape": {
             "A": {"x":  1.2, "y":  3.4, "z":  1.0},
@@ -42,7 +43,8 @@
         "actual_allocated_door": ["seat_front_left"],
         "active_seat": ["Front Left Seat"],
         "actual_allocated_seat": ["seat_front_left"],
-        "up_down_speed": 25,
+        "up_down_speed": 20,
+        "pitch_speed": 10,
         "rebound_constant": 0.5,
         "shape": {
             "A": {"x":  1.2, "y":  3.4, "z":  1.0},

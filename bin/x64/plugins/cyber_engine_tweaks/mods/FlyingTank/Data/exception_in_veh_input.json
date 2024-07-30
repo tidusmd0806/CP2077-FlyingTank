@@ -1,16 +1,5 @@
 [
-    "VisionHold",
+    "PhoneInteract",
     "UseConsumable",
-    "Exit",
-    "EnterCombatMode",
-    "Weapon",
-    "SwitchItem",
-    "ToggleVehCamera",
-    "IconicCyberware",
-    "upgrade_cyberware",
-    "TogglePhotoMode",
-    "PocketRadio",
-    "DescriptionChange",
-    "VehicleInsideWheel",
-    "Phone"
+    "VisionHold"
 ]

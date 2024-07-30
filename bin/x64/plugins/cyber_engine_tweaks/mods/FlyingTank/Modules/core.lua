@@ -21,7 +21,7 @@ function Core:New()
     obj.delay_action_time_in_waiting = 0.05
     obj.delay_action_time_in_vehicle = 0.05
     -- import path
-    obj.av_model_path = "Data/default_model.json"
+    obj.tank_model_path = "Data/default_model.json"
     obj.tank_input_path = "Data/tank_input.json"
     -- input setting
     obj.axis_dead_zone = 0.5
@@ -37,6 +37,10 @@ function Core:New()
     obj.move_up_button_hold_count = 0
     obj.is_move_down_button_hold_counter = false
     obj.move_down_button_hold_count = 0
+    obj.is_pitch_up_button_hold_counter = false
+    obj.pitch_up_button_hold_count = 0
+    obj.is_pitch_down_button_hold_counter = false
+    obj.pitch_down_button_hold_count = 0
     -- lock
     obj.is_locked_action_in_waiting = false
     -- model table
@@ -234,7 +238,6 @@ function Core:SetInputListener()
 
     local player = Game.GetPlayer()
 
-    local exception_common_list = Utils:ReadJson("Data/exception_common_input.json")
     local exception_in_veh_list = Utils:ReadJson("Data/exception_in_veh_input.json")
     local exception_radio_list = Utils:ReadJson("Data/exception_radio_input.json")
 
@@ -243,29 +246,22 @@ function Core:SetInputListener()
 		local action_type = action:GetType(action).value
         local action_value = action:GetValue(action)
 
-        -- if self.event_obj:IsInVehicle() and not self.event_obj:IsInMenuOrPopupOrPhoto() then
-        --     for _, exception in pairs(exception_in_veh_list) do
-        --         if string.find(action_name, exception) then
-        --             consumer:Consume()
-        --             return
-        --         end
-        --     end
-        -- elseif (self.event_obj:IsInEntryArea() or self.event_obj:IsInVehicle()) then
-        --     for _, exception in pairs(exception_common_list) do
-        --         if string.find(action_name, exception) then
-        --             consumer:Consume()
-        --             return
-        --         end
-        --     end
-        -- end
-        -- if self:IsOpenedRadioPopup() then
-        --     for _, exception in pairs(exception_radio_list) do
-        --         if string.find(action_name, exception) then
-        --             consumer:Consume()
-        --             return
-        --         end
-        --     end
-        -- end
+        if self.event_obj:IsInVehicle() then
+            for _, exception in pairs(exception_in_veh_list) do
+                if string.find(action_name, exception) then
+                    consumer:Consume()
+                    return
+                end
+            end
+        end
+        if self:IsOpenedRadioPopup() then
+            for _, exception in pairs(exception_radio_list) do
+                if string.find(action_name, exception) then
+                    consumer:Consume()
+                    return
+                end
+            end
+        end
 
         self.log_obj:Record(LogLevel.Debug, "Action Name: " .. action_name .. " Type: " .. action_type .. " Value: " .. action_value)
 
@@ -277,7 +273,7 @@ end
 
 function Core:GetAllModel()
 
-    local model = Utils:ReadJson(self.av_model_path)
+    local model = Utils:ReadJson(self.tank_model_path)
     if model == nil then
         self.log_obj:Record(LogLevel.Error, "Default Model is nil")
         return nil
@@ -376,6 +372,12 @@ function Core:ConvertReleaseButtonAction(key)
     elseif keybind_name == "move_down" then
         self.is_move_down_button_hold_counter = false
         self.move_down_button_hold_count = 0
+    elseif keybind_name == "pitch_up" then
+        self.is_pitch_up_button_hold_counter = false
+        self.pitch_up_button_hold_count = 0
+    elseif keybind_name == "pitch_down" then
+        self.is_pitch_down_button_hold_counter = false
+        self.pitch_down_button_hold_count = 0
     end
 end
 
@@ -420,8 +422,42 @@ function Core:ConvertPressButtonAction(key)
                 end
             end)
         end
+    elseif keybind_name == "pitch_up" then
+        if not self.is_pitch_up_button_hold_counter then
+            self.is_pitch_up_button_hold_counter = true
+            Cron.Every(FlyingTank.time_resolution, {tick=0}, function(timer)
+                timer.tick = timer.tick + 1
+                self.pitch_up_button_hold_count = timer.tick
+                if timer.tick >= self.max_move_count then
+                    self.is_pitch_up_button_hold_counter = false
+                    Cron.Halt(timer)
+                elseif not self.is_pitch_up_button_hold_counter then
+                    Cron.Halt(timer)
+                else
+                    self.queue_obj:Enqueue(Def.ActionList.PitchUp)
+                end
+            end)
+        end
+    elseif keybind_name == "pitch_down" then
+        if not self.is_pitch_down_button_hold_counter then
+            self.is_pitch_down_button_hold_counter = true
+            Cron.Every(FlyingTank.time_resolution, {tick=0}, function(timer)
+                timer.tick = timer.tick + 1
+                self.pitch_down_button_hold_count = timer.tick
+                if timer.tick >= self.max_move_count then
+                    self.is_pitch_down_button_hold_counter = false
+                    Cron.Halt(timer)
+                elseif not self.is_pitch_down_button_hold_counter then
+                    Cron.Halt(timer)
+                else
+                    self.queue_obj:Enqueue(Def.ActionList.PitchDown)
+                end
+            end)
+        end
+    elseif keybind_name == "pitch_reset" then
+        self.queue_obj:Enqueue(Def.ActionList.PitchReset)
     elseif keybind_name == "toggle_door" then
-        action_list = Def.ActionList.ChangeDoor1
+        action_list = Def.ActionList.ChangeDoor
     elseif keybind_name == "toggle_radio" then
         if not self.is_radio_button_hold_counter then
             self.is_radio_button_hold_counter = true
@@ -486,7 +522,7 @@ end
 function Core:SetEvent(action)
 
     if self.event_obj.current_situation == Def.Situation.InVehicle then
-        if action == Def.ActionList.ChangeDoor1 then
+        if action == Def.ActionList.ChangeDoor then
             self:ToggleDoors()
         elseif action == Def.ActionList.ToggleRadio then
             self:ToggleRadio()
