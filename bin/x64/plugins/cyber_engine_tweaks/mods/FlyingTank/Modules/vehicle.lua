@@ -18,14 +18,12 @@ function Vehicle:New(all_models)
 	-- summon
 	obj.spawn_distance = 5.5
 	obj.spawn_high = 1
-	obj.spawn_wait_count = 150
-	obj.down_time_count = 30
+	obj.spawn_wait_count = 100
+	obj.down_time_count = 20
 	obj.land_offset = -1.0
-	obj.door_open_time = 1.0
+	obj.door_open_time = 0.5
 	-- collision
 	obj.max_collision_count = obj.position_obj.collision_max_count
-	-- for spawning vehicle and pedistrian
-	obj.freeze_stage_num = 10
 	---dynamic---
 	-- summon
 	obj.entity_id = nil
@@ -36,7 +34,6 @@ function Vehicle:New(all_models)
 	obj.seat_index = 1
 	obj.is_crystal_dome = false
 	-- speed
-	obj.previous_pos = nil
 	obj.current_speed = 0
 	-- collision
 	obj.is_collision = false
@@ -123,19 +120,6 @@ function Vehicle:Spawn(position, angle)
 			self.is_spawning = false
 			self.position_obj:SetEntity(entity)
 			self.engine_obj:Init()
-
-			self.previous_pos = self.position_obj:GetPosition()
-			self.previous_pos.z = 0
-			Cron.Every(0.1, {tick = 1}, function(timer)
-				local current_pos = self.position_obj:GetPosition()
-				current_pos.z = 0
-				self.current_speed = Vector4.Distance(current_pos, self.previous_pos) / 0.1
-				self.previous_pos = current_pos
-				if self.entity_id == nil then
-					self.log_obj:Record(LogLevel.Trace, "No entity to get speed")
-					Cron.Halt(timer)
-				end
-			end)
 			Cron.Halt(timer)
 		end
 	end)
@@ -308,9 +292,6 @@ function Vehicle:Operate(action_commands)
 	if #action_commands == 1 and action_commands[1] == Def.ActionList.Nothing then
 		return false
 	end
-	if self.current_speed > 5 then
-		return false
-	end
 	local x_total, y_total, z_total, roll_total, pitch_total, yaw_total = 0, 0, 0, 0, 0, 0
 	self.log_obj:Record(LogLevel.Debug, "Operation Count:" .. #action_commands)
 	for _, action_command in ipairs(action_commands) do
@@ -345,28 +326,30 @@ function Vehicle:Operate(action_commands)
 		return false
 	end
 
-	local res = self.position_obj:SetNextPosition(x_total, y_total, z_total, roll_total, pitch_total, yaw_total, is_freeze)
+	self.position_obj:AddLinelyVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
 
-	if res == Def.TeleportResult.Collision then
-		self.engine_obj:SetSpeedAfterRebound(self.current_speed)
-		self.is_collision = true
-		self.colison_count = self.colison_count + 1
-		if self.colison_count > self.max_collision_count then
-			self.log_obj:Record(LogLevel.Info, "Collision Count Over. Engine Reset")
-			self.colison_count = 0
-		end
-		return false
-	elseif res == Def.TeleportResult.AvoidStack then
-		self.log_obj:Record(LogLevel.Info, "Avoid Stack")
-		self.colison_count = 0
-		return false
-	elseif res == Def.TeleportResult.Error then
-		self.log_obj:Record(LogLevel.Error, "Teleport Error")
-		self.colison_count = 0
-		return false
-	end
+	-- local res = self.position_obj:SetNextPosition(x_total, y_total, z_total, roll_total, pitch_total, yaw_total, is_freeze)
 
-	self.colison_count = 0
+	-- if res == Def.TeleportResult.Collision then
+	-- 	self.engine_obj:SetSpeedAfterRebound(self.current_speed)
+	-- 	self.is_collision = true
+	-- 	self.colison_count = self.colison_count + 1
+	-- 	if self.colison_count > self.max_collision_count then
+	-- 		self.log_obj:Record(LogLevel.Info, "Collision Count Over. Engine Reset")
+	-- 		self.colison_count = 0
+	-- 	end
+	-- 	return false
+	-- elseif res == Def.TeleportResult.AvoidStack then
+	-- 	self.log_obj:Record(LogLevel.Info, "Avoid Stack")
+	-- 	self.colison_count = 0
+	-- 	return false
+	-- elseif res == Def.TeleportResult.Error then
+	-- 	self.log_obj:Record(LogLevel.Error, "Teleport Error")
+	-- 	self.colison_count = 0
+	-- 	return false
+	-- end
+
+	-- self.colison_count = 0
 
 	return true
 

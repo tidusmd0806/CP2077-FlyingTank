@@ -80,9 +80,9 @@ registerForEvent("onTweak",function ()
     -- Vehicle Parameters
     TweakDB:CloneRecord("Vehicle.v_militech_basilisk_inline5_fly", "Vehicle.v_militech_basilisk_inline5")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankGravityMul"), 0)
-    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankMaxSpeed"), 100) -- do not increase over 100
-    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankAcceleration"), 50)
-    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankDeceleration"), 30)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankMaxSpeed"), 50) -- do not increase over 100
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankAcceleration"), 30)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankDeceleration"), 15)
 
     -- Custom Aldecaldos Basilisk Record
     TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")

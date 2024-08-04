@@ -30,8 +30,8 @@ end
 
 function Engine:SetModel(index)
     -- set pyhsical parameters
-    self.up_down_speed = self.all_models[index].up_down_speed * FlyingTank.time_resolution
-    self.pitch_speed = self.all_models[index].pitch_speed * FlyingTank.time_resolution
+    self.up_down_speed = self.all_models[index].up_down_speed
+    self.pitch_speed = self.all_models[index].pitch_speed
 end
 
 function Engine:Init()
@@ -53,8 +53,16 @@ function Engine:GetNextPosition(movement)
     end
 
     if movement == Def.ActionList.Up then
+        local vec3 = self.position_obj.fly_tank_system:GetVelocity()
+        if vec3.z > 40 then
+            return 0, 0, 0, 0, 0, 0
+        end
         return 0, 0, self.up_down_speed, 0, 0, 0
     elseif movement == Def.ActionList.Down then
+        local vec3 = self.position_obj.fly_tank_system:GetVelocity()
+        if vec3.z < -40 then
+            return 0, 0, 0, 0, 0, 0
+        end
         return 0, 0, -self.up_down_speed, 0, 0, 0
     elseif movement == Def.ActionList.PitchUp then
         return 0, 0, 0, 0, self.pitch_speed, 0

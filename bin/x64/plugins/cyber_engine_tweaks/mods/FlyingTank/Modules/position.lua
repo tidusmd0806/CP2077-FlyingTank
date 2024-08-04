@@ -27,12 +27,12 @@ function Position:New(all_models)
     obj.is_power_on = false
     obj.local_corners = {}
     obj.corners = {}
-    -- obj.entry_point = {}
-    -- obj.entry_area_radius = 0
     obj.stack_distance = 0
     obj.stack_count = 0
     obj.sensor_pair_vector_num = 15
     obj.collision_trace_result = nil
+
+    obj.fly_tank_system = nil
 
     return setmetatable(obj, self)
 end
@@ -80,6 +80,7 @@ function Position:SetEntity(entity)
         self.log_obj:Record(LogLevel.Warning, "Entity is nil for SetEntity")
     end
     self.entity = entity
+    self.fly_tank_system = FlyTankSystem.new()
 end
 
 function Position:ChangeWorldCordinate(basic_vector ,point_list)
@@ -216,6 +217,66 @@ function Position:ChangePosition()
     Game.GetTeleportationFacility():Teleport(self.entity, self.next_position, self.next_angle)
     return true
 
+end
+
+function Position:AddLinelyVelocity(x,y,z,roll,pitch,yaw)
+    local pos = Vector3.new(x, y, z)
+    local delta_roll, delta_pitch, delta_yaw = self:EulerAngleChange(roll, pitch, yaw)
+    local angle = Vector3.new(delta_pitch, delta_roll, delta_yaw)
+    self.fly_tank_system:AddLinelyVelocity(pos, angle)
+end
+
+function Position:EulerAngleChange(local_roll, local_pitch, local_yaw)
+
+    local angle = self:GetEulerAngles()
+
+    -- Convert Euler angles to radians
+    local rad_roll = math.rad(angle.roll)
+    local rad_pitch = math.rad(angle.pitch)
+    local rad_yaw = math.rad(angle.yaw)
+    local rad_local_roll = math.rad(local_roll)
+    local rad_local_pitch = math.rad(local_pitch)
+    local rad_local_yaw = math.rad(local_yaw)
+
+    -- Calculate sin and cos
+    local cos_roll, sin_roll = math.cos(rad_roll), math.sin(rad_roll)
+    local cos_pitch, sin_pitch = math.cos(rad_pitch), math.sin(rad_pitch)
+    local cos_yaw, sin_yaw = math.cos(rad_yaw), math.sin(rad_yaw)
+    local cos_local_roll, sin_local_roll = math.cos(rad_local_roll), math.sin(rad_local_roll)
+    local cos_local_pitch, sin_local_pitch = math.cos(rad_local_pitch), math.sin(rad_local_pitch)
+    local cos_local_yaw, sin_local_yaw = math.cos(rad_local_yaw), math.sin(rad_local_yaw)
+
+    -- Calculate rotation matrices
+    local R1 = {
+        {cos_roll * cos_pitch, cos_roll * sin_pitch * sin_yaw - sin_roll * cos_yaw, cos_roll * sin_pitch * cos_yaw + sin_roll * sin_yaw},
+        {sin_roll * cos_pitch, sin_roll * sin_pitch * sin_yaw + cos_roll * cos_yaw, sin_roll * sin_pitch * cos_yaw - cos_roll * sin_yaw},
+        {-sin_pitch, cos_pitch * sin_yaw, cos_pitch * cos_yaw}
+    }
+
+    local R2 = {
+        {cos_local_roll * cos_local_pitch, cos_local_roll * sin_local_pitch * sin_local_yaw - sin_local_roll * cos_local_yaw, cos_local_roll * sin_local_pitch * cos_local_yaw + sin_local_roll * sin_local_yaw},
+        {sin_local_roll * cos_local_pitch, sin_local_roll * sin_local_pitch * sin_local_yaw + cos_local_roll * cos_local_yaw, sin_local_roll * sin_local_pitch * cos_local_yaw - cos_local_roll * sin_local_yaw},
+        {-sin_local_pitch, cos_local_pitch * sin_local_yaw, cos_local_pitch * cos_local_yaw}
+    }
+
+    -- Calculate composite rotation matrix
+    local R = {}
+    for i = 1, 3 do
+        R[i] = {}
+        for j = 1, 3 do
+            R[i][j] = 0
+            for k = 1, 3 do
+                R[i][j] = R[i][j] + R1[i][k] * R2[k][j]
+            end
+        end
+    end
+
+    -- Calculate Euler angles from composite rotation matrix
+    local new_roll = math.deg(math.atan2(R[2][1], R[1][1]))
+    local new_pitch = math.deg(math.atan2(-R[3][1], math.sqrt(R[3][2] * R[3][2] + R[3][3] * R[3][3])))
+    local new_yaw = math.deg(math.atan2(R[3][2], R[3][3]))
+
+    return new_roll - angle.roll, new_pitch - angle.pitch, new_yaw - angle.yaw
 end
 
 function Position:CheckCollision(current_pos, next_pos)

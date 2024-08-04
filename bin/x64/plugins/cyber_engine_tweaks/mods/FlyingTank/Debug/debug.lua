@@ -61,6 +61,7 @@ function Debug:SetObserver()
             print("HUD: gameuiPanzerHUDGameController OnInitialize")
             self.hud_tank_controller = this
         end)
+
     end
     self.is_set_observer = true
 
@@ -370,6 +371,100 @@ function Debug:ImGuiExcuteFunction()
         child_widget_left:SetText(tostring(num) .. "%")
         print("Excute Test Function 5")
     end
+    if ImGui.Button("TF6") then
+        local fly_tank_system = FlyTankSystem.new()
+        local vec = Vector3.new(0, 0, 10)
+        local angle_vec = Vector3.new(0, 0, 0)
+        print(fly_tank_system:AddLinelyVelocity(vec, angle_vec))
+
+        print("Excute Test Function 6")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF7") then
+        local fly_tank_system = FlyTankSystem.new()
+        local veh = Game.GetMountedVehicle(Game.GetPlayer())
+        local eular_angle = veh:GetWorldOrientation():ToEulerAngles()
+        function eulerAngleChange(a, b, c, p, q, r)
+            -- オイラー角をラジアンに変換
+            local rad_a = math.rad(a)
+            local rad_b = math.rad(b)
+            local rad_c = math.rad(c)
+            local rad_p = math.rad(p)
+            local rad_q = math.rad(q)
+            local rad_r = math.rad(r)
+        
+            -- sinとcosを計算
+            local cos_a, sin_a = math.cos(rad_a), math.sin(rad_a)
+            local cos_b, sin_b = math.cos(rad_b), math.sin(rad_b)
+            local cos_c, sin_c = math.cos(rad_c), math.sin(rad_c)
+            local cos_p, sin_p = math.cos(rad_p), math.sin(rad_p)
+            local cos_q, sin_q = math.cos(rad_q), math.sin(rad_q)
+            local cos_r, sin_r = math.cos(rad_r), math.sin(rad_r)
+        
+            -- 回転行列を計算
+            local R1 = {
+                {cos_a * cos_b, cos_a * sin_b * sin_c - sin_a * cos_c, cos_a * sin_b * cos_c + sin_a * sin_c},
+                {sin_a * cos_b, sin_a * sin_b * sin_c + cos_a * cos_c, sin_a * sin_b * cos_c - cos_a * sin_c},
+                {-sin_b, cos_b * sin_c, cos_b * cos_c}
+            }
+        
+            local R2 = {
+                {cos_p * cos_q, cos_p * sin_q * sin_r - sin_p * cos_r, cos_p * sin_q * cos_r + sin_p * sin_r},
+                {sin_p * cos_q, sin_p * sin_q * sin_r + cos_p * cos_r, sin_p * sin_q * cos_r - cos_p * sin_r},
+                {-sin_q, cos_q * sin_r, cos_q * cos_r}
+            }
+        
+            -- 合成回転行列を計算
+            local R = {}
+            for i = 1, 3 do
+                R[i] = {}
+                for j = 1, 3 do
+                    R[i][j] = 0
+                    for k = 1, 3 do
+                        R[i][j] = R[i][j] + R1[i][k] * R2[k][j]
+                    end
+                end
+            end
+        
+            -- 合成回転行列からオイラー角を計算
+            local new_a = math.deg(math.atan2(R[2][1], R[1][1]))
+            local new_b = math.deg(math.atan2(-R[3][1], math.sqrt(R[3][2] * R[3][2] + R[3][3] * R[3][3])))
+            local new_c = math.deg(math.atan2(R[3][2], R[3][3]))
+        
+            return new_a - a, new_b - b, new_c - c
+        end
+
+        local a, b, c = eular_angle.roll, eular_angle.pitch, eular_angle.yaw
+        print(a, b, c)
+        local p, q, r = 0, 1, 0
+        local new_a, new_b, new_c = eulerAngleChange(a, b, c, p, q, r)
+        print(new_a, new_b, new_c)
+        local vec = Vector3.new(0, 0, 0)
+        local angle_vec = Vector3.new(new_b, new_a, new_c)
+        print(fly_tank_system:AddLinelyVelocity(vec, angle_vec))
+
+        print("Excute Test Function 7")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF8") then
+        local fly_tank_system = FlyTankSystem.new()
+        local vec = Vector3.new(0, 0, 0)
+        local vec_angle = Vector3.new(0, 0, 0)
+        print(fly_tank_system:ChangeLinelyVelocity(vec, vec_angle, 1))
+
+        print("Excute Test Function 8")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF9") then
+        local fly_tank_system = FlyTankSystem.new()
+        local vec = fly_tank_system:GetVelocity()
+        print(vec.x , vec.y, vec.z)
+        local vec = fly_tank_system:GetAngularVelocity()
+        print(vec.x , vec.y, vec.z)
+
+        print("Excute Test Function 9")
+    end
 end
+
 
 return Debug
