@@ -41,6 +41,8 @@ function Core:New()
     obj.pitch_up_button_hold_count = 0
     obj.is_pitch_down_button_hold_counter = false
     obj.pitch_down_button_hold_count = 0
+    obj.is_pitch_reset_button_hold_counter = false
+    obj.pitch_reset_button_hold_count = 0
     -- lock
     obj.is_locked_action_in_waiting = false
     -- model table
@@ -378,6 +380,9 @@ function Core:ConvertReleaseButtonAction(key)
     elseif keybind_name == "pitch_down" then
         self.is_pitch_down_button_hold_counter = false
         self.pitch_down_button_hold_count = 0
+    elseif keybind_name == "pitch_reset" then
+        self.is_pitch_reset_button_hold_counter = false
+        self.pitch_reset_button_hold_count = 0
     end
 end
 
@@ -455,7 +460,21 @@ function Core:ConvertPressButtonAction(key)
             end)
         end
     elseif keybind_name == "pitch_reset" then
-        self.queue_obj:Enqueue(Def.ActionList.PitchReset)
+        if not self.is_pitch_reset_button_hold_counter then
+            self.is_pitch_reset_button_hold_counter = true
+            Cron.Every(FlyingTank.time_resolution, {tick=0}, function(timer)
+                timer.tick = timer.tick + 1
+                self.pitch_reset_button_hold_count = timer.tick
+                if timer.tick >= self.max_move_count then
+                    self.is_pitch_reset_button_hold_counter = false
+                    Cron.Halt(timer)
+                elseif not self.is_pitch_reset_button_hold_counter then
+                    Cron.Halt(timer)
+                else
+                    self.queue_obj:Enqueue(Def.ActionList.PitchReset)
+                end
+            end)
+        end
     elseif keybind_name == "toggle_door" then
         action_list = Def.ActionList.ChangeDoor
     elseif keybind_name == "toggle_radio" then

@@ -135,8 +135,9 @@ function Event:CheckAllEvents()
         self:CheckCommonEvent()
     elseif self.current_situation == Def.Situation.InVehicle then
         self:CheckInAV()
-        self:CheckCollision()
+        -- self:CheckCollision()
         self:CheckCommonEvent()
+        self:CheckTankHUD()
     elseif self.current_situation == Def.Situation.TalkingOff then
         self:CheckDespawn()
         self:CheckCommonEvent()
@@ -192,23 +193,23 @@ function Event:CheckInAV()
     end
 end
 
-function Event:CheckCollision()
-    if self.vehicle_obj.is_collision then
-        self.log_obj:Record(LogLevel.Debug, "Collision detected")
-        local material = self.vehicle_obj.position_obj.collision_trace_result.material.value
-        if not self.vehicle_obj.engine_obj:IsInFalling() then
-            if string.find(material, "concrete") then
-                self.sound_obj:PlaySound("331_crash_concrete")
-            elseif string.find(material, "metal") then
-                self.sound_obj:PlaySound("332_crash_metal")
-            elseif string.find(material, "glass") then
-                self.sound_obj:PlaySound("333_crash_wood")
-            else
-                self.sound_obj:PlaySound("330_crash_default")
-            end
-        end
-    end
-end
+-- function Event:CheckCollision()
+--     if self.vehicle_obj.is_collision then
+--         self.log_obj:Record(LogLevel.Debug, "Collision detected")
+--         local material = self.vehicle_obj.position_obj.collision_trace_result.material.value
+--         if not self.vehicle_obj.engine_obj:IsInFalling() then
+--             if string.find(material, "concrete") then
+--                 self.sound_obj:PlaySound("331_crash_concrete")
+--             elseif string.find(material, "metal") then
+--                 self.sound_obj:PlaySound("332_crash_metal")
+--             elseif string.find(material, "glass") then
+--                 self.sound_obj:PlaySound("333_crash_wood")
+--             else
+--                 self.sound_obj:PlaySound("330_crash_default")
+--             end
+--         end
+--     end
+-- end
 
 function Event:CheckReturnVehicle()
     if FlyingTank.core_obj:GetCallStatus() then
@@ -310,6 +311,10 @@ function Event:CheckSoundRestriction()
             self.sound_obj:PartialMute(200, 300)
         end
     end
+end
+
+function Event:CheckTankHUD()
+    self.hud_obj:UpdateTankHUD()
 end
 
 return Event

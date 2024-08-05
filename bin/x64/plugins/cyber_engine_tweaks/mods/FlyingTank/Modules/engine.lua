@@ -11,6 +11,8 @@ function Engine:New(position_obj, all_models)
     obj.all_models = all_models
     obj.model_index = 1
 
+    obj.reset_pitch_exception_area = 0.1
+
     --Common
     obj.rebound_constant = nil
 
@@ -32,6 +34,7 @@ function Engine:SetModel(index)
     -- set pyhsical parameters
     self.up_down_speed = self.all_models[index].up_down_speed
     self.pitch_speed = self.all_models[index].pitch_speed
+    self.reset_pitch_speed = self.all_models[index].reset_pitch_speed
 end
 
 function Engine:Init()
@@ -68,6 +71,13 @@ function Engine:GetNextPosition(movement)
         return 0, 0, 0, 0, self.pitch_speed, 0
     elseif movement == Def.ActionList.PitchDown then
         return 0, 0, 0, 0, -self.pitch_speed, 0
+    elseif movement == Def.ActionList.PitchReset then
+        local angle_pitch = self.position_obj:GetEulerAngles().pitch
+        if angle_pitch > self.reset_pitch_exception_area then
+            return 0, 0, 0, 0, -self.reset_pitch_speed, 0
+        elseif angle_pitch < -self.reset_pitch_exception_area then
+            return 0, 0, 0, 0, self.reset_pitch_speed, 0
+        end
     else
         return 0, 0, 0, 0, 0, 0
     end

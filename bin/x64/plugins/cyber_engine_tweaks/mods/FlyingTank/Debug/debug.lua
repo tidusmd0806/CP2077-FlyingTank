@@ -57,11 +57,6 @@ function Debug:SetObserver()
 
     if not self.is_set_observer then
         -- reserved
-        Observe('gameuiPanzerHUDGameController', 'OnInitialize', function(this)
-            print("HUD: gameuiPanzerHUDGameController OnInitialize")
-            self.hud_tank_controller = this
-        end)
-
     end
     self.is_set_observer = true
 
@@ -191,61 +186,6 @@ function Debug:ImGuiSoundCheck()
     end
 end
 
-function Debug:ImGuiMappinPosition()
-    self.is_im_gui_mappin_position = ImGui.Checkbox("[ImGui] Custom Mappin Position", self.is_im_gui_mappin_position)
-    if self.is_im_gui_mappin_position then
-        local x = string.format("%.2f", self.core_obj.current_custom_mappin_position.x)
-        local y = string.format("%.2f", self.core_obj.current_custom_mappin_position.y)
-        local z = string.format("%.2f", self.core_obj.current_custom_mappin_position.z)
-        ImGui.Text("X: " .. x .. ", Y: " .. y .. ", Z: " .. z)
-        if FlyingTank.core_obj.is_custom_mappin then
-            ImGui.Text("Custom Mappin : On")
-        else
-            ImGui.Text("Custom Mappin : Off")
-        end
-    end
-end
-
-function Debug:ImGuiAutoPilotStatus()
-    self.is_im_gui_auto_pilot_status = ImGui.Checkbox("[ImGui] Auto Pilot Status", self.is_im_gui_auto_pilot_status)
-    if self.is_im_gui_auto_pilot_status then
-        ImGui.Text("FT Index near mappin : " .. tostring(FlyingTank.core_obj.ft_index_nearest_mappin))
-        ImGui.Text("FT Index near favorite : " .. tostring(FlyingTank.core_obj.ft_index_nearest_favorite))
-        local selected_history_index = FlyingTank.core_obj.event_obj.ui_obj.selected_auto_pilot_history_index
-        ImGui.Text("Selected History Index : " .. selected_history_index)
-        ImGui.Text("-----History-----")
-        local mappin_history = FlyingTank.user_setting_table.mappin_history
-        if #mappin_history ~= 0 then
-            for i, value in ipairs(mappin_history) do
-                ImGui.Text("[" .. i .. "] : " .. value.district[1])
-                ImGui.SameLine()
-                ImGui.Text("/ " .. value.location)
-                ImGui.SameLine()
-                ImGui.Text("/ " .. value.distance)
-                if value.position ~= nil then
-                    ImGui.Text("[" .. i .. "] : " .. value.position.x .. ", " .. value.position.y .. ", " .. value.position.z)
-                else
-                    ImGui.Text("[" .. i .. "] : nil")
-                end
-            end
-        else
-            ImGui.Text("No History")
-        end
-        local selected_favorite_index = FlyingTank.core_obj.event_obj.ui_obj.selected_auto_pilot_favorite_index
-        ImGui.Text("Selected Favorite Index : " .. selected_favorite_index)
-        ImGui.Text("------Favorite Location------")
-        local favorite_location_list = FlyingTank.user_setting_table.favorite_location_list
-        for i, value in ipairs(favorite_location_list) do
-            ImGui.Text("[" .. i .. "] : " .. value.name)
-            if value.pos ~= nil then
-                ImGui.Text("[" .. i .. "] : " .. value.pos.x .. ", " .. value.pos.y .. ", " .. value.pos.z)
-            else
-                ImGui.Text("[" .. i .. "] : nil")
-            end
-        end
-    end
-end
-
 function Debug:ImGuiRadioInfo()
     self.is_im_gui_radio_info = ImGui.Checkbox("[ImGui] Radio Info", self.is_im_gui_radio_info)
     if self.is_im_gui_radio_info then
@@ -307,7 +247,7 @@ end
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
         -- atitude
-        local root_widget = self.hud_tank_controller.root
+        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
         local child_widget = root_widget:GetWidget(CName.new("ruler_right"))
         local child_widget_2 = child_widget:GetWidget(CName.new("value"))
         local num = math.random(0, 1000)
@@ -316,7 +256,7 @@ function Debug:ImGuiExcuteFunction()
     end
     ImGui.SameLine()
     if ImGui.Button("TF2") then
-        local root_widget = self.hud_tank_controller.root
+        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
         local child_widget = root_widget:GetWidget(CName.new("boost"))
         local child_widget_header = child_widget:GetWidget(CName.new("header"))
         local child_widget_bar = child_widget:GetWidget(CName.new("inkMaskWidget48"))
@@ -336,7 +276,7 @@ function Debug:ImGuiExcuteFunction()
     end
     ImGui.SameLine()
     if ImGui.Button("TF3") then
-        local root_widget = self.hud_tank_controller.root
+        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
         local child_widget = root_widget:GetWidget(CName.new("missile"))
         local child_widget_header = child_widget:GetWidget(CName.new("header"))
         local child_widget_text_1 = child_widget:GetWidget(3)
@@ -348,7 +288,7 @@ function Debug:ImGuiExcuteFunction()
     end
     ImGui.SameLine()
     if ImGui.Button("TF4") then
-        local root_widget = self.hud_tank_controller.root
+        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
         local child_widget = root_widget:GetWidget(CName.new("ruler_yaw"))
         local child_widget_header = child_widget:GetWidget(CName.new("yaw_descr"))
         child_widget_header:SetText("eee")
@@ -360,7 +300,7 @@ function Debug:ImGuiExcuteFunction()
     end
     ImGui.SameLine()
     if ImGui.Button("TF5") then
-        local root_widget = self.hud_tank_controller.root
+        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
         local child_widget_r = root_widget:GetWidget(CName.new("intake_fans-r"))
         local child_widget_right = child_widget_r:GetWidget(CName.new("R-percent"))
         local num = math.random(0, 100)
@@ -463,6 +403,13 @@ function Debug:ImGuiExcuteFunction()
         print(vec.x , vec.y, vec.z)
 
         print("Excute Test Function 9")
+    end
+    if ImGui.Button("TF10") then
+        local veh = Game.GetMountedVehicle(Game.GetPlayer())
+        local aaa = gamedataShooterBasilisk_Record.new()
+        print(aaa:MissileCount())
+
+        print("Excute Test Function 10")
     end
 end
 

@@ -11,15 +11,16 @@ function HUD:New()
     obj.log_obj:SetLevel(LogLevel.Info, "HUD")
     --static --
     obj.speed_meter_refresh_rate = 0.05
+    obj.shown_max_pitch = 35
     -- dynamic --
     obj.vehicle_obj = nil
-	-- obj.hud_car_controller = nil
-
-    -- obj.is_speed_meter_shown = false
     obj.key_input_show_hint_event = nil
     obj.key_input_hide_hint_event = nil
 
     obj.popup_manager = nil
+    obj.hud_tank_controller = nil
+
+    obj.kill_count = 0
 
     return setmetatable(obj, self)
 end
@@ -31,6 +32,7 @@ function HUD:Init(vehicle_obj)
     if not FlyingTank.is_ready then
         self:SetOverride()
         self:SetObserve()
+        self:PreTankHUD()
         GameHUD.Initialize()
     end
 
@@ -54,114 +56,99 @@ function HUD:SetObserve()
             self.popup_manager = this
         end)
 
+        Observe('gameuiPanzerHUDGameController', 'OnInitialize', function(this)
+            self.hud_tank_controller = this
+        end)
+
+        Observe('NPCPuppet', 'SendAfterDeathOrDefeatEvent', function(this)
+            self.kill_count = self.kill_count + 1
+        end)
     end
 
 end
 
--- function HUD:ShowMeter()
+function HUD:PreTankHUD()
 
---     self.hud_car_controller:ShowRequest()
---     self.hud_car_controller:OnCameraModeChanged(true)
+    -- gauge normal color settings
+    self.gauge_normal_color = HDRColor.new()
+    self.gauge_normal_color.Red = 0.369
+    self.gauge_normal_color.Green = 0.965
+    self.gauge_normal_color.Blue = 1.000
+    self.gauge_normal_color.Alpha = 1.000
 
---     if self.is_speed_meter_shown then
---         return
---     else
---         self.is_speed_meter_shown = true
---         Cron.Every(self.speed_meter_refresh_rate, {tick = 0}, function(timer)
---             local meter_value = 0    
---             if self.vehicle_obj.is_auto_pilot then
---                 inkTextRef.SetText(self.hud_car_controller.SpeedUnits, FlyingTank.core_obj:GetTranslationText("hud_meter_auto_pilot_display"))
---                 meter_value = math.floor(Vector4.Distance(self.vehicle_obj.auto_pilot_info.dist_pos, Game.GetPlayer():GetWorldPosition()))
---             else
---                 if FlyingTank.user_setting_table.is_unit_km_per_hour then
---                     inkTextRef.SetText(self.hud_car_controller.SpeedUnits, FlyingTank.core_obj:GetTranslationText("hud_meter_kph"))
---                     meter_value = math.floor(self.vehicle_obj.engine_obj.current_speed * (3600 / 1000))
---                 else
---                     inkTextRef.SetText(self.hud_car_controller.SpeedUnits,  FlyingTank.core_obj:GetTranslationText("hud_meter_mph"))
---                     meter_value = math.floor(self.vehicle_obj.engine_obj.current_speed * (3600 / 1609))
---                 end
---             end
---             inkTextRef.SetText(self.hud_car_controller.SpeedValue, meter_value)
+    -- gauge warning color settings
+    self.gauge_waring_color = HDRColor.new()
+    self.gauge_waring_color.Red = 1.369
+    self.gauge_waring_color.Green = 0.965
+    self.gauge_waring_color.Blue = 1.000
+    self.gauge_waring_color.Alpha = 1.000
 
---             local power_level = 0
---             if self.vehicle_obj.is_auto_pilot then
---                 local distance = Vector4.Distance(self.vehicle_obj.auto_pilot_info.dist_pos, self.vehicle_obj.auto_pilot_info.start_pos)
---                 power_level = math.floor((1.01 - (meter_value / distance)) * 10)
---             else
---                 if FlyingTank.user_setting_table.flight_mode == Def.FlightMode.Heli then
---                     power_level = math.floor((self.vehicle_obj.engine_obj.lift_force - self.vehicle_obj.engine_obj.min_lift_force) / ((self.vehicle_obj.engine_obj.max_lift_force - self.vehicle_obj.engine_obj.min_lift_force) / 10))
---                 elseif FlyingTank.user_setting_table.flight_mode == Def.FlightMode.Spinner then 
---                     power_level = math.floor(self.vehicle_obj.engine_obj.spinner_horizenal_force / (self.vehicle_obj.engine_obj.max_spinner_horizenal_force / 10))
---                 end
---             end
---             self.hud_car_controller:OnRpmValueChanged(power_level)
---             self.hud_car_controller:EvaluateRPMMeterWidget(power_level)
---             if not self.is_speed_meter_shown then
---                 Cron.Halt(timer)
---             end
---         end)
---     end
-
--- end
-
--- function HUD:HideMeter()
---     self.hud_car_controller:HideRequest()
---     self.hud_car_controller:OnCameraModeChanged(false)
---     self.is_speed_meter_shown = false
--- end
-
--- function HUD:SetCustomHint()
---     local hint_table = {}
---     if FlyingTank.user_setting_table.flight_mode == Def.FlightMode.Heli then
---         hint_table = Utils:ReadJson("Data/heli_key_hint.json")
---     elseif FlyingTank.user_setting_table.flight_mode == Def.FlightMode.Spinner then
---         hint_table = Utils:ReadJson("Data/spinner_key_hint.json")
---     end
---     self.key_input_show_hint_event = UpdateInputHintMultipleEvent.new()
---     self.key_input_hide_hint_event = UpdateInputHintMultipleEvent.new()
---     self.key_input_show_hint_event.targetHintContainer = CName.new("GameplayInputHelper")
---     self.key_input_hide_hint_event.targetHintContainer = CName.new("GameplayInputHelper")
---     for _, hint in ipairs(hint_table) do
---         local input_hint_data = InputHintData.new()
---         input_hint_data.source = CName.new(hint.source)
---         input_hint_data.action = CName.new(hint.action)
---         if hint.holdIndicationType == "FromInputConfig" then
---             input_hint_data.holdIndicationType = inkInputHintHoldIndicationType.FromInputConfig
---         elseif hint.holdIndicationType == "Hold" then
---             input_hint_data.holdIndicationType = inkInputHintHoldIndicationType.Hold
---         elseif hint.holdIndicationType == "Press" then
---             input_hint_data.holdIndicationType = inkInputHintHoldIndicationType.Press
---         else
---             input_hint_data.holdIndicationType = inkInputHintHoldIndicationType.FromInputConfig
---         end
---         input_hint_data.sortingPriority = hint.sortingPriority
---         input_hint_data.enableHoldAnimation = hint.enableHoldAnimation
---         local keys = string.gmatch(hint.localizedLabel, "LocKey#(%d+)")
---         local localizedLabels = {}
---         for key in keys do
---             table.insert(localizedLabels, GetLocalizedText("LocKey#" .. key))
---         end
---         input_hint_data.localizedLabel = table.concat(localizedLabels, "-")
---         self.key_input_show_hint_event:AddInputHint(input_hint_data, true)
---         self.key_input_hide_hint_event:AddInputHint(input_hint_data, false)
---     end
--- end
-
--- function HUD:ShowCustomHint()
---     self:SetCustomHint()
---     Game.GetUISystem():QueueEvent(self.key_input_show_hint_event)
--- end
-
--- function HUD:HideCustomHint()
---     Game.GetUISystem():QueueEvent(self.key_input_hide_hint_event)
--- end
-
-function HUD:ShowActionButtons()
-    GameSettings.Set('/interface/hud/action_buttons', true)
 end
 
-function HUD:HideActionButtons()
-    GameSettings.Set('/interface/hud/action_buttons', false)
+function HUD:UpdateTankHUD()
+    local root_widget = self.hud_tank_controller.root
+
+    if root_widget == nil then
+        return
+    end
+
+    -- Attitude Indicator
+    local attitude_indicator = root_widget:GetWidget(CName.new("ruler_right")):GetWidget(CName.new("value"))
+    local attitude_num = self.vehicle_obj.position_obj:GetPosition().z
+    attitude_indicator:SetText(tostring(math.floor(attitude_num)))
+
+    -- Left Bottom Gauge
+    local boost_gauge_widget = root_widget:GetWidget(CName.new("boost"))
+    local boost_gauge_header = boost_gauge_widget:GetWidget(CName.new("header"))
+    local boost_gauge_slide_bar = boost_gauge_widget:GetWidget(CName.new("inkMaskWidget48"))
+    local boost_gauge_bar_base = boost_gauge_widget:GetWidget(0)
+    local boost_gauge_max_value = boost_gauge_widget:GetWidget(5)
+    local pitch_value = self.vehicle_obj.position_obj:GetEulerAngles().pitch
+    local pitch_value_int = math.floor(pitch_value)
+    boost_gauge_header:SetText(FlyingTank.core_obj:GetTranslationText("hud_pitch_header") .. "[" .. tostring(pitch_value_int) .. "]")
+    if pitch_value_int > self.shown_max_pitch then
+        pitch_value_int = self.shown_max_pitch
+    elseif pitch_value_int < -self.shown_max_pitch then
+        pitch_value_int = -self.shown_max_pitch
+    end
+    local num = self.shown_max_pitch - math.abs(pitch_value_int)
+    boost_gauge_slide_bar:SetMargin(-1801.25 - num * 10, 895, 0, 0)
+    if pitch_value > 0 then
+        if pitch_value > self.shown_max_pitch / 2 then
+            boost_gauge_bar_base:SetTintColor(self.gauge_waring_color)
+        else
+            boost_gauge_bar_base:SetTintColor(self.gauge_normal_color)
+        end
+        boost_gauge_max_value:SetText(tostring(self.shown_max_pitch))
+    else
+        if pitch_value < -self.shown_max_pitch / 2 then
+            boost_gauge_bar_base:SetTintColor(self.gauge_waring_color)
+        else
+            boost_gauge_bar_base:SetTintColor(self.gauge_normal_color)
+        end
+        boost_gauge_max_value:SetText(tostring(-self.shown_max_pitch))
+    end
+
+    -- YAW Indicator
+    local yaw_indicator_header = root_widget:GetWidget(CName.new("ruler_yaw")):GetWidget(CName.new("yaw_descr"))
+    local yaw_indicator_value = root_widget:GetWidget(CName.new("ruler_yaw")):GetWidget(CName.new("yaw_hori")):GetWidget(CName.new("yawCounter"))
+    local yaw_value = self.vehicle_obj.position_obj:GetEulerAngles().yaw
+    local yaw_value_int = math.floor(yaw_value)
+    if yaw_value_int < 0 then
+        yaw_value_int = -yaw_value_int
+    elseif yaw_value_int > 0 then
+        yaw_value_int = 360 - yaw_value_int
+    end
+    yaw_indicator_header:SetText(FlyingTank.core_obj:GetTranslationText("hud_yaw_header"))
+    yaw_indicator_value:SetText(tostring(yaw_value_int))
+
+    -- Right Bottom Text
+    local right_bottom_text_parent = root_widget:GetWidget(CName.new("missile"))
+    local right_bottom_text_top = right_bottom_text_parent:GetWidget(CName.new("header"))
+    local right_bottom_text_middle = right_bottom_text_parent:GetWidget(3)
+    local right_bottom_text_bottom = right_bottom_text_parent:GetWidget(CName.new("0"))
+    right_bottom_text_middle:SetText(tostring(self.kill_count))
+
 end
 
 function HUD:ShowRadioPopup()

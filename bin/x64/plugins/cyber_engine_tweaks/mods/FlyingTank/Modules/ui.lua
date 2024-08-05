@@ -16,6 +16,7 @@ function UI:New()
 	obj.dummy_basilisk_aldecaldos_record_id = nil
 	obj.dummy_basilisk_militech_record_id = nil
 	obj.option_table_list = {}
+	obj.is_activate_vehicle_switch = false
     return setmetatable(obj, self)
 end
 
@@ -26,11 +27,28 @@ end
 
 function UI:CreateNativeSettingsBasePage()
 	FlyingTank.NativeSettings.addTab("/FlyingTank", FlyingTank.core_obj:GetTranslationText("native_settings_keybinds_title"))
-	FlyingTank.NativeSettings.addSubcategory("/FlyingTank/activation", FlyingTank.core_obj:GetTranslationText("native_settings_activation_subtitle"))
+	self:CreateNativeSettingsSubCategory()
+	self:CreateNativeSettingsPage()
+end
+
+function UI:CreateNativeSettingsSubCategory()
+
+	FlyingTank.NativeSettings.addSubcategory("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_subtitle"))
+	if self.is_activate_vehicle_switch then
+		FlyingTank.NativeSettings.addSubcategory("/FlyingTank/activation", FlyingTank.core_obj:GetTranslationText("native_settings_activation_subtitle"))
+	end
 	FlyingTank.NativeSettings.addSubcategory("/FlyingTank/keybinds", FlyingTank.core_obj:GetTranslationText("native_settings_keybinds_subtitle"))
 	FlyingTank.NativeSettings.addSubcategory("/FlyingTank/controller", FlyingTank.core_obj:GetTranslationText("native_settings_controller_subtitle"))
-	FlyingTank.NativeSettings.addSubcategory("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_subtitle"))
-	self:CreateNativeSettingsPage()
+
+end
+
+function UI:ClearAllNativeSettingsSubCategory()
+
+	FlyingTank.NativeSettings.removeSubcategory("/FlyingTank/general")
+	FlyingTank.NativeSettings.removeSubcategory("/FlyingTank/activation")
+	FlyingTank.NativeSettings.removeSubcategory("/FlyingTank/keybinds")
+	FlyingTank.NativeSettings.removeSubcategory("/FlyingTank/controller")
+
 end
 
 function UI:CreateNativeSettingsPage()
@@ -49,15 +67,14 @@ function UI:CreateNativeSettingsPage()
 		end)
 	end)
 	table.insert(self.option_table_list, option_table)
-	option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/activation", FlyingTank.core_obj:GetTranslationText("native_settings_activation_tank"), FlyingTank.core_obj:GetTranslationText("native_settings_activation_tank_description"), FlyingTank.user_setting_table.is_activate_vehicle_switch, false, function(state)
-		FlyingTank.user_setting_table.is_activate_vehicle_switch = state
-		Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
+	option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_activation_tank"), FlyingTank.core_obj:GetTranslationText("native_settings_activation_tank_description"), self.is_activate_vehicle_switch, false, function(state)
+		self.is_activate_vehicle_switch = state
 		Cron.After(self.delay_updating_native_settings, function()
 			self:UpdateNativeSettingsPage()
 		end)
 	end)
 	table.insert(self.option_table_list, option_table)
-	if FlyingTank.user_setting_table.is_activate_vehicle_switch then
+	if self.is_activate_vehicle_switch then
 		local is_aldecaldos_tank = Game.GetVehicleSystem():IsVehiclePlayerUnlocked(TweakDBID.new(FlyingTank.basilisk_aldecaldos_record))
 		local is_militech_tank = Game.GetVehicleSystem():IsVehiclePlayerUnlocked(TweakDBID.new(FlyingTank.basilisk_militech_record))
 		option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/activation", FlyingTank.core_obj:GetTranslationText("native_settings_activation_aldecaldos"), FlyingTank.core_obj:GetTranslationText("native_settings_activation_aldecaldos_description"), is_aldecaldos_tank, is_aldecaldos_tank, function(state)
@@ -116,10 +133,18 @@ function UI:ClearNativeSettingsPage()
 	end
 	self.option_table_list = {}
 
+	self:ClearAllNativeSettingsSubCategory()
+
 end
 
 function UI:UpdateNativeSettingsPage()
+
+	if FlyingTank.core_obj.event_obj.current_situation == -1 then
+		self.is_activate_vehicle_switch = false
+	end
+
 	self:ClearNativeSettingsPage()
+	self:CreateNativeSettingsSubCategory()
 	self:CreateNativeSettingsPage()
 end
 

@@ -62,7 +62,6 @@ FlyingTank.user_setting_table = {
     version = FlyingTank.version,
     --- general
     language_index = 1,
-    is_activate_vehicle_switch = false,
     is_mute_all = false, -- hidden
     is_mute_flight = false, -- hidden
     --- input
@@ -80,7 +79,7 @@ registerForEvent("onTweak",function ()
     -- Vehicle Parameters
     TweakDB:CloneRecord("Vehicle.v_militech_basilisk_inline5_fly", "Vehicle.v_militech_basilisk_inline5")
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankGravityMul"), 0)
-    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankMaxSpeed"), 50) -- do not increase over 100
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankMaxSpeed"), 58) -- do not increase over 100
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankAcceleration"), 30)
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankDeceleration"), 15)
 
