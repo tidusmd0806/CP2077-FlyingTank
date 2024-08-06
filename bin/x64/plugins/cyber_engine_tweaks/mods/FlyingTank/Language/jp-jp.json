@@ -13,6 +13,9 @@
     "native_settings_activation_aldecaldos_description": "車両リストに反映されます。既に車両リストを開いている場合は閉じてください。",
     "native_settings_activation_militech": "ミリテックの車両",
     "native_settings_activation_militech_description": "車両リストに反映されます。既に車両リストを開いている場合は閉じてください。",
+    "native_settings_hud_subtitle": "HUD",
+    "native_settings_hud_active": "車両HUDを有効にする",
+    "native_settings_hud_active_description": "HUDを表示の有無を設定します。",
     "native_settings_keybinds_subtitle": "キーバインド (キーボードとマウス)",
     "native_settings_controller_subtitle": "キーバインド (コントローラー)",
     "native_settings_keybinds_move_up": "上昇",
@@ -32,4 +35,5 @@
 
     "hud_pitch_header": "PITCH",
     "hud_yaw_header": "YAW",
+    "hud_kill_counter_header": "KILL COUNTER",
 }

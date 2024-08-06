@@ -212,19 +212,19 @@ end
 function Debug:ImGuiMeasurement()
     self.is_im_gui_measurement = ImGui.Checkbox("[ImGui] Measurement", self.is_im_gui_measurement)
     if self.is_im_gui_measurement then
-        local res_x, res_y = GetDisplayResolution()
-        ImGui.SetNextWindowPos((res_x / 2) - 20, (res_y / 2) - 20)
-        ImGui.SetNextWindowSize(40, 40)
-        ImGui.SetNextWindowSizeConstraints(40, 40, 40, 40)
-        ---
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 10)
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 5)
-        ---
-        ImGui.Begin("Crosshair", ImGuiWindowFlags.NoMove + ImGuiWindowFlags.NoCollapse + ImGuiWindowFlags.NoTitleBar + ImGuiWindowFlags.NoResize)
-        ImGui.End()
-        ---
-        ImGui.PopStyleVar(2)
-        ImGui.PopStyleColor(1)
+        -- local res_x, res_y = GetDisplayResolution()
+        -- ImGui.SetNextWindowPos((res_x / 2) - 20, (res_y / 2) - 20)
+        -- ImGui.SetNextWindowSize(40, 40)
+        -- ImGui.SetNextWindowSizeConstraints(40, 40, 40, 40)
+        -- ---
+        -- ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 10)
+        -- ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 5)
+        -- ---
+        -- ImGui.Begin("FlyingTankDebugCrosshair", ImGuiWindowFlags.NoMove + ImGuiWindowFlags.NoCollapse + ImGuiWindowFlags.NoTitleBar + ImGuiWindowFlags.NoResize)
+        -- ImGui.End()
+        -- ---
+        -- ImGui.PopStyleVar(2)
+        -- ImGui.PopStyleColor(1)
         local look_at_pos = Game.GetTargetingSystem():GetLookAtPosition(Game.GetPlayer())
         if self.core_obj.vehicle_obj.position_obj.entity == nil then
             return
@@ -312,16 +312,14 @@ function Debug:ImGuiExcuteFunction()
         print("Excute Test Function 5")
     end
     if ImGui.Button("TF6") then
-        local fly_tank_system = FlyTankSystem.new()
         local vec = Vector3.new(0, 0, 10)
         local angle_vec = Vector3.new(0, 0, 0)
-        print(fly_tank_system:AddLinelyVelocity(vec, angle_vec))
+        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:AddLinelyVelocity(vec, angle_vec))
 
         print("Excute Test Function 6")
     end
     ImGui.SameLine()
     if ImGui.Button("TF7") then
-        local fly_tank_system = FlyTankSystem.new()
         local veh = Game.GetMountedVehicle(Game.GetPlayer())
         local eular_angle = veh:GetWorldOrientation():ToEulerAngles()
         function eulerAngleChange(a, b, c, p, q, r)
@@ -381,35 +379,55 @@ function Debug:ImGuiExcuteFunction()
         print(new_a, new_b, new_c)
         local vec = Vector3.new(0, 0, 0)
         local angle_vec = Vector3.new(new_b, new_a, new_c)
-        print(fly_tank_system:AddLinelyVelocity(vec, angle_vec))
+        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:AddLinelyVelocity(vec, angle_vec))
 
         print("Excute Test Function 7")
     end
     ImGui.SameLine()
     if ImGui.Button("TF8") then
-        local fly_tank_system = FlyTankSystem.new()
         local vec = Vector3.new(0, 0, 0)
         local vec_angle = Vector3.new(0, 0, 0)
-        print(fly_tank_system:ChangeLinelyVelocity(vec, vec_angle, 1))
+        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:ChangeLinelyVelocity(vec, vec_angle, 1))
 
         print("Excute Test Function 8")
     end
     ImGui.SameLine()
     if ImGui.Button("TF9") then
-        local fly_tank_system = FlyTankSystem.new()
-        local vec = fly_tank_system:GetVelocity()
+        local vec = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetVelocity()
         print(vec.x , vec.y, vec.z)
-        local vec = fly_tank_system:GetAngularVelocity()
+        local vec = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetAngularVelocity()
         print(vec.x , vec.y, vec.z)
 
         print("Excute Test Function 9")
     end
-    if ImGui.Button("TF10") then
-        local veh = Game.GetMountedVehicle(Game.GetPlayer())
-        local aaa = gamedataShooterBasilisk_Record.new()
-        print(aaa:MissileCount())
+    ImGui.SameLine()
+    if ImGui.Button("TF9-2") then
 
+        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetPhysicsState())
+
+        print("Excute Test Function 9-2")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF9-3") then
+        local entity = Game.FindEntityByID(self.core_obj.vehicle_obj.entity_id)
+        entity:PhysicsWakeUp()
+        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:AddLinelyVelocity(Vector3.new(0, 0, 10), Vector3.new(0, 0, 0)))
+
+        print("Excute Test Function 9-3")
+    end
+    if ImGui.Button("TF10") then
+        self.core_obj.event_obj.hud_obj.hud_tank_controller:TurnOff()
         print("Excute Test Function 10")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF11") then
+        self.core_obj.event_obj.hud_obj.hud_tank_controller:TurnOn()
+        print("Excute Test Function 11")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF12") then
+        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:IsOnGround())
+        print("Excute Test Function 12")
     end
 end
 

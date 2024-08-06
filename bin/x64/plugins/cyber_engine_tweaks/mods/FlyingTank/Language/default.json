@@ -13,6 +13,11 @@
     "native_settings_activation_aldecaldos_description": "It will be reflected in the vehicle list. If you have already opened the vehicle list, please close it.",
     "native_settings_activation_militech": "Activate Militech Tank",
     "native_settings_activation_militech_description": "It will be reflected in the vehicle list. If you have already opened the vehicle list, please close it.",
+    "native_settings_hud_subtitle": "HUD",
+    "native_settings_hud_active": "Enable Tank HUD",
+    "native_settings_hud_active_description": "Whether to display the HUD.",
+    "native_settings_hud_hud_mode": "HUD Mode",
+    "native_settings_hud_hud_mode_description": "The following display will appear in the bottom right of the HUD: [District] The district will be displayed. [KillCounter] The number of NPC kills will be displayed.",
     "native_settings_keybinds_subtitle": "Keybinds (Keyboard and Mouse)",
     "native_settings_controller_subtitle": "Keybinds (Controller)",
     "native_settings_keybinds_move_up": "Ascend",
@@ -32,5 +37,6 @@
 
     "hud_pitch_header": "PITCH",
     "hud_yaw_header": "YAW",
+    "hud_kill_counter_header": "KILL COUNTER",
 
 }

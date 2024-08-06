@@ -1,6 +1,3 @@
-local GameSettings = require('External/GameSettings.lua')
-local GameHUD = require('External/GameHUD.lua')
-local Utils = require("Tools/utils.lua")
 local HUD = {}
 HUD.__index = HUD
 
@@ -20,7 +17,13 @@ function HUD:New()
     obj.popup_manager = nil
     obj.hud_tank_controller = nil
 
+    obj.fan_speed = 50
     obj.kill_count = 0
+
+    obj.hud_mode_list = {
+        "District",
+        "KillCounter"
+    }
 
     return setmetatable(obj, self)
 end
@@ -29,11 +32,12 @@ function HUD:Init(vehicle_obj)
 
     self.vehicle_obj = vehicle_obj
 
+    self.kill_count = 0
+
     if not FlyingTank.is_ready then
         self:SetOverride()
         self:SetObserve()
         self:PreTankHUD()
-        GameHUD.Initialize()
     end
 
 end
@@ -86,10 +90,23 @@ function HUD:PreTankHUD()
 end
 
 function HUD:UpdateTankHUD()
+
+    if self.hud_tank_controller == nil then
+        return
+    end
     local root_widget = self.hud_tank_controller.root
 
     if root_widget == nil then
         return
+    end
+
+    if FlyingTank.user_setting_table.is_active_hud == false and FlyingTank.is_active_hud ~= false then
+        self.hud_tank_controller:TurnOff()
+        FlyingTank.is_active_hud = false
+        return
+    elseif FlyingTank.user_setting_table.is_active_hud == true and FlyingTank.is_active_hud ~= true then
+        self.hud_tank_controller:TurnOn()
+        FlyingTank.is_active_hud = true
     end
 
     -- Attitude Indicator
@@ -142,12 +159,42 @@ function HUD:UpdateTankHUD()
     yaw_indicator_header:SetText(FlyingTank.core_obj:GetTranslationText("hud_yaw_header"))
     yaw_indicator_value:SetText(tostring(yaw_value_int))
 
+    -- Both Side Fan Speed
+    local left_fan_speed = root_widget:GetWidget(CName.new("intake_fans-l")):GetWidget(CName.new("L-percent"))
+    local right_fan_speed = root_widget:GetWidget(CName.new("intake_fans-r")):GetWidget(CName.new("R-percent"))
+    local fan_speed_int = math.floor(self.fan_speed)
+    left_fan_speed:SetText(tostring(fan_speed_int).. "%")
+    right_fan_speed:SetText(tostring(fan_speed_int).. "%")
+
     -- Right Bottom Text
     local right_bottom_text_parent = root_widget:GetWidget(CName.new("missile"))
     local right_bottom_text_top = right_bottom_text_parent:GetWidget(CName.new("header"))
     local right_bottom_text_middle = right_bottom_text_parent:GetWidget(3)
     local right_bottom_text_bottom = right_bottom_text_parent:GetWidget(CName.new("0"))
-    right_bottom_text_middle:SetText(tostring(self.kill_count))
+    if self.hud_mode_list[FlyingTank.user_setting_table.hud_mode] == "District" then
+        local district_list = FlyingTank.core_obj:GetCurrentDistrict()
+        local district_list_num = #district_list
+        if district_list_num >= 1 then
+            right_bottom_text_middle:SetText(district_list[1])
+            right_bottom_text_middle:SetFontSize(44)
+        end
+        if district_list_num >= 2 then
+            right_bottom_text_top:SetText(district_list[2])
+            right_bottom_text_top:SetFontSize(29)
+        end
+        local x = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().x)
+        local y = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().y)
+        local z = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().z)
+        right_bottom_text_bottom:SetText("X: " .. x .. "  Y: " .. y .. "  Z: " .. z)
+        right_bottom_text_bottom:SetFontSize(18)
+    elseif self.hud_mode_list[FlyingTank.user_setting_table.hud_mode] == "KillCounter" then
+        right_bottom_text_top:SetText(FlyingTank.core_obj:GetTranslationText("hud_kill_counter_header"))
+        right_bottom_text_top:SetFontSize(22)
+        right_bottom_text_middle:SetText(tostring(self.kill_count))
+        right_bottom_text_middle:SetFontSize(97)
+        right_bottom_text_bottom:SetText(" ")
+        right_bottom_text_bottom:SetFontSize(22)
+    end
 
 end
 

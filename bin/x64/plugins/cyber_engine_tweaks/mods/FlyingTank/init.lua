@@ -18,7 +18,6 @@ FlyingTank = {
     is_ready = false,
     time_resolution = 0.01,
     is_debug_mode = true,
-    -- is_opening_overlay = false,
     -- common
     user_setting_path = "Data/user_setting.json",
     language_path = "Language",
@@ -53,7 +52,9 @@ FlyingTank = {
         {name = "pitch_reset", key = "IK_G", pad = "IK_Pad_X_SQUARE"},
         {name = "toggle_door", key = "IK_X", pad = "IK_Pad_DigitLeft"},
         {name = "toggle_radio", key = "IK_Z", pad = "IK_Pad_LeftShoulder"},
-    }
+    },
+    -- HUD
+    is_active_hud = true,
 }
 
 -- initial settings
@@ -62,6 +63,8 @@ FlyingTank.user_setting_table = {
     version = FlyingTank.version,
     --- general
     language_index = 1,
+    hud_mode = 1, -- #1: District, #2: KillCounter
+    is_active_hud = true,
     is_mute_all = false, -- hidden
     is_mute_flight = false, -- hidden
     --- input

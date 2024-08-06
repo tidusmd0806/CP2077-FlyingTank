@@ -1,4 +1,3 @@
--- local Log = require("Tools/log.lua")
 local Utils = require("Tools/utils.lua")
 local Position = {}
 Position.__index = Position
@@ -81,6 +80,8 @@ function Position:SetEntity(entity)
     end
     self.entity = entity
     self.fly_tank_system = FlyTankSystem.new()
+    local entity_id_hash = entity:GetEntityID().hash
+    self.fly_tank_system:SetVehicle(entity_id_hash)
 end
 
 function Position:ChangeWorldCordinate(basic_vector ,point_list)
@@ -224,6 +225,12 @@ function Position:AddLinelyVelocity(x,y,z,roll,pitch,yaw)
     local delta_roll, delta_pitch, delta_yaw = self:EulerAngleChange(roll, pitch, yaw)
     local angle = Vector3.new(delta_pitch, delta_roll, delta_yaw)
     self.fly_tank_system:AddLinelyVelocity(pos, angle)
+end
+
+function Position:ChangeLinelyVelocity(x,y,z,roll,pitch,yaw,type)
+    local pos = Vector3.new(x, y, z)
+    local angle = Vector3.new(roll, pitch, yaw)
+    self.fly_tank_system:ChangeLinelyVelocity(pos, angle, type)
 end
 
 function Position:EulerAngleChange(local_roll, local_pitch, local_yaw)

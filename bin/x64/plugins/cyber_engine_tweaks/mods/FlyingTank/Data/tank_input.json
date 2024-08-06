@@ -28,5 +28,15 @@
         "name": "UI_MoveX_Axis",
         "type": "AXIS_CHANGE",
         "value": "NEGATIVE"
+    },
+    "MOUSE_TANK_RIGHT_ROTATE": {
+        "name": "CameraMouseX",
+        "type": "RELATIVE_CHANGE",
+        "value": "POSITIVE"
+    },
+    "MOUSE_TANK_LEFT_ROTATE": {
+        "name": "CameraMouseX",
+        "type": "RELATIVE_CHANGE",
+        "value": "NEGATIVE"
     }
 }

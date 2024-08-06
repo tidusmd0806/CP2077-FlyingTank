@@ -17,9 +17,9 @@ function Vehicle:New(all_models)
 	obj.all_models = all_models
 	-- summon
 	obj.spawn_distance = 5.5
-	obj.spawn_high = 1
-	obj.spawn_wait_count = 100
-	obj.down_time_count = 20
+	obj.spawn_high = 5
+	obj.spawn_wait_count = 150
+	obj.down_time_count = 200
 	obj.land_offset = -1.0
 	obj.door_open_time = 0.5
 	-- collision
@@ -86,7 +86,7 @@ function Vehicle:IsSpawning()
 end
 
 function Vehicle:IsDespawned()
-	if self.entity_id == nil then
+	if Game.FindEntityByID(self.entity_id) == nil then
 		return true
 	else
 		return false
@@ -353,6 +353,22 @@ function Vehicle:Operate(action_commands)
 
 	return true
 
+end
+
+function Vehicle:Stay(hight)
+
+	local angle_pitch = self.position_obj:GetEulerAngles().pitch
+        if angle_pitch > self.engine_obj.reset_pitch_exception_area then
+            self.position_obj:ChangeLinelyVelocity(0, 0, 0, 0, -self.engine_obj.reset_pitch_speed, 0, 2)
+        elseif angle_pitch < -self.engine_obj.reset_pitch_exception_area then
+            self.position_obj:ChangeLinelyVelocity(0, 0, 0, 0, self.engine_obj.reset_pitch_speed, 0, 2)
+        end
+	local current_pos_z = self.position_obj:GetPosition().z
+	local vel_vec = self.position_obj.fly_tank_system:GetVelocity()
+	print(vel_vec.z)
+	if current_pos_z < hight then
+		self.position_obj:AddLinelyVelocity(0, 0, math.abs(vel_vec.z) + 0.1 * (hight-current_pos_z), 0, 0, 0)
+	end
 end
 
 return Vehicle

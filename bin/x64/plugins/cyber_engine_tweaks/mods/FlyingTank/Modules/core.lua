@@ -26,11 +26,13 @@ function Core:New()
     -- input setting
     obj.axis_dead_zone = 0.5
     obj.relative_dead_zone = 0.01
-    obj.relative_resolution = 0.1
     obj.hold_progress = 0.9
     -- radio
     obj.default_station_num = 13
     obj.get_track_name_time_resolution = 1
+    -- fan speed
+    obj.fan_speed_up_value = 0.015
+    obj.fan_speed_down_value = 0.005
     -- dynamic --
     -- move
     obj.is_move_up_button_hold_counter = false
@@ -336,22 +338,29 @@ function Core:ConvertTankActionList(action_name, action_type, action_value_type)
 
     local action_command = Def.ActionList.Nothing
     local action_dist = {name = action_name, type = action_type, value = action_value_type}
+    local fan_diff = 0
 
-    -- if self.event_obj.current_situation == Def.Situation.InVehicle and (self.is_move_up_button_hold_counter or self.is_move_down_button_hold_counter) then
-    --     if Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_FORWARD_MOVE) then
-    --         action_command = Def.ActionList.SpinnerForward
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_BACK_MOVE) then
-    --         action_command = Def.ActionList.SpinnerBackward
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_MOVE) then
-    --         action_command = Def.ActionList.SpinnerRight
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_MOVE) then
-    --         action_command = Def.ActionList.SpinnerLeft
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_ROTATE) then
-    --         action_command = Def.ActionList.SpinnerRightRotate
-    --     elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_ROTATE) then
-    --         action_command = Def.ActionList.SpinnerLeftRotate
-    --     end
-    -- end
+    if Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_MOVE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_MOVE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_FORWARD_MOVE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_BACK_MOVE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_LEFT_ROTATE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.KEY_TANK_RIGHT_ROTATE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.MOUSE_TANK_LEFT_ROTATE) then
+        fan_diff = self.fan_speed_up_value
+    elseif Utils:IsTablesNearlyEqual(action_dist, self.tank_input_table.MOUSE_TANK_RIGHT_ROTATE) then
+        fan_diff = self.fan_speed_up_value
+    end
+
+    if self.event_obj.hud_obj.fan_speed + fan_diff <= 100 and self.event_obj.hud_obj.fan_speed + fan_diff >= 0 then
+        self.event_obj.hud_obj.fan_speed = self.event_obj.hud_obj.fan_speed + fan_diff
+    end
 
     return action_command
 
@@ -522,17 +531,23 @@ function Core:GetActions()
         table.insert(move_actions, Def.ActionList.Nothing)
     end
 
-    self:OperateAerialVehicle(move_actions)
+    self:OperateVehicle(move_actions)
+
+    -- fan speed down
+    if self.event_obj.hud_obj.fan_speed - self.fan_speed_down_value >= 0 then
+        self.event_obj.hud_obj.fan_speed = self.event_obj.hud_obj.fan_speed - self.fan_speed_down_value
+    end
 
 end
 
-function Core:OperateAerialVehicle(actions)
+function Core:OperateVehicle(actions)
 
     if not self.is_locked_operation then
         if self.event_obj:IsInVehicle() then
             self.vehicle_obj:Operate(actions)
         elseif self.event_obj:IsWaiting() then
-            self.vehicle_obj:Operate({Def.ActionList.Nothing})
+            -- self.vehicle_obj:Move(0,0,0,0,0,0)
+            self.vehicle_obj:Stay(self.vehicle_obj.position_obj:GetSpawnPosition(self.vehicle_obj.spawn_distance, 0.0).z)
         end
     end
 
@@ -639,6 +654,25 @@ end
 
 function Core:ShowRadioPopup()
     self.event_obj:ShowRadioPopup()
+end
+
+function Core:GetCurrentDistrict()
+
+    local current_district_list = {}
+    local district_manager = Game.GetScriptableSystemsContainer():Get('PreventionSystem').districtManager
+    local district = district_manager:GetCurrentDistrict()
+    if district == nil then
+        return current_district_list
+    end
+    local district_record = district:GetDistrictRecord()
+    if district_record ~= nil then
+        repeat
+            table.insert(current_district_list, 1, GetLocalizedText(district_record:LocalizedName()))
+            district_record = district_record:ParentDistrict()
+        until district_record == nil
+    end
+    return current_district_list
+
 end
 
 return Core

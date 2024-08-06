@@ -15,17 +15,39 @@ RED4ext::CClass* FlyTankSystem::GetNativeType()
     return &cls;
 }
 
-void AddLinelyVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, float* aOut, int64_t a4)
+static RED4ext::Handle<RED4ext::vehicle::BaseObject> vehicle;
+
+void SetVehicle(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, float* aOut, int64_t a4)
 {
     RED4EXT_UNUSED_PARAMETER(aContext);
     RED4EXT_UNUSED_PARAMETER(a4);
 
-    RED4ext::ScriptGameInstance gameInstance;
-    RED4ext::Handle<RED4ext::IScriptable> playerHandle;
-    RED4ext::ExecuteGlobalFunction("GetPlayer;GameInstance", &playerHandle, gameInstance);
-    
     RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> wvehicle;
-    RED4ext::ExecuteGlobalFunction("GetMountedVehicle;GameObject", &wvehicle, playerHandle);
+    uint32_t entity_id_hash;
+    RED4ext::EntityID entity_id;
+
+    RED4ext::GetParameter(aFrame, &entity_id_hash);
+    aFrame->code++; // skip ParamEnd
+
+    entity_id.hash = entity_id_hash;
+
+    RED4ext::ScriptGameInstance gameInstance;
+    RED4ext::ExecuteFunction("ScriptGameInstance", "FindEntityByID", &wvehicle, gameInstance, entity_id);
+
+    vehicle = wvehicle.Lock();
+
+    *aOut = 0;
+
+    if (vehicle)
+    {
+        *aOut = 1;
+    }
+}
+
+void AddLinelyVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, float* aOut, int64_t a4)
+{
+    RED4EXT_UNUSED_PARAMETER(aContext);
+    RED4EXT_UNUSED_PARAMETER(a4);
 
     RED4ext::Vector3 velocity;
     RED4ext::Vector3 angularVelocity;
@@ -33,8 +55,6 @@ void AddLinelyVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFr
     RED4ext::GetParameter(aFrame, &velocity);
     RED4ext::GetParameter(aFrame, &angularVelocity);
     aFrame->code++; // skip ParamEnd
-
-    auto vehicle = wvehicle.Lock();
 
     *aOut = 0;
 
@@ -51,13 +71,6 @@ void ChangeLinelyVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* 
     RED4EXT_UNUSED_PARAMETER(aContext);
     RED4EXT_UNUSED_PARAMETER(a4);
 
-    RED4ext::ScriptGameInstance gameInstance;
-    RED4ext::Handle<RED4ext::IScriptable> playerHandle;
-    RED4ext::ExecuteGlobalFunction("GetPlayer;GameInstance", &playerHandle, gameInstance);
-
-    RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> wvehicle;
-    RED4ext::ExecuteGlobalFunction("GetMountedVehicle;GameObject", &wvehicle, playerHandle);
-
     RED4ext::Vector3 velocity;
     RED4ext::Vector3 angularVelocity;
     float switchIndex;
@@ -67,8 +80,6 @@ void ChangeLinelyVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* 
     RED4ext::GetParameter(aFrame, &switchIndex);
 
     aFrame->code++; // skip ParamEnd
-
-    auto vehicle = wvehicle.Lock();
 
     *aOut = 0;
 
@@ -97,21 +108,12 @@ void GetVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, R
     RED4EXT_UNUSED_PARAMETER(aFrame);
     RED4EXT_UNUSED_PARAMETER(a4);
 
-    RED4ext::ScriptGameInstance gameInstance;
-    RED4ext::Handle<RED4ext::IScriptable> playerHandle;
-    RED4ext::ExecuteGlobalFunction("GetPlayer;GameInstance", &playerHandle, gameInstance);
-
-    RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> wvehicle;
-    RED4ext::ExecuteGlobalFunction("GetMountedVehicle;GameObject", &wvehicle, playerHandle);
-
     RED4ext::Vector3 velocity;
     velocity.X = 0;
     velocity.Y = 0;
     velocity.Z = 0;
 
     *aOut = velocity;
-
-    auto vehicle = wvehicle.Lock();
 
     if (vehicle)
     {
@@ -125,13 +127,6 @@ void GetAngularVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aF
     RED4EXT_UNUSED_PARAMETER(aFrame);
     RED4EXT_UNUSED_PARAMETER(a4);
 
-    RED4ext::ScriptGameInstance gameInstance;
-    RED4ext::Handle<RED4ext::IScriptable> playerHandle;
-    RED4ext::ExecuteGlobalFunction("GetPlayer;GameInstance", &playerHandle, gameInstance);
-
-    RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> wvehicle;
-    RED4ext::ExecuteGlobalFunction("GetMountedVehicle;GameObject", &wvehicle, playerHandle);
-
     RED4ext::Vector3 angularVelocity;
     angularVelocity.X = 0;
     angularVelocity.Y = 0;
@@ -139,11 +134,38 @@ void GetAngularVelocity(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aF
 
     *aOut = angularVelocity;
 
-    auto vehicle = wvehicle.Lock();
-
     if (vehicle)
     {
         *aOut = vehicle->physicsData->angularVelocity;
+    }
+}
+
+void GetPhysicsState(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, float* aOut, int64_t a4)
+{
+    RED4EXT_UNUSED_PARAMETER(aContext);
+    RED4EXT_UNUSED_PARAMETER(aFrame);
+    RED4EXT_UNUSED_PARAMETER(a4);
+
+
+    *aOut = -1;
+
+    if (vehicle)
+    {
+        *aOut = vehicle->physicsState;
+    }
+}
+
+void IsOnGround(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, bool*aOut, int64_t a4)
+{
+    RED4EXT_UNUSED_PARAMETER(aContext);
+    RED4EXT_UNUSED_PARAMETER(aFrame);
+    RED4EXT_UNUSED_PARAMETER(a4);
+
+    *aOut = false;
+
+    if (vehicle)
+    {
+        *aOut = vehicle->isOnGround;
     }
 }
 
@@ -153,6 +175,20 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterFlyTankSystem()
 
     cls.flags = {.isNative = true};
     RED4ext::CRTTISystem::Get()->RegisterType(&cls);
+}
+
+RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterSetVehicle()
+{
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto scriptable = rtti->GetClass("IScriptable");
+    cls.parent = scriptable;
+
+    RED4ext::CBaseFunction::Flags flags = {.isNative = true};
+    auto func = RED4ext::CClassFunction::Create(&cls, "SetVehicle", "SetVehicle", &SetVehicle, {.isNative = true});
+    func->flags = flags;
+    func->SetReturnType("Float");
+    func->AddParam("Uint32", "entity_id_hash");
+    cls.RegisterFunction(func);
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterAddLinelyVelocity()
@@ -212,6 +248,32 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterGetAngularVelocity()
     cls.RegisterFunction(func);
 }
 
+RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterGetPhysicsState()
+{
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto scriptable = rtti->GetClass("IScriptable");
+    cls.parent = scriptable;
+
+    RED4ext::CBaseFunction::Flags flags = {.isNative = true};
+    auto func = RED4ext::CClassFunction::Create(&cls, "GetPhysicsState", "GetPhysicsState", &GetPhysicsState, {.isNative = true});
+    func->flags = flags;
+    func->SetReturnType("Float");
+    cls.RegisterFunction(func);
+}
+
+RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterIsOnGround()
+{
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto scriptable = rtti->GetClass("IScriptable");
+    cls.parent = scriptable;
+
+    RED4ext::CBaseFunction::Flags flags = {.isNative = true};
+    auto func = RED4ext::CClassFunction::Create(&cls, "IsOnGround", "IsOnGround", &IsOnGround, {.isNative = true});
+    func->flags = flags;
+    func->SetReturnType("Bool");
+    cls.RegisterFunction(func);
+}
+
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk* aSdk)
 {
@@ -222,10 +284,13 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     {
     case RED4ext::EMainReason::Load:
     {
+        RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterSetVehicle);
         RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterAddLinelyVelocity);
         RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterChangeLinelyVelocity);
         RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterGetVelocity);
         RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterGetAngularVelocity);
+        RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterGetPhysicsState);
+        RED4ext::RTTIRegistrator::Add(RegisterFlyTankSystem, PostRegisterIsOnGround);
         break;
     }
     case RED4ext::EMainReason::Unload:

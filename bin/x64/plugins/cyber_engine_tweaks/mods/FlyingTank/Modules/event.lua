@@ -115,6 +115,10 @@ function Event:SetSituation(situation)
         self.log_obj:Record(LogLevel.Info, "Normal detected")
         self.current_situation = Def.Situation.Normal
         return true
+    elseif (self.current_situation == Def.Situation.Waiting and situation == Def.Situation.Normal) then
+        self.log_obj:Record(LogLevel.Warning, "Normal detected. May unexpected situation")
+        self.current_situation = Def.Situation.Normal
+        return true
     else
         self.log_obj:Record(LogLevel.Critical, "Invalid translating situation")
         return false
@@ -133,6 +137,7 @@ function Event:CheckAllEvents()
         self:CheckInAV()
         self:CheckReturnVehicle()
         self:CheckCommonEvent()
+        self:CheckDespawn()
     elseif self.current_situation == Def.Situation.InVehicle then
         self:CheckInAV()
         -- self:CheckCollision()
@@ -147,9 +152,7 @@ function Event:CheckAllEvents()
 end
 
 function Event:CheckCommonEvent()
-
     self:CheckSoundRestriction()
-
 end
 
 function Event:CheckCallVehicle()
@@ -168,7 +171,6 @@ function Event:CheckLanded()
         self.sound_obj:StopSound("210_landing")
         self.sound_obj:PlaySound("110_arrive_vehicle")
         self:SetSituation(Def.Situation.Waiting)
-        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Open)
     end
 end
 
@@ -177,7 +179,7 @@ function Event:CheckInAV()
         -- when player take on AV
         if self.current_situation == Def.Situation.Waiting then
             self.log_obj:Record(LogLevel.Info, "Enter In AV")
-            SaveLocksManager.RequestSaveLockAdd(CName.new("FlyingTank_IN_AV"))
+            SaveLocksManager.RequestSaveLockAdd(CName.new("FlyingTank"))
             self.sound_obj:PlaySound("230_fly_loop")
             self:SetSituation(Def.Situation.InVehicle)
         end
@@ -188,28 +190,10 @@ function Event:CheckInAV()
             self.sound_obj:StopSound("230_fly_loop")
             self:SetSituation(Def.Situation.Waiting)
             self:StopRadio()
-            SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank_IN_AV"))
+            SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank"))
         end
     end
 end
-
--- function Event:CheckCollision()
---     if self.vehicle_obj.is_collision then
---         self.log_obj:Record(LogLevel.Debug, "Collision detected")
---         local material = self.vehicle_obj.position_obj.collision_trace_result.material.value
---         if not self.vehicle_obj.engine_obj:IsInFalling() then
---             if string.find(material, "concrete") then
---                 self.sound_obj:PlaySound("331_crash_concrete")
---             elseif string.find(material, "metal") then
---                 self.sound_obj:PlaySound("332_crash_metal")
---             elseif string.find(material, "glass") then
---                 self.sound_obj:PlaySound("333_crash_wood")
---             else
---                 self.sound_obj:PlaySound("330_crash_default")
---             end
---         end
---     end
--- end
 
 function Event:CheckReturnVehicle()
     if FlyingTank.core_obj:GetCallStatus() then
@@ -217,8 +201,6 @@ function Event:CheckReturnVehicle()
         self.sound_obj:PlaySound("240_leaving")
         self.sound_obj:PlaySound("104_call_vehicle")
         self:SetSituation(Def.Situation.TalkingOff)
-        -- self.hud_obj:HideChoice()
-        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
         self.vehicle_obj:DespawnFromGround()
     end
 end
@@ -236,7 +218,7 @@ function Event:CheckLockedSave()
     local res, reason = Game.IsSavingLocked()
     if res then
         self.log_obj:Record(LogLevel.Info, "Locked save detected. Remove lock")
-        SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank_IN_AV"))
+        SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank"))
     end
 
 end
