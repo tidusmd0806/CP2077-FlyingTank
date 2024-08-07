@@ -66,7 +66,11 @@ function HUD:SetObserve()
 
         Observe('NPCPuppet', 'SendAfterDeathOrDefeatEvent', function(this)
             self.kill_count = self.kill_count + 1
-        end)
+            print("Kill Count: " .. self.kill_count)
+            if this.isPolice then
+                print("Police")
+            end
+        end)       
     end
 
 end

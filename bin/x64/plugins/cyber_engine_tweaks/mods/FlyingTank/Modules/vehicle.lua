@@ -355,20 +355,4 @@ function Vehicle:Operate(action_commands)
 
 end
 
-function Vehicle:Stay(hight)
-
-	local angle_pitch = self.position_obj:GetEulerAngles().pitch
-        if angle_pitch > self.engine_obj.reset_pitch_exception_area then
-            self.position_obj:ChangeLinelyVelocity(0, 0, 0, 0, -self.engine_obj.reset_pitch_speed, 0, 2)
-        elseif angle_pitch < -self.engine_obj.reset_pitch_exception_area then
-            self.position_obj:ChangeLinelyVelocity(0, 0, 0, 0, self.engine_obj.reset_pitch_speed, 0, 2)
-        end
-	local current_pos_z = self.position_obj:GetPosition().z
-	local vel_vec = self.position_obj.fly_tank_system:GetVelocity()
-	print(vel_vec.z)
-	if current_pos_z < hight then
-		self.position_obj:AddLinelyVelocity(0, 0, math.abs(vel_vec.z) + 0.1 * (hight-current_pos_z), 0, 0, 0)
-	end
-end
-
 return Vehicle

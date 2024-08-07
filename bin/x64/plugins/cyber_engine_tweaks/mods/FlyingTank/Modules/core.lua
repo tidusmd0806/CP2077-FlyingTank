@@ -546,8 +546,7 @@ function Core:OperateVehicle(actions)
         if self.event_obj:IsInVehicle() then
             self.vehicle_obj:Operate(actions)
         elseif self.event_obj:IsWaiting() then
-            -- self.vehicle_obj:Move(0,0,0,0,0,0)
-            self.vehicle_obj:Stay(self.vehicle_obj.position_obj:GetSpawnPosition(self.vehicle_obj.spawn_distance, 0.0).z)
+            self.vehicle_obj:Move(0,0,0,0,0,0)
         end
     end
 

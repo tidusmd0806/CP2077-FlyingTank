@@ -57,6 +57,51 @@ function Debug:SetObserver()
 
     if not self.is_set_observer then
         -- reserved
+        Observe("PreventionSystem", "OnAttach", function(this)
+            print("PreventionSystem OnAttach")
+            self.prevention_system = this
+        end)
+        
+        Observe("PreventionSystem", "StartBlinkingTimerRequest", function(this)
+            -- method has just been called with:
+            -- this: PreventionSystem
+            print("PreventionSystem StartBlinkingTimerRequest")
+            print(this.starState)
+            -- this:ResetSearchingTimerRequest()
+        end)
+        
+
+        Observe("PreventionSystem", "UpdateStarStateTo", function(this, newStarState)
+            -- method has just been called with:
+            -- this: PreventionSystem
+            print(newStarState)
+        end)
+
+        Observe("PreventionSystem", "SetWantedStateFact", function(this, state)
+            -- method has just been called with:
+            -- this: PreventionSystem
+            -- state: EStarState
+            print("PreventionSystem SetWantedStateFact" .. state)
+        end)        
+
+        Observe("PreventionSystem", "ChangeHeatStage", function(this, newHeatStage, heatChangeReason)
+            -- method has just been called with:
+            -- this: PreventionSystem
+            -- newHeatStage: EPreventionHeatStage
+            -- heatChangeReason: String
+            print("PreventionSystem ChangeHeatStage")
+            print(newHeatStage)
+            print(heatChangeReason)
+        end)
+        
+        Observe("VehicleComponent", "EvaluateDamageLevel", function(this, destruction)
+            -- method has just been called with:
+            -- this: VehicleComponent
+            -- destruction: Float
+            print("VehicleComponent EvaluateDamageLevel".. destruction)
+        end)
+        
+        
     end
     self.is_set_observer = true
 
@@ -428,6 +473,46 @@ function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF12") then
         print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:IsOnGround())
         print("Excute Test Function 12")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF13") then
+        local look_at_obj = Game.GetTargetingSystem():GetLookAtObject(Game.GetPlayer())
+        local sys = FlyTankSystem.new()
+        sys:SetVehicle(look_at_obj:GetEntityID().hash)
+        look_at_obj:PhysicsWakeUp()
+        sys:ChangeLinelyVelocity(Vector3.new(0, 0, 10), Vector3.new(0, 0, 0), 1)
+        print("Excute Test Function 13")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF14") then
+        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
+        ps:ChangeHeatStage(EPreventionHeatStage.Heat_5, "KillCivilian")
+        print("Excute Test Function 14")
+    end
+    if ImGui.Button("TF15") then
+        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
+        ps:ResetSearchingTimerRequest()
+        ps:SetLastKnownPlayerPosition(Game.GetPlayer():GetWorldPosition())
+        -- local veh = Game.GetMountedVehicle(Game.GetPlayer())
+        -- ps:SetLastKnownPlayerVehicle(veh)
+        print("Excute Test Function 15")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF16") then
+        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
+        local widget = root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3"))
+        widget:SetVisible(true)
+        print("Excute Test Function 16")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF17") then
+        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
+        print(ps:GetStarState())
+        -- ps:ForceStarStateToActive(true)
+        -- ps:SetWantedStateFact(1)
+        -- ps:UpdateStarStateTo(1)
+        -- print(ps:GetStarState())
+        print("Excute Test Function 17")
     end
 end
 
