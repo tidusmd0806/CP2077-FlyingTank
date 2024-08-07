@@ -47,8 +47,8 @@ FlyingTank = {
     default_keybind_table = {
         {name = "move_up", key = "IK_R", pad = "IK_Pad_Y_TRIANGLE"},
         {name = "move_down", key = "IK_C", pad = "IK_Pad_A_CROSS"},
-        {name = "pitch_up", key = "IK_T", pad = "IK_Pad_DigitUp"},
-        {name = "pitch_down", key = "IK_V", pad = "IK_Pad_DigitDown"},
+        {name = "pitch_up", key = "IK_V", pad = "IK_Pad_DigitDown"},
+        {name = "pitch_down", key = "IK_T", pad = "IK_Pad_DigitUp"},
         {name = "pitch_reset", key = "IK_G", pad = "IK_Pad_X_SQUARE"},
         {name = "toggle_door", key = "IK_X", pad = "IK_Pad_DigitLeft"},
         {name = "toggle_radio", key = "IK_Z", pad = "IK_Pad_LeftShoulder"},

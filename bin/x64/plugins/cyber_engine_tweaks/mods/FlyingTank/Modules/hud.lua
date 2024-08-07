@@ -9,21 +9,17 @@ function HUD:New()
     --static --
     obj.speed_meter_refresh_rate = 0.05
     obj.shown_max_pitch = 35
-    -- dynamic --
-    obj.vehicle_obj = nil
-    obj.key_input_show_hint_event = nil
-    obj.key_input_hide_hint_event = nil
-
-    obj.popup_manager = nil
-    obj.hud_tank_controller = nil
-
-    obj.fan_speed = 50
-    obj.kill_count = 0
-
     obj.hud_mode_list = {
         "District",
         "KillCounter"
     }
+    -- dynamic --
+    obj.vehicle_obj = nil
+    obj.popup_manager = nil
+    obj.hud_tank_controller = nil
+    obj.fan_speed = 50
+    obj.kill_count = 0
+    obj.vehicle_hp = 100
 
     return setmetatable(obj, self)
 end
@@ -66,11 +62,23 @@ function HUD:SetObserve()
 
         Observe('NPCPuppet', 'SendAfterDeathOrDefeatEvent', function(this)
             self.kill_count = self.kill_count + 1
-            print("Kill Count: " .. self.kill_count)
             if this.isPolice then
                 print("Police")
             end
-        end)       
+        end)
+
+        Observe("VehicleComponent", "EvaluateDamageLevel", function(this, destruction)
+            if this.mounted then
+                self.vehicle_hp = destruction
+            end
+        end)
+
+        Override("PanzerHUDGameController", "OnStatsChanged", function(this, value, wrapped_method)
+            -- To prevent the game from changing the HP value
+            return
+        end)
+        
+        
     end
 
 end
@@ -83,6 +91,13 @@ function HUD:PreTankHUD()
     self.gauge_normal_color.Green = 0.965
     self.gauge_normal_color.Blue = 1.000
     self.gauge_normal_color.Alpha = 1.000
+
+    -- gauge pre warning color settings
+    self.gauge_pre_waring_color = HDRColor.new()
+    self.gauge_pre_waring_color.Red = 1.000
+    self.gauge_pre_waring_color.Green = 1.000
+    self.gauge_pre_waring_color.Blue = 0.800
+    self.gauge_pre_waring_color.Alpha = 1.000
 
     -- gauge warning color settings
     self.gauge_waring_color = HDRColor.new()
@@ -179,12 +194,13 @@ function HUD:UpdateTankHUD()
         local district_list = FlyingTank.core_obj:GetCurrentDistrict()
         local district_list_num = #district_list
         if district_list_num >= 1 then
+            right_bottom_text_top:SetText(" ")
+            right_bottom_text_top:SetFontSize(29)
             right_bottom_text_middle:SetText(district_list[1])
             right_bottom_text_middle:SetFontSize(44)
         end
         if district_list_num >= 2 then
             right_bottom_text_top:SetText(district_list[2])
-            right_bottom_text_top:SetFontSize(29)
         end
         local x = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().x)
         local y = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().y)
@@ -199,6 +215,28 @@ function HUD:UpdateTankHUD()
         right_bottom_text_bottom:SetText(" ")
         right_bottom_text_bottom:SetFontSize(22)
     end
+
+    -- HP Gauge
+    local hp_gauge_widget = root_widget:GetWidget(CName.new("HP"))
+    local hp_header_value = hp_gauge_widget:GetWidget(CName.new("headerPanel")):GetWidget(CName.new("valueContainer")):GetWidget(CName.new("value"))
+    local hp_header_plate = hp_gauge_widget:GetWidget(CName.new("headerPanel")):GetWidget(CName.new("valueContainer")):GetWidget(CName.new("plate"))
+    local hp_gauge_slide_bar = hp_gauge_widget:GetWidget(CName.new("inkMaskWidget48"))
+    local hp_gauge_bar_base = hp_gauge_widget:GetWidget(0)
+    local hp_int = math.floor(self.vehicle_hp)
+    hp_header_value:SetText(tostring(hp_int) .. "/100")
+    local hp_remain = (680 / 100) * hp_int
+    hp_gauge_slide_bar:SetMargin(-2203 + hp_remain, -915.83, 0, 0)
+    if hp_int < 20 then
+        hp_gauge_bar_base:SetTintColor(self.gauge_waring_color)
+        hp_header_plate:SetTintColor(self.gauge_waring_color)
+    elseif hp_int < 50 then
+        hp_gauge_bar_base:SetTintColor(self.gauge_pre_waring_color)
+        hp_header_plate:SetTintColor(self.gauge_pre_waring_color)
+    else
+        hp_gauge_bar_base:SetTintColor(self.gauge_normal_color)
+        hp_header_plate:SetTintColor(self.gauge_normal_color)
+    end
+
 
 end
 

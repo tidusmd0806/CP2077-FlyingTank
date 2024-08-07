@@ -17,9 +17,9 @@ function Vehicle:New(all_models)
 	obj.all_models = all_models
 	-- summon
 	obj.spawn_distance = 5.5
-	obj.spawn_high = 5
+	obj.spawn_high = 25
 	obj.spawn_wait_count = 150
-	obj.down_time_count = 200
+	obj.down_time_count = 300
 	obj.land_offset = -1.0
 	obj.door_open_time = 0.5
 	-- collision

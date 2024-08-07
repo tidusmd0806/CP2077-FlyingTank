@@ -17,17 +17,8 @@ function Debug:New(core_obj)
     obj.is_im_gui_engine_info = false
     obj.is_im_gui_sound_check = false
     obj.selected_sound = "100_call_vehicle"
-    obj.is_im_gui_mappin_position = false
-    obj.is_im_gui_model_type_status = false
-    obj.is_im_gui_auto_pilot_status = false
-    obj.is_im_gui_change_auto_setting = false
     obj.is_im_gui_radio_info = false
     obj.is_im_gui_measurement = false
-    obj.is_exist_av_1 = false
-    obj.is_exist_av_2 = false
-    obj.is_exist_av_3 = false
-    obj.is_exist_av_4 = false
-    obj.is_exist_av_5 = false
 
     return setmetatable(obj, self)
 end
@@ -93,15 +84,6 @@ function Debug:SetObserver()
             print(newHeatStage)
             print(heatChangeReason)
         end)
-        
-        Observe("VehicleComponent", "EvaluateDamageLevel", function(this, destruction)
-            -- method has just been called with:
-            -- this: VehicleComponent
-            -- destruction: Float
-            print("VehicleComponent EvaluateDamageLevel".. destruction)
-        end)
-        
-        
     end
     self.is_set_observer = true
 
@@ -502,6 +484,7 @@ function Debug:ImGuiExcuteFunction()
         local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
         local widget = root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3"))
         widget:SetVisible(true)
+        self.core_obj.event_obj.hud_obj.hud_tank_controller.currentHealth = 100
         print("Excute Test Function 16")
     end
     ImGui.SameLine()
@@ -513,6 +496,11 @@ function Debug:ImGuiExcuteFunction()
         -- ps:UpdateStarStateTo(1)
         -- print(ps:GetStarState())
         print("Excute Test Function 17")
+    end
+    if ImGui.Button("TF18") then
+        self.core_obj.event_obj.hud_obj.hud_tank_controller.maximumHealth = 100
+        self.core_obj.event_obj.hud_obj.hud_tank_controller.currentHealth = self.core_obj.event_obj.hud_obj.hud_tank_controller.currentHealth - 1
+        print("Excute Test Function 18")
     end
 end
 

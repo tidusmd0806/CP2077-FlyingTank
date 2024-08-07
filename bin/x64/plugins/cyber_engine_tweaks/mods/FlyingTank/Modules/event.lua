@@ -170,6 +170,7 @@ function Event:CheckLanded()
         self.log_obj:Record(LogLevel.Trace, "Landed detected")
         self.sound_obj:StopSound("210_landing")
         self.sound_obj:PlaySound("110_arrive_vehicle")
+        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Open)
         self:SetSituation(Def.Situation.Waiting)
     end
 end
@@ -198,6 +199,7 @@ end
 function Event:CheckReturnVehicle()
     if FlyingTank.core_obj:GetCallStatus() then
         self.log_obj:Record(LogLevel.Trace, "Vehicle return detected")
+        self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
         self.sound_obj:PlaySound("240_leaving")
         self.sound_obj:PlaySound("104_call_vehicle")
         self:SetSituation(Def.Situation.TalkingOff)
