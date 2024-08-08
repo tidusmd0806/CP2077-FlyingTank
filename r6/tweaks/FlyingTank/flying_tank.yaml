@@ -8,8 +8,8 @@ Vehicle.basilisk_aldecaldos:
 
 Vehicle.basilisk_aldecaldos.dealerAtlasPath: "base/gameplay/gui/common/icons/codex/assets_fullscreen16.inkatlas"
 Vehicle.basilisk_aldecaldos.dealerPartName: "v_militech_basilisk_full"
-Vehicle.basilisk_aldecaldos.dealerPrice: 100
-Vehicle.basilisk_aldecaldos.dealerCred: 20
+Vehicle.basilisk_aldecaldos.dealerPrice: 320000
+Vehicle.basilisk_aldecaldos.dealerCred: 50
 
 Vehicle.basilisk_militech:
   $base:  Vehicle.v_sport2_quadra_type66_02_player
@@ -21,8 +21,8 @@ Vehicle.basilisk_militech:
 
 Vehicle.basilisk_militech.dealerAtlasPath: "base/gameplay/gui/common/icons/codex/assets_fullscreen16.inkatlas"
 Vehicle.basilisk_militech.dealerPartName: "v_militech_basilisk_full"
-Vehicle.basilisk_militech.dealerPrice: 100
-Vehicle.basilisk_militech.dealerCred: 20
+Vehicle.basilisk_militech.dealerPrice: 300000
+Vehicle.basilisk_militech.dealerCred: 50
 
 Vehicle.vehicle_list.list:
   - !append Vehicle.basilisk_aldecaldos

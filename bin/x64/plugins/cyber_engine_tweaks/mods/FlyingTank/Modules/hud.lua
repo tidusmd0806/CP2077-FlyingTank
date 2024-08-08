@@ -137,7 +137,14 @@ function HUD:UpdateTankHUD()
     -- Attitude Indicator
     local attitude_indicator = root_widget:GetWidget(CName.new("ruler_right")):GetWidget(CName.new("value"))
     local attitude_num = self.vehicle_obj.position_obj:GetPosition().z
-    attitude_indicator:SetText(tostring(math.floor(attitude_num)))
+    local attitude_num_int = math.floor(attitude_num)
+    if attitude_num_int < 10 then
+        attitude_indicator:SetText("00" .. tostring(attitude_num_int))
+    elseif attitude_num_int < 100 then
+        attitude_indicator:SetText("0" .. tostring(attitude_num_int))
+    else
+        attitude_indicator:SetText(tostring(attitude_num_int))
+    end
 
     -- Left Bottom Gauge
     local boost_gauge_widget = root_widget:GetWidget(CName.new("boost"))
