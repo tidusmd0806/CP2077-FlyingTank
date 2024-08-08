@@ -47,43 +47,7 @@ end
 function Debug:SetObserver()
 
     if not self.is_set_observer then
-        -- reserved
-        Observe("PreventionSystem", "OnAttach", function(this)
-            print("PreventionSystem OnAttach")
-            self.prevention_system = this
-        end)
-        
-        Observe("PreventionSystem", "StartBlinkingTimerRequest", function(this)
-            -- method has just been called with:
-            -- this: PreventionSystem
-            print("PreventionSystem StartBlinkingTimerRequest")
-            print(this.starState)
-            -- this:ResetSearchingTimerRequest()
-        end)
-        
-
-        Observe("PreventionSystem", "UpdateStarStateTo", function(this, newStarState)
-            -- method has just been called with:
-            -- this: PreventionSystem
-            print(newStarState)
-        end)
-
-        Observe("PreventionSystem", "SetWantedStateFact", function(this, state)
-            -- method has just been called with:
-            -- this: PreventionSystem
-            -- state: EStarState
-            print("PreventionSystem SetWantedStateFact" .. state)
-        end)        
-
-        Observe("PreventionSystem", "ChangeHeatStage", function(this, newHeatStage, heatChangeReason)
-            -- method has just been called with:
-            -- this: PreventionSystem
-            -- newHeatStage: EPreventionHeatStage
-            -- heatChangeReason: String
-            print("PreventionSystem ChangeHeatStage")
-            print(newHeatStage)
-            print(heatChangeReason)
-        end)
+        -- reserved    
     end
     self.is_set_observer = true
 
@@ -267,7 +231,7 @@ function Debug:ImGuiMeasurement()
         local absolute_position_x = string.format("%.2f", x)
         local absolute_position_y = string.format("%.2f", y)
         local absolute_position_z = string.format("%.2f", z)
-        ImGui.Text("[LookAt]X:" .. absolute_position_x .. ", Y:" .. absolute_position_y .. ", Z:" .. absolute_position_z) 
+        ImGui.Text("[LookAt]X:" .. absolute_position_x .. ", Y:" .. absolute_position_y .. ", Z:" .. absolute_position_z)
     end
 end
 
@@ -357,7 +321,7 @@ function Debug:ImGuiExcuteFunction()
             local rad_p = math.rad(p)
             local rad_q = math.rad(q)
             local rad_r = math.rad(r)
-        
+
             -- sinとcosを計算
             local cos_a, sin_a = math.cos(rad_a), math.sin(rad_a)
             local cos_b, sin_b = math.cos(rad_b), math.sin(rad_b)
@@ -365,20 +329,20 @@ function Debug:ImGuiExcuteFunction()
             local cos_p, sin_p = math.cos(rad_p), math.sin(rad_p)
             local cos_q, sin_q = math.cos(rad_q), math.sin(rad_q)
             local cos_r, sin_r = math.cos(rad_r), math.sin(rad_r)
-        
+
             -- 回転行列を計算
             local R1 = {
                 {cos_a * cos_b, cos_a * sin_b * sin_c - sin_a * cos_c, cos_a * sin_b * cos_c + sin_a * sin_c},
                 {sin_a * cos_b, sin_a * sin_b * sin_c + cos_a * cos_c, sin_a * sin_b * cos_c - cos_a * sin_c},
                 {-sin_b, cos_b * sin_c, cos_b * cos_c}
             }
-        
+
             local R2 = {
                 {cos_p * cos_q, cos_p * sin_q * sin_r - sin_p * cos_r, cos_p * sin_q * cos_r + sin_p * sin_r},
                 {sin_p * cos_q, sin_p * sin_q * sin_r + cos_p * cos_r, sin_p * sin_q * cos_r - cos_p * sin_r},
                 {-sin_q, cos_q * sin_r, cos_q * cos_r}
             }
-        
+
             -- 合成回転行列を計算
             local R = {}
             for i = 1, 3 do
@@ -390,12 +354,12 @@ function Debug:ImGuiExcuteFunction()
                     end
                 end
             end
-        
+
             -- 合成回転行列からオイラー角を計算
             local new_a = math.deg(math.atan2(R[2][1], R[1][1]))
             local new_b = math.deg(math.atan2(-R[3][1], math.sqrt(R[3][2] * R[3][2] + R[3][3] * R[3][3])))
             local new_c = math.deg(math.atan2(R[3][2], R[3][3]))
-        
+
             return new_a - a, new_b - b, new_c - c
         end
 
@@ -491,6 +455,7 @@ function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF17") then
         local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
         print(ps:GetStarState())
+        print(ps:GetHeatStage())
         -- ps:ForceStarStateToActive(true)
         -- ps:SetWantedStateFact(1)
         -- ps:UpdateStarStateTo(1)
@@ -498,8 +463,14 @@ function Debug:ImGuiExcuteFunction()
         print("Excute Test Function 17")
     end
     if ImGui.Button("TF18") then
-        self.core_obj.event_obj.hud_obj.hud_tank_controller.maximumHealth = 100
-        self.core_obj.event_obj.hud_obj.hud_tank_controller.currentHealth = self.core_obj.event_obj.hud_obj.hud_tank_controller.currentHealth - 1
+        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
+        local pss = Game.GetPreventionSpawnSystem()
+        local transform = WorldTransform.new()
+        transform:SetOrientation(Quaternion.new(0, 0, 0, 1))
+        transform:SetPosition(Game.GetPlayer():GetWorldPosition())
+        local ticketID = pss:RequestUnitSpawn(TweakDBID.new("Character.prevention_police_handgun_ma"), transform)
+        local reg = ps:GetAgentRegistry()
+        reg:CreateTicket(ticketID, vehiclePoliceStrategy.SearchFromAnywhere, true)
         print("Excute Test Function 18")
     end
 end

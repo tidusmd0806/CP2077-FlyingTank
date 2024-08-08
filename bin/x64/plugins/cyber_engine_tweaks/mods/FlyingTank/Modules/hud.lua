@@ -15,12 +15,15 @@ function HUD:New()
     }
     -- dynamic --
     obj.vehicle_obj = nil
+    obj.last_killed_npc = nil
     obj.popup_manager = nil
     obj.hud_tank_controller = nil
     obj.fan_speed = 50
     obj.kill_count = 0
     obj.vehicle_hp = 100
-
+    obj.blink_count = 0
+    obj.blink_duration_count = 50
+    obj.is_visible_star = true
     return setmetatable(obj, self)
 end
 
@@ -61,9 +64,12 @@ function HUD:SetObserve()
         end)
 
         Observe('NPCPuppet', 'SendAfterDeathOrDefeatEvent', function(this)
+            self.last_killed_npc = this
             self.kill_count = self.kill_count + 1
+            FlyingTank.core_obj.kill_count_for_prevention = FlyingTank.core_obj.kill_count_for_prevention + 1
             if this.isPolice then
-                print("Police")
+                self.log_obj:Record(LogLevel.Trace, "Police killed")
+                FlyingTank.core_obj.kill_count_for_prevention = FlyingTank.core_obj.kill_count_for_prevention + 1
             end
         end)
 
@@ -237,6 +243,91 @@ function HUD:UpdateTankHUD()
         hp_header_plate:SetTintColor(self.gauge_normal_color)
     end
 
+    self.blink_count = self.blink_count + 1
+    if self.blink_count % self.blink_duration_count == 0 then
+        if FlyingTank.core_obj.star_state == EStarState.Blinking then
+            if self.is_visible_star then
+                self.is_visible_star = false
+            else
+                self.is_visible_star = true
+            end
+        else
+            self.is_visible_star = true
+        end
+    end
+
+    -- wanted level
+    if FlyingTank.core_obj.heat_stage == EPreventionHeatStage.Heat_0 then
+        for i = 1, 5 do
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star"..i)):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("socket"..i)):SetVisible(false)
+        end
+    elseif FlyingTank.core_obj.heat_stage == EPreventionHeatStage.Heat_1 then
+        for i = 1, 5 do
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("socket"..i)):SetVisible(true)
+        end
+        if self.is_visible_star then
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(true)
+        else
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(false)
+        end
+    elseif FlyingTank.core_obj.heat_stage == EPreventionHeatStage.Heat_2 then
+        for i = 1, 5 do
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("socket"..i)):SetVisible(true)
+        end
+        if self.is_visible_star then
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(true)
+        else
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(false)
+        end
+    elseif FlyingTank.core_obj.heat_stage == EPreventionHeatStage.Heat_3 then
+        for i = 1, 5 do
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("socket"..i)):SetVisible(true)
+        end
+        if self.is_visible_star then
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3")):SetVisible(true)
+        else
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3")):SetVisible(false)
+        end
+    elseif FlyingTank.core_obj.heat_stage == EPreventionHeatStage.Heat_4 then
+        for i = 1, 5 do
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("socket"..i)):SetVisible(true)
+        end
+        if self.is_visible_star then
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star4")):SetVisible(true)
+        else
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star4")):SetVisible(false)
+        end
+    elseif FlyingTank.core_obj.heat_stage == EPreventionHeatStage.Heat_5 then
+        for i = 1, 5 do
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("socket"..i)):SetVisible(true)
+        end
+        if self.is_visible_star then
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star4")):SetVisible(true)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star5")):SetVisible(true)
+        else
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star1")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star2")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star4")):SetVisible(false)
+            root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star5")):SetVisible(false)
+        end
+    end
 
 end
 

@@ -328,29 +328,6 @@ function Vehicle:Operate(action_commands)
 
 	self.position_obj:AddLinelyVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
 
-	-- local res = self.position_obj:SetNextPosition(x_total, y_total, z_total, roll_total, pitch_total, yaw_total, is_freeze)
-
-	-- if res == Def.TeleportResult.Collision then
-	-- 	self.engine_obj:SetSpeedAfterRebound(self.current_speed)
-	-- 	self.is_collision = true
-	-- 	self.colison_count = self.colison_count + 1
-	-- 	if self.colison_count > self.max_collision_count then
-	-- 		self.log_obj:Record(LogLevel.Info, "Collision Count Over. Engine Reset")
-	-- 		self.colison_count = 0
-	-- 	end
-	-- 	return false
-	-- elseif res == Def.TeleportResult.AvoidStack then
-	-- 	self.log_obj:Record(LogLevel.Info, "Avoid Stack")
-	-- 	self.colison_count = 0
-	-- 	return false
-	-- elseif res == Def.TeleportResult.Error then
-	-- 	self.log_obj:Record(LogLevel.Error, "Teleport Error")
-	-- 	self.colison_count = 0
-	-- 	return false
-	-- end
-
-	-- self.colison_count = 0
-
 	return true
 
 end

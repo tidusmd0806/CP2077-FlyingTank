@@ -33,6 +33,9 @@ function Core:New()
     -- fan speed
     obj.fan_speed_up_value = 0.015
     obj.fan_speed_down_value = 0.005
+    -- prevention
+    obj.next_stage_count_list = {0, 1, 5, 15, 30}
+    obj.re_searching_time_in_level5 = 60
     -- dynamic --
     -- move
     obj.is_move_up_button_hold_counter = false
@@ -68,6 +71,11 @@ function Core:New()
     obj.current_station_index = -1
     obj.current_radio_volume = 50
     obj.is_opened_radio_popup = false
+    --prevention
+    obj.prevention_system = nil
+    obj.heat_stage = EStarState.default
+    obj.star_state = EPreventionHeatStage.Heat_0
+    obj.kill_count_for_prevention = 0
     return setmetatable(obj, self)
 end
 
@@ -102,6 +110,7 @@ function Core:Init()
     self:SetInputListener()
     self:SetSummonTrigger()
     self:SetRadioPopupController()
+    self:SetPreventionObserver()
 
 end
 
@@ -672,6 +681,96 @@ function Core:GetCurrentDistrict()
     end
     return current_district_list
 
+end
+
+-- prevention system
+function Core:SetPreventionObserver()
+
+    Observe("PreventionSystem", "ChangeHeatStage", function(this, heat_stage, reason)
+        if heat_stage == EPreventionHeatStage.Heat_0 then
+            self.kill_count_for_prevention = 0
+        end
+    end)
+
+    Cron.Every(0.1, {tick=1}, function(timer)
+        local prevention_system = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
+        timer.tick = timer.tick + 1
+        local player = Game.GetPlayer()
+        if player == nil then
+            return
+        end
+        local mounted_vehicle_obj = Game.GetMountedVehicle(player)
+        if mounted_vehicle_obj == nil or self.vehicle_obj.entity_id == nil then
+            return
+        elseif mounted_vehicle_obj:GetEntityID().hash ~= self.vehicle_obj.entity_id.hash then
+            return
+        end
+        self.star_state = prevention_system:GetStarState()
+        self.heat_stage = prevention_system:GetHeatStage()
+        self.log_obj:Record(LogLevel.Debug, "Kill Count For Prevention: " .. self.kill_count_for_prevention)
+
+        if self.heat_stage == EPreventionHeatStage.Heat_0 then
+            if self.kill_count_for_prevention > self.next_stage_count_list[1] then
+                self:SetPreventionSpawning(prevention_system)
+                prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_1, "KillCivilian")
+            end
+        elseif self.heat_stage == EPreventionHeatStage.Heat_1 then
+            self.log_obj:Record(LogLevel.Info, "Prevention Heat_1")
+            if self.kill_count_for_prevention > self.next_stage_count_list[2] then
+                self:SetPreventionSpawning(prevention_system)
+                prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_2, "KillCivilian")
+            end
+        elseif self.heat_stage == EPreventionHeatStage.Heat_2 then
+            self.log_obj:Record(LogLevel.Info, "Prevention Heat_2")
+            if self.kill_count_for_prevention > self.next_stage_count_list[3] then
+                self:SetPreventionSpawning(prevention_system)
+                prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_3, "KillCivilian")
+            end
+        elseif self.heat_stage == EPreventionHeatStage.Heat_3 then
+            self.log_obj:Record(LogLevel.Info, "Prevention Heat_3")
+            if self.kill_count_for_prevention > self.next_stage_count_list[4] then
+                self:SetPreventionSpawning(prevention_system)
+                prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_4, "KillCivilian")
+            end
+        elseif self.heat_stage == EPreventionHeatStage.Heat_4 then
+            self.log_obj:Record(LogLevel.Info, "Prevention Heat_4")
+            if self.kill_count_for_prevention > self.next_stage_count_list[5] then
+                self:SetPreventionSpawning(prevention_system)
+                prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_5, "KillCivilian")
+            end
+        elseif self.heat_stage == EPreventionHeatStage.Heat_5 then
+            self.log_obj:Record(LogLevel.Info, "Prevention Heat_5")
+
+        end
+    end)
+
+end
+
+function Core:SetPreventionSpawning(prevention_system)
+    local police_agent_registry = prevention_system:GetAgentRegistry()
+    local prevention_spawn_system = Game.GetPreventionSpawnSystem()
+    prevention_spawn_system:CancelAllSpawnRequests()
+    prevention_spawn_system:TogglePreventionActive(true)
+    local player = Game.GetPlayer()
+    local player_pos = player:GetWorldPosition()
+    local police_transform = WorldTransform.new()
+    local npcs = player:GetNPCsAroundObject()
+    local min_distance = 100
+    local min_index = 0
+    for index, npc in ipairs(npcs) do
+        local npc_pos = npc:GetWorldPosition()
+        local distnce = Vector4.Distance(player_pos, npc_pos)
+        if distnce < min_distance then
+            min_distance = distnce
+            min_index = index
+        end
+    end
+    local spawn_point = npcs[min_index]:GetWorldPosition()
+    police_transform:SetPosition(spawn_point)
+    local police_unit_num = prevention_spawn_system:RequestUnitSpawn(TweakDBID.new("Character.prevention_police_handgun_ma"), police_transform)
+    police_agent_registry:CreateTicket(police_unit_num, vehiclePoliceStrategy.SearchFromAnywhere, true)
+
+    prevention_system:SetLastKnownPlayerPosition(player_pos)
 end
 
 return Core
