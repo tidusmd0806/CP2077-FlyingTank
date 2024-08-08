@@ -11,9 +11,6 @@ function Engine:New(position_obj, all_models)
 
     obj.reset_pitch_exception_area = 0.1
 
-    --Common
-    obj.rebound_constant = nil
-
     -- set default parameters
     obj.next_indication = {roll = 0, pitch = 0, yaw = 0}
     obj.base_angle = nil
@@ -80,32 +77,6 @@ function Engine:GetNextPosition(movement)
         return 0, 0, 0, 0, 0, 0
     end
 
-end
-
-function Engine:SetSpeedAfterRebound(current_speed)
-    local reflection_vector = self.position_obj:GetReflectionVector()
-    local reflection_vector_norm = math.sqrt(reflection_vector.x * reflection_vector.x + reflection_vector.y * reflection_vector.y + reflection_vector.z * reflection_vector.z)
-    local reflection_value = reflection_vector_norm * current_speed * self.rebound_constant
-
-    self.horizenal_x_speed = reflection_vector.x * reflection_value
-    self.horizenal_y_speed = reflection_vector.y * reflection_value
-    self.vertical_speed = reflection_vector.z * reflection_value
-
-    -- check falling
-    local horizenal_speed = math.sqrt(self.horizenal_x_speed * self.horizenal_x_speed + self.horizenal_y_speed * self.horizenal_y_speed)
-    if self.vertical_speed > 0 and math.abs(self.vertical_speed) > horizenal_speed then
-        self.is_falling = true
-    else
-        self.is_falling = false
-    end
-end
-
-function Engine:IsInFalling()
-    if self.is_falling then
-        return true
-    else
-        return false
-    end
 end
 
 return Engine
