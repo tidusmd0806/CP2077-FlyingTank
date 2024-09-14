@@ -279,7 +279,7 @@ end
 
 function Vehicle:Move(x, y, z, roll, pitch, yaw)
 
-	if not self.position_obj:SetNextPosition(x, y, z, roll, pitch, yaw, false) then
+	if self.position_obj:SetNextPosition(x, y, z, roll, pitch, yaw) == Def.TeleportResult.Collision then
 		return false
 	end
 
