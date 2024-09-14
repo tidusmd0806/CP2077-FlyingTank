@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.0.0",
+	version = "1.0.1",
     -- system
     is_ready = false,
     time_resolution = 0.01,
@@ -131,7 +131,7 @@ end)
 registerForEvent('onInit', function()
 
     if not FlyingTank:CheckDependencies() then
-        print('[Error] Drive an Aerial Vehicle Mod failed to load due to missing dependencies.')
+        print('[FlyTank][Error] Drive an Aerial Vehicle Mod failed to load due to missing dependencies.')
         return
     end
 
@@ -144,7 +144,7 @@ registerForEvent('onInit', function()
 
     FlyingTank.is_ready = true
 
-    print('Flying Tank Mod is ready!')
+    print('[FlyTank][Info] Finished initializing Flying Tank Mod.')
 
 end)
 
@@ -175,10 +175,10 @@ function FlyingTank:CheckDependencies()
     FlyingTank.codeware_version_num = tonumber(code_version_major .. "." .. code_version_minor)
 
     if FlyingTank.cet_version_num < FlyingTank.cet_required_version then
-        print("Drive an Aerial Vehicle Mod requires Cyber Engine Tweaks version 1." .. FlyingTank.cet_required_version .. " or higher.")
+        print("[FlyTank][Error] Flying Tank Mod requires Cyber Engine Tweaks version 1." .. FlyingTank.cet_required_version .. " or higher.")
         return false
     elseif FlyingTank.codeware_version_num < FlyingTank.codeware_required_version then
-        print("Drive an Aerial Vehicle Mod requires CodeWare version 1." .. FlyingTank.codeware_required_version .. " or higher.")
+        print("[FlyTank][Error] Flying Tank Mod requires CodeWare version 1." .. FlyingTank.codeware_required_version .. " or higher.")
         return false
     end
 

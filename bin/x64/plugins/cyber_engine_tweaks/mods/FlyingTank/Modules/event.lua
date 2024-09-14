@@ -38,6 +38,7 @@ function Event:Init(vehicle_obj)
 
     if not FlyingTank.is_ready then
         self:SetObserve()
+        self:SetOverride()
     end
 
 end
@@ -86,6 +87,18 @@ function Event:SetObserve()
         self.log_obj:Record(LogLevel.Info, "Session end detected")
         self.current_situation = Def.Situation.Idel
     end)
+end
+
+function Event:SetOverride()
+
+    Override("VehicleComponentPS", "GetHasAnyDoorOpen", function(this, wrapped_method)
+        if self:IsInVehicle() then
+            return false
+        else
+            return wrapped_method()
+        end
+    end)
+
 end
 
 function Event:SetSituation(situation)
@@ -140,7 +153,6 @@ function Event:CheckAllEvents()
         self:CheckDespawn()
     elseif self.current_situation == Def.Situation.InVehicle then
         self:CheckInAV()
-        -- self:CheckCollision()
         self:CheckCommonEvent()
         self:CheckTankHUD()
     elseif self.current_situation == Def.Situation.TalkingOff then

@@ -9,6 +9,8 @@ function Engine:New(position_obj, all_models)
     obj.all_models = all_models
     obj.model_index = 1
 
+    obj.pitch_limit = 35
+    obj.max_pitch = 70
     obj.reset_pitch_exception_area = 0.1
 
     -- set default parameters
@@ -50,6 +52,11 @@ function Engine:GetNextPosition(movement)
         return 0, 0, 0, 0, 0, 0
     end
 
+    local angle_pitch = self.position_obj:GetEulerAngles().pitch
+    if angle_pitch > self.max_pitch or angle_pitch < -self.max_pitch then
+        self.position_obj:ChangeLinelyVelocity(0, 0, 0, 0, 0, 0, 2)
+    end
+
     if movement == Def.ActionList.Up then
         local vec3 = self.position_obj.fly_tank_system:GetVelocity()
         if vec3.z > 40 then
@@ -63,16 +70,26 @@ function Engine:GetNextPosition(movement)
         end
         return 0, 0, -self.up_down_speed, 0, 0, 0
     elseif movement == Def.ActionList.PitchUp then
+        if angle_pitch > self.pitch_limit then
+            return 0, 0, 0, 0, 0, 0
+        elseif angle_pitch > 0 then
+            return 0, 0, 0, 0, self.pitch_speed * (1 - angle_pitch / self.pitch_limit), 0
+        end
         return 0, 0, 0, 0, self.pitch_speed, 0
     elseif movement == Def.ActionList.PitchDown then
+        if angle_pitch < -self.pitch_limit then
+            return 0, 0, 0, 0, 0, 0
+        elseif angle_pitch < 0 then
+            return 0, 0, 0, 0, -self.pitch_speed * (1 + angle_pitch / self.pitch_limit), 0
+        end
         return 0, 0, 0, 0, -self.pitch_speed, 0
     elseif movement == Def.ActionList.PitchReset then
-        local angle_pitch = self.position_obj:GetEulerAngles().pitch
         if angle_pitch > self.reset_pitch_exception_area then
             return 0, 0, 0, 0, -self.reset_pitch_speed, 0
         elseif angle_pitch < -self.reset_pitch_exception_area then
             return 0, 0, 0, 0, self.reset_pitch_speed, 0
         end
+        return 0, 0, 0, 0, 0, 0
     else
         return 0, 0, 0, 0, 0, 0
     end
