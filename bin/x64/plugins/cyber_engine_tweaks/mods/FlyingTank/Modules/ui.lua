@@ -71,7 +71,16 @@ function UI:CreateNativeSettingsPage()
 	end)
 	table.insert(self.option_table_list, option_table)
 
+	option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_enable_destory"), FlyingTank.core_obj:GetTranslationText("native_settings_general_enable_destory_description"),  FlyingTank.user_setting_table.is_enable_destory, true, function(state)
+		FlyingTank.user_setting_table.is_enable_destory = state
+		FlyingTank.core_obj:SetDestructibility(state)
+		Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
+		Cron.After(self.delay_updating_native_settings, function()
+			self:UpdateNativeSettingsPage()
+		end)
+	end)
 	table.insert(self.option_table_list, option_table)
+
 	option_table = FlyingTank.NativeSettings.addSwitch("/FlyingTank/general", FlyingTank.core_obj:GetTranslationText("native_settings_general_activation_tank"), FlyingTank.core_obj:GetTranslationText("native_settings_activation_tank_description"), self.is_activate_vehicle_switch, false, function(state)
 		self.is_activate_vehicle_switch = state
 		Cron.After(self.delay_updating_native_settings, function()
