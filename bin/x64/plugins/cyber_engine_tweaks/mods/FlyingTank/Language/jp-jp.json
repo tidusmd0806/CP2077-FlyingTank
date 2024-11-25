@@ -1,11 +1,13 @@
 {
     "language": "日本語",
-    "version": "1.0.0",
+    "version": "1.1.0",
 
     "native_settings_keybinds_title": "Flying Tank",
     "native_settings_general_subtitle": "一般",
     "native_settings_general_language": "言語",
     "native_settings_general_language_description": "言語を選択してください。",
+    "native_settings_general_enable_destory": "破壊の有効化",
+    "native_settings_general_enable_destory_description": "無効にすると耐久値は減りますが決して0にはならず、爆発することはありません。",
     "native_settings_general_activation_tank": "車両のアクティベーションスイッチを表示",
     "native_settings_activation_subtitle": "アクティベーション",
     "native_settings_activation_tank_description": "この画面による車両アクティベーション機能を有効にします。仮想カーディーラーなしで使用できます。",

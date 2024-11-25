@@ -118,6 +118,7 @@ function Core:Reset()
     self.vehicle_obj = Vehicle:New(self.all_models)
     self.vehicle_obj:Init()
     self.event_obj:Init(self.vehicle_obj)
+    self.kill_count_for_prevention = 0
 end
 
 function Core:LoadSetting()
@@ -131,6 +132,7 @@ function Core:LoadSetting()
     if setting_data.version == FlyingTank.version then
         FlyingTank.user_setting_table = setting_data
     end
+    self:SetDestructibility(FlyingTank.user_setting_table.is_enable_destory)
 
 end
 
@@ -711,31 +713,31 @@ function Core:SetPreventionObserver()
 
         if self.heat_stage == EPreventionHeatStage.Heat_0 then
             if self.kill_count_for_prevention > self.next_stage_count_list[1] then
-                self:SetPreventionSpawning(prevention_system)
+                -- self:SetPreventionSpawning(prevention_system)
                 prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_1, "KillCivilian")
             end
         elseif self.heat_stage == EPreventionHeatStage.Heat_1 then
             self.log_obj:Record(LogLevel.Info, "Prevention Heat_1")
             if self.kill_count_for_prevention > self.next_stage_count_list[2] then
-                self:SetPreventionSpawning(prevention_system)
+                -- self:SetPreventionSpawning(prevention_system)
                 prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_2, "KillCivilian")
             end
         elseif self.heat_stage == EPreventionHeatStage.Heat_2 then
             self.log_obj:Record(LogLevel.Info, "Prevention Heat_2")
             if self.kill_count_for_prevention > self.next_stage_count_list[3] then
-                self:SetPreventionSpawning(prevention_system)
+                -- self:SetPreventionSpawning(prevention_system)
                 prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_3, "KillCivilian")
             end
         elseif self.heat_stage == EPreventionHeatStage.Heat_3 then
             self.log_obj:Record(LogLevel.Info, "Prevention Heat_3")
             if self.kill_count_for_prevention > self.next_stage_count_list[4] then
-                self:SetPreventionSpawning(prevention_system)
+                -- self:SetPreventionSpawning(prevention_system)
                 prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_4, "KillCivilian")
             end
         elseif self.heat_stage == EPreventionHeatStage.Heat_4 then
             self.log_obj:Record(LogLevel.Info, "Prevention Heat_4")
             if self.kill_count_for_prevention > self.next_stage_count_list[5] then
-                self:SetPreventionSpawning(prevention_system)
+                -- self:SetPreventionSpawning(prevention_system)
                 prevention_system:ChangeHeatStage(EPreventionHeatStage.Heat_5, "KillCivilian")
             end
         elseif self.heat_stage == EPreventionHeatStage.Heat_5 then
@@ -747,6 +749,7 @@ function Core:SetPreventionObserver()
 end
 
 function Core:SetPreventionSpawning(prevention_system)
+
     local police_agent_registry = prevention_system:GetAgentRegistry()
     local prevention_spawn_system = Game.GetPreventionSpawnSystem()
     prevention_spawn_system:CancelAllSpawnRequests()
@@ -771,6 +774,18 @@ function Core:SetPreventionSpawning(prevention_system)
     police_agent_registry:CreateTicket(police_unit_num, vehiclePoliceStrategy.SearchFromAnywhere, true)
 
     prevention_system:SetLastKnownPlayerPosition(player_pos)
+
+end
+
+function Core:SetDestructibility(enable)
+
+    local tweek_db_tag_list = {CName.new("InteractiveTrunk")}
+	if not enable then
+		table.insert(tweek_db_tag_list, CName.new("Immortal"))
+	end
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".tags"), tweek_db_tag_list)
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record .. ".tags"), tweek_db_tag_list)
+
 end
 
 return Core

@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.0.1",
+	version = "1.1.0",
     -- system
     is_ready = false,
     time_resolution = 0.01,
@@ -55,6 +55,8 @@ FlyingTank = {
     },
     -- HUD
     is_active_hud = true,
+    -- general
+    is_enable_destory = true,
 }
 
 -- initial settings
@@ -65,6 +67,7 @@ FlyingTank.user_setting_table = {
     language_index = 1,
     hud_mode = 1, -- #1: District, #2: KillCounter
     is_active_hud = true,
+    is_enable_destory = true,
     is_mute_all = false, -- hidden
     is_mute_flight = false, -- hidden
     --- input
@@ -88,11 +91,11 @@ registerForEvent("onTweak",function ()
 
     -- Custom Aldecaldos Basilisk Record
     TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")
-    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_fly.tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
     -- Custom Militech Basilisk Record
     TweakDB:CloneRecord(FlyingTank.basilisk_militech_fly_record, "Vehicle.v_militech_basilisk_militech")
-    TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_militech_fly.tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record ..".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
 end)
 
@@ -111,7 +114,7 @@ registerForEvent("onHook", function ()
                 elseif FlyingTank.listening_keybind_widget and action == "IACT_Release" then -- Key was bound, by keyboard
                     FlyingTank.listening_keybind_widget = nil
                 end
-                if FlyingTank.core_obj.event_obj.current_situation == Def.Situation.InVehicle then
+                if FlyingTank.core_obj ~= nil and FlyingTank.core_obj.event_obj.current_situation == Def.Situation.InVehicle then
                     if action == "IACT_Press" then
                         FlyingTank.core_obj:ConvertPressButtonAction(key)
                     elseif action == "IACT_Release" then
