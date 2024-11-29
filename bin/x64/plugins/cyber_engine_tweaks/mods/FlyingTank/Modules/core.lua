@@ -782,7 +782,12 @@ function Core:SetDestructibility(enable)
     local tweek_db_tag_list = {CName.new("InteractiveTrunk")}
 	if not enable then
 		table.insert(tweek_db_tag_list, CName.new("Immortal"))
-	end
+        TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".destruction"), "Vehicle.TankDestructionParamsNone")
+        TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record .. ".destruction"), "Vehicle.TankDestructionParamsNone")
+    else
+        TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".destruction"), "Vehicle.v_militech_basilisk_inline0")
+        TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record .. ".destruction"), "Vehicle.v_militech_basilisk_inline0")
+    end
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".tags"), tweek_db_tag_list)
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record .. ".tags"), tweek_db_tag_list)
 
