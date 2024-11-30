@@ -30,7 +30,7 @@ end
 function HUD:Init(vehicle_obj)
 
     self.vehicle_obj = vehicle_obj
-
+    self.vehicle_hp = 100
     self.kill_count = 0
 
     if not FlyingTank.is_ready then
@@ -44,10 +44,20 @@ end
 function HUD:SetOverride()
 
     if not FlyingTank.is_ready then
-        -- Override("gameuiPanzerHUDGameController", "OnSpeedValueChanged", function(this, value, wrapped_method)
-        --     print("HUD: gameuiPanzerHUDGameController OnSpeedValueChanged")
-        --     wrapped_method(1)
-        -- end)
+        Override("VehicleComponent", "EvaluateDamageLevel", function(this, destruction, wrapped_method)
+            if this.mounted and FlyingTank.core_obj.event_obj.current_situation == Def.Situation.InVehicle then
+                if not FlyingTank.user_setting_table.is_enable_destory then
+                    destruction = 100
+                end
+                self.vehicle_hp = destruction
+            end
+            return wrapped_method(destruction)
+        end)
+
+        Override("PanzerHUDGameController", "OnStatsChanged", function(this, value, wrapped_method)
+            -- To prevent the game from changing the HP value
+            return
+        end)
     end
 
 end
@@ -72,19 +82,6 @@ function HUD:SetObserve()
                 FlyingTank.core_obj.kill_count_for_prevention = FlyingTank.core_obj.kill_count_for_prevention + 1
             end
         end)
-
-        Observe("VehicleComponent", "EvaluateDamageLevel", function(this, destruction)
-            if this.mounted then
-                self.vehicle_hp = destruction
-            end
-        end)
-
-        Override("PanzerHUDGameController", "OnStatsChanged", function(this, value, wrapped_method)
-            -- To prevent the game from changing the HP value
-            return
-        end)
-        
-        
     end
 
 end

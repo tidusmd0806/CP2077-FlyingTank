@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.1.0",
+	version = "1.1.1",
     -- system
     is_ready = false,
     time_resolution = 0.01,
@@ -96,6 +96,9 @@ registerForEvent("onTweak",function ()
     -- Custom Militech Basilisk Record
     TweakDB:CloneRecord(FlyingTank.basilisk_militech_fly_record, "Vehicle.v_militech_basilisk_militech")
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record ..".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
+
+    -- Destruction Dummy Parameters
+    TweakDB:CreateRecord("Vehicle.TankDestructionParamsNone", "gamedataVehicleDestruction_Record")
 
 end)
 
