@@ -81,6 +81,10 @@ function Position:SetEntity(entity)
     self.fly_tank_system:SetVehicle(entity_id_hash)
 end
 
+function Position:UnsetPhysicsState()
+    self.fly_tank_system:UnsetPhysicsState()
+end
+
 function Position:ChangeWorldCordinate(basic_vector ,point_list)
     local quaternion = self:GetQuaternion()
     local result_list = {}
@@ -191,17 +195,17 @@ function Position:ChangePosition()
 
 end
 
-function Position:AddLinelyVelocity(x,y,z,roll,pitch,yaw)
+function Position:AddVelocity(x,y,z,roll,pitch,yaw)
     local pos = Vector3.new(x, y, z)
     local delta_roll, delta_pitch, delta_yaw = self:EulerAngleChange(roll, pitch, yaw)
     local angle = Vector3.new(delta_pitch, delta_roll, delta_yaw)
-    self.fly_tank_system:AddLinelyVelocity(pos, angle)
+    self.fly_tank_system:AddVelocity(pos, angle)
 end
 
-function Position:ChangeLinelyVelocity(x,y,z,roll,pitch,yaw,type)
+function Position:ChangeVelocity(x,y,z,roll,pitch,yaw,type)
     local pos = Vector3.new(x, y, z)
     local angle = Vector3.new(roll, pitch, yaw)
-    self.fly_tank_system:ChangeLinelyVelocity(pos, angle, type)
+    self.fly_tank_system:ChangeVelocity(pos, angle, type)
 end
 
 function Position:EulerAngleChange(local_roll, local_pitch, local_yaw)

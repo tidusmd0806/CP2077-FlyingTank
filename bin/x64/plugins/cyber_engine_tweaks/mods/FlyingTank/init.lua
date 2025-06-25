@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.1.2",
+	version = "1.2.0",
     -- system
     is_ready = false,
     time_resolution = 0.01,
@@ -210,6 +210,10 @@ end
 
 function FlyingTank:Version()
     return FlyingTank.version
+end
+
+function FlyingTank:ToggleDebugMode()
+    FlyingTank.is_debug_mode = not FlyingTank.is_debug_mode
 end
 
 return FlyingTank

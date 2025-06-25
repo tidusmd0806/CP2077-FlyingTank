@@ -9,6 +9,7 @@ function Debug:New(core_obj)
     -- set parameters
     obj.is_set_observer = false
     obj.is_im_gui_rw_count = false
+    obj.is_im_gui_vehicle_info = false
     obj.is_im_gui_situation = false
     obj.is_im_gui_player_position = false
     obj.is_im_gui_av_position = false
@@ -32,6 +33,7 @@ function Debug:ImGuiMain()
     self:SetLogLevel()
     self:SelectPrintDebug()
     self:ImGuiShowRWCount()
+    self:ImGuiVehicleInfo()
     self:ImGuiSituation()
     self:ImGuiPlayerPosition()
     self:ImGuiAVPosition()
@@ -83,6 +85,42 @@ function Debug:ImGuiShowRWCount()
     self.is_im_gui_rw_count = ImGui.Checkbox("[ImGui] R/W Count", self.is_im_gui_rw_count)
     if self.is_im_gui_rw_count then
         ImGui.Text("Read : " .. READ_COUNT .. ", Write : " .. WRITE_COUNT)
+    end
+end
+
+function Debug:ImGuiVehicleInfo()
+    self.is_im_gui_vehicle_info = ImGui.Checkbox("[ImGui] Vehicle Info", self.is_im_gui_vehicle_info)
+    if self.is_im_gui_vehicle_info then
+        if self.core_obj.vehicle_obj == nil then
+            return
+        end
+        local left_door_state = self.core_obj.vehicle_obj:GetDoorState(EVehicleDoor.seat_front_left)
+        ImGui.Text("Door State : " .. tostring(left_door_state) )
+        if self.core_obj.vehicle_obj.position_obj.fly_tank_system == nil then
+            return
+        end
+        if self.core_obj.vehicle_obj.position_obj.fly_tank_system:IsOnGround() then
+            ImGui.Text("On Ground")
+        else
+            ImGui.Text("In Air")
+        end
+        ImGui.Text("Phy State: " .. tostring(self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetPhysicsState()))
+        if self.core_obj.vehicle_obj.position_obj.fly_tank_system:HasGravity() then
+            ImGui.Text("Gravity : On")
+        else
+            ImGui.Text("Gravity : Off")
+        end
+        local speed = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetVelocity()
+        local speed_x = string.format("%.2f", speed.x)
+        local speed_y = string.format("%.2f", speed.y)
+        local speed_z = string.format("%.2f", speed.z)
+        ImGui.Text("Speed : X:" .. speed_x .. ", Y:" .. speed_y .. ", Z:" .. speed_z)
+        local force = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetForce()
+        local force_x = string.format("%.2f", force.x)
+        local force_y = string.format("%.2f", force.y)
+        local force_z = string.format("%.2f", force.z)
+        ImGui.Text("Force : X:" .. force_x .. ", Y:" .. force_y .. ", Z:" .. force_z)
+
     end
 end
 
@@ -237,241 +275,15 @@ end
 
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
-        -- atitude
-        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
-        local child_widget = root_widget:GetWidget(CName.new("ruler_right"))
-        local child_widget_2 = child_widget:GetWidget(CName.new("value"))
-        local num = math.random(0, 1000)
-        child_widget_2:SetText(tostring(num))
+        local sys = self.core_obj.vehicle_obj.position_obj.fly_tank_system
+        sys:AddForce(Vector3.new(0, 0, 1000000), Vector3.new(0, 0, 0))
         print("Excute Test Function 1")
     end
     ImGui.SameLine()
     if ImGui.Button("TF2") then
-        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
-        local child_widget = root_widget:GetWidget(CName.new("boost"))
-        local child_widget_header = child_widget:GetWidget(CName.new("header"))
-        local child_widget_bar = child_widget:GetWidget(CName.new("inkMaskWidget48"))
-        local child_widget_bar_base = child_widget:GetWidget(0)
-        local child_widget_bar_max = child_widget:GetWidget(5)
-        child_widget_header:SetText("aaa")
-        local num = math.random(0, 35)
-        child_widget_bar:SetMargin(-1801.25 - num * 10, 895, 0, 0)
-        local color = HDRColor.new()
-        color.Red = 1.369
-        color.Green = 0.965
-        color.Blue = 1.000
-        color.Alpha = 1.000
-        child_widget_bar_base:SetTintColor(color) -- default : 0.369, 0.965, 1.000, 1.000
-        child_widget_bar_max:SetText(tostring(num))
+        local sys = self.core_obj.vehicle_obj.position_obj.fly_tank_system
+        sys:UnsetPhysicsState()
         print("Excute Test Function 2")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF3") then
-        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
-        local child_widget = root_widget:GetWidget(CName.new("missile"))
-        local child_widget_header = child_widget:GetWidget(CName.new("header"))
-        local child_widget_text_1 = child_widget:GetWidget(3)
-        local child_widget_text_2 = child_widget:GetWidget(CName.new("0"))
-        child_widget_header:SetText("bbb")
-        child_widget_text_1:SetText("ccc")
-        child_widget_text_2:SetText("ddd")
-        print("Excute Test Function 3")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF4") then
-        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
-        local child_widget = root_widget:GetWidget(CName.new("ruler_yaw"))
-        local child_widget_header = child_widget:GetWidget(CName.new("yaw_descr"))
-        child_widget_header:SetText("eee")
-        local child_widget_2 = child_widget:GetWidget(CName.new("yaw_hori"))
-        local child_widget_3 = child_widget_2:GetWidget(CName.new("yawCounter"))
-        local num = math.random(-100, 100)
-        child_widget_3:SetText(tostring(num))
-        print("Excute Test Function 4")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF5") then
-        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
-        local child_widget_r = root_widget:GetWidget(CName.new("intake_fans-r"))
-        local child_widget_right = child_widget_r:GetWidget(CName.new("R-percent"))
-        local num = math.random(0, 100)
-        child_widget_right:SetText(tostring(num) .. "%")
-        local child_widget_l = root_widget:GetWidget(CName.new("intake_fans-l"))
-        local child_widget_left = child_widget_l:GetWidget(CName.new("L-percent"))
-        local num = math.random(0, 100)
-        child_widget_left:SetText(tostring(num) .. "%")
-        print("Excute Test Function 5")
-    end
-    if ImGui.Button("TF6") then
-        local vec = Vector3.new(0, 0, 10)
-        local angle_vec = Vector3.new(0, 0, 0)
-        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:AddLinelyVelocity(vec, angle_vec))
-
-        print("Excute Test Function 6")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF7") then
-        local veh = Game.GetMountedVehicle(Game.GetPlayer())
-        local eular_angle = veh:GetWorldOrientation():ToEulerAngles()
-        function eulerAngleChange(a, b, c, p, q, r)
-            -- オイラー角をラジアンに変換
-            local rad_a = math.rad(a)
-            local rad_b = math.rad(b)
-            local rad_c = math.rad(c)
-            local rad_p = math.rad(p)
-            local rad_q = math.rad(q)
-            local rad_r = math.rad(r)
-
-            -- sinとcosを計算
-            local cos_a, sin_a = math.cos(rad_a), math.sin(rad_a)
-            local cos_b, sin_b = math.cos(rad_b), math.sin(rad_b)
-            local cos_c, sin_c = math.cos(rad_c), math.sin(rad_c)
-            local cos_p, sin_p = math.cos(rad_p), math.sin(rad_p)
-            local cos_q, sin_q = math.cos(rad_q), math.sin(rad_q)
-            local cos_r, sin_r = math.cos(rad_r), math.sin(rad_r)
-
-            -- 回転行列を計算
-            local R1 = {
-                {cos_a * cos_b, cos_a * sin_b * sin_c - sin_a * cos_c, cos_a * sin_b * cos_c + sin_a * sin_c},
-                {sin_a * cos_b, sin_a * sin_b * sin_c + cos_a * cos_c, sin_a * sin_b * cos_c - cos_a * sin_c},
-                {-sin_b, cos_b * sin_c, cos_b * cos_c}
-            }
-
-            local R2 = {
-                {cos_p * cos_q, cos_p * sin_q * sin_r - sin_p * cos_r, cos_p * sin_q * cos_r + sin_p * sin_r},
-                {sin_p * cos_q, sin_p * sin_q * sin_r + cos_p * cos_r, sin_p * sin_q * cos_r - cos_p * sin_r},
-                {-sin_q, cos_q * sin_r, cos_q * cos_r}
-            }
-
-            -- 合成回転行列を計算
-            local R = {}
-            for i = 1, 3 do
-                R[i] = {}
-                for j = 1, 3 do
-                    R[i][j] = 0
-                    for k = 1, 3 do
-                        R[i][j] = R[i][j] + R1[i][k] * R2[k][j]
-                    end
-                end
-            end
-
-            -- 合成回転行列からオイラー角を計算
-            local new_a = math.deg(math.atan2(R[2][1], R[1][1]))
-            local new_b = math.deg(math.atan2(-R[3][1], math.sqrt(R[3][2] * R[3][2] + R[3][3] * R[3][3])))
-            local new_c = math.deg(math.atan2(R[3][2], R[3][3]))
-
-            return new_a - a, new_b - b, new_c - c
-        end
-
-        local a, b, c = eular_angle.roll, eular_angle.pitch, eular_angle.yaw
-        print(a, b, c)
-        local p, q, r = 0, 1, 0
-        local new_a, new_b, new_c = eulerAngleChange(a, b, c, p, q, r)
-        print(new_a, new_b, new_c)
-        local vec = Vector3.new(0, 0, 0)
-        local angle_vec = Vector3.new(new_b, new_a, new_c)
-        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:AddLinelyVelocity(vec, angle_vec))
-
-        print("Excute Test Function 7")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF8") then
-        local vec = Vector3.new(0, 0, 0)
-        local vec_angle = Vector3.new(0, 0, 0)
-        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:ChangeLinelyVelocity(vec, vec_angle, 1))
-
-        print("Excute Test Function 8")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF9") then
-        local vec = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetVelocity()
-        print(vec.x , vec.y, vec.z)
-        local vec = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetAngularVelocity()
-        print(vec.x , vec.y, vec.z)
-
-        print("Excute Test Function 9")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF9-2") then
-
-        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetPhysicsState())
-
-        print("Excute Test Function 9-2")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF9-3") then
-        local entity = Game.FindEntityByID(self.core_obj.vehicle_obj.entity_id)
-        entity:PhysicsWakeUp()
-        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:AddLinelyVelocity(Vector3.new(0, 0, 10), Vector3.new(0, 0, 0)))
-
-        print("Excute Test Function 9-3")
-    end
-    if ImGui.Button("TF10") then
-        self.core_obj.event_obj.hud_obj.hud_tank_controller:TurnOff()
-        print("Excute Test Function 10")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF11") then
-        self.core_obj.event_obj.hud_obj.hud_tank_controller:TurnOn()
-        print("Excute Test Function 11")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF12") then
-        print(self.core_obj.vehicle_obj.position_obj.fly_tank_system:IsOnGround())
-        print("Excute Test Function 12")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF13") then
-        local look_at_obj = Game.GetTargetingSystem():GetLookAtObject(Game.GetPlayer())
-        local sys = FlyTankSystem.new()
-        sys:SetVehicle(look_at_obj:GetEntityID().hash)
-        look_at_obj:PhysicsWakeUp()
-        sys:ChangeLinelyVelocity(Vector3.new(0, 0, 10), Vector3.new(0, 0, 0), 1)
-        print("Excute Test Function 13")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF14") then
-        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
-        ps:ChangeHeatStage(EPreventionHeatStage.Heat_5, "KillCivilian")
-        print("Excute Test Function 14")
-    end
-    if ImGui.Button("TF15") then
-        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
-        ps:ResetSearchingTimerRequest()
-        ps:SetLastKnownPlayerPosition(Game.GetPlayer():GetWorldPosition())
-        -- local veh = Game.GetMountedVehicle(Game.GetPlayer())
-        -- ps:SetLastKnownPlayerVehicle(veh)
-        print("Excute Test Function 15")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF16") then
-        local root_widget = self.core_obj.event_obj.hud_obj.hud_tank_controller.root
-        local widget = root_widget:GetWidget(CName.new("lines-r")):GetWidget(CName.new("star3"))
-        widget:SetVisible(true)
-        self.core_obj.event_obj.hud_obj.hud_tank_controller.currentHealth = 100
-        print("Excute Test Function 16")
-    end
-    ImGui.SameLine()
-    if ImGui.Button("TF17") then
-        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
-        print(ps:GetStarState())
-        print(ps:GetHeatStage())
-        -- ps:ForceStarStateToActive(true)
-        -- ps:SetWantedStateFact(1)
-        -- ps:UpdateStarStateTo(1)
-        -- print(ps:GetStarState())
-        print("Excute Test Function 17")
-    end
-    if ImGui.Button("TF18") then
-        local ps = Game.GetScriptableSystemsContainer():Get('PreventionSystem')
-        local pss = Game.GetPreventionSpawnSystem()
-        local transform = WorldTransform.new()
-        transform:SetOrientation(Quaternion.new(0, 0, 0, 1))
-        transform:SetPosition(Game.GetPlayer():GetWorldPosition())
-        local ticketID = pss:RequestUnitSpawn(TweakDBID.new("Character.prevention_police_handgun_ma"), transform)
-        local reg = ps:GetAgentRegistry()
-        reg:CreateTicket(ticketID, vehiclePoliceStrategy.SearchFromAnywhere, true)
-        print("Excute Test Function 18")
     end
 end
 

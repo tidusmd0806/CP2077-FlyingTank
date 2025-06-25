@@ -54,7 +54,7 @@ function Engine:GetNextPosition(movement)
 
     local angle_pitch = self.position_obj:GetEulerAngles().pitch
     if angle_pitch > self.max_pitch or angle_pitch < -self.max_pitch then
-        self.position_obj:ChangeLinelyVelocity(0, 0, 0, 0, 0, 0, 2)
+        self.position_obj:ChangeVelocity(0, 0, 0, 0, 0, 0, 2)
     end
 
     if movement == Def.ActionList.Up then

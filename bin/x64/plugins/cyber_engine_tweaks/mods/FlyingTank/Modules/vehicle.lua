@@ -120,6 +120,7 @@ function Vehicle:Spawn(position, angle)
 			self.is_spawning = false
 			self.position_obj:SetEntity(entity)
 			self.engine_obj:Init()
+			self.position_obj:UnsetPhysicsState()
 			Cron.Halt(timer)
 		end
 	end)
@@ -134,22 +135,22 @@ function Vehicle:SpawnToSky()
 	position.z = position.z + self.spawn_high
 	local angle = self.position_obj:GetSpawnOrientation(90.0)
 	self:Spawn(position, angle)
-	Cron.Every(0.01, { tick = 1 }, function(timer)
-		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
-			timer.tick = timer.tick + 1
-			if timer.tick == self.spawn_wait_count then
-				self:LockDoor()
-			elseif timer.tick > self.spawn_wait_count then
-				if not self:Move(0.0, 0.0, Utils:CalculationQuadraticFuncSlope(self.down_time_count, self.land_offset ,self.spawn_high , timer.tick - self.spawn_wait_count + 1), 0.0, 0.0, 0.0) then
-					self.is_landed = true
-					Cron.Halt(timer)
-				elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
-					self.is_landed = true
-					Cron.Halt(timer)
-				end
-			end
-		end
-	end)
+	-- Cron.Every(0.01, { tick = 1 }, function(timer)
+	-- 	if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
+	-- 		timer.tick = timer.tick + 1
+	-- 		if timer.tick == self.spawn_wait_count then
+	-- 			self:LockDoor()
+	-- 		elseif timer.tick > self.spawn_wait_count then
+	-- 			if not self:Move(0.0, 0.0, Utils:CalculationQuadraticFuncSlope(self.down_time_count, self.land_offset ,self.spawn_high , timer.tick - self.spawn_wait_count + 1), 0.0, 0.0, 0.0) then
+	-- 				self.is_landed = true
+	-- 				Cron.Halt(timer)
+	-- 			elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
+	-- 				self.is_landed = true
+	-- 				Cron.Halt(timer)
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end)
 
 end
 
@@ -326,7 +327,7 @@ function Vehicle:Operate(action_commands)
 		return false
 	end
 
-	self.position_obj:AddLinelyVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
+	self.position_obj:AddVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
 
 	return true
 
