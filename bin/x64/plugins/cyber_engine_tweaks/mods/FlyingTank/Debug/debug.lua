@@ -96,26 +96,26 @@ function Debug:ImGuiVehicleInfo()
         end
         local left_door_state = self.core_obj.vehicle_obj:GetDoorState(EVehicleDoor.seat_front_left)
         ImGui.Text("Door State : " .. tostring(left_door_state) )
-        if self.core_obj.vehicle_obj.position_obj.fly_tank_system == nil then
+        if self.core_obj.vehicle_obj.engine_obj.fly_tank_system == nil then
             return
         end
-        if self.core_obj.vehicle_obj.position_obj.fly_tank_system:IsOnGround() then
+        if self.core_obj.vehicle_obj.engine_obj.fly_tank_system:IsOnGround() then
             ImGui.Text("On Ground")
         else
             ImGui.Text("In Air")
         end
-        ImGui.Text("Phy State: " .. tostring(self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetPhysicsState()))
-        if self.core_obj.vehicle_obj.position_obj.fly_tank_system:HasGravity() then
+        ImGui.Text("Phy State: " .. tostring(self.core_obj.vehicle_obj.engine_obj.fly_tank_system:GetPhysicsState()))
+        if self.core_obj.vehicle_obj.engine_obj.fly_tank_system:HasGravity() then
             ImGui.Text("Gravity : On")
         else
             ImGui.Text("Gravity : Off")
         end
-        local speed = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetVelocity()
+        local speed = self.core_obj.vehicle_obj.engine_obj.fly_tank_system:GetVelocity()
         local speed_x = string.format("%.2f", speed.x)
         local speed_y = string.format("%.2f", speed.y)
         local speed_z = string.format("%.2f", speed.z)
         ImGui.Text("Speed : X:" .. speed_x .. ", Y:" .. speed_y .. ", Z:" .. speed_z)
-        local force = self.core_obj.vehicle_obj.position_obj.fly_tank_system:GetForce()
+        local force = self.core_obj.vehicle_obj.engine_obj.fly_tank_system:GetForce()
         local force_x = string.format("%.2f", force.x)
         local force_y = string.format("%.2f", force.y)
         local force_z = string.format("%.2f", force.z)
@@ -275,13 +275,13 @@ end
 
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
-        local sys = self.core_obj.vehicle_obj.position_obj.fly_tank_system
+        local sys = self.core_obj.vehicle_obj.engine_obj.fly_tank_system
         sys:AddForce(Vector3.new(0, 0, 1000000), Vector3.new(0, 0, 0))
         print("Excute Test Function 1")
     end
     ImGui.SameLine()
     if ImGui.Button("TF2") then
-        local sys = self.core_obj.vehicle_obj.position_obj.fly_tank_system
+        local sys = self.core_obj.vehicle_obj.engine_obj.fly_tank_system
         sys:UnsetPhysicsState()
         print("Excute Test Function 2")
     end

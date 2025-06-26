@@ -162,6 +162,9 @@ end)
 
 registerForEvent('onUpdate', function(delta)
     Cron.Update(delta)
+    if FlyingTank.core_obj.vehicle_obj.engine_obj.fly_tank_system ~= nil then
+        FlyingTank.core_obj.vehicle_obj.engine_obj:Update()
+    end
 end)
 
 registerForEvent('onShutdown', function()

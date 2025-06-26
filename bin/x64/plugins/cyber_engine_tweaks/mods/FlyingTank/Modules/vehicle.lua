@@ -118,9 +118,9 @@ function Vehicle:Spawn(position, angle)
 		local entity = Game.FindEntityByID(self.entity_id)
 		if entity ~= nil then
 			self.is_spawning = false
-			self.position_obj:SetEntity(entity)
-			self.engine_obj:Init()
-			self.position_obj:UnsetPhysicsState()
+			-- self.position_obj:SetEntity(entity)
+			self.engine_obj:Init(entity)
+			-- self.position_obj:UnsetPhysicsState()
 			Cron.Halt(timer)
 		end
 	end)
@@ -151,7 +151,9 @@ function Vehicle:SpawnToSky()
 	-- 		end
 	-- 	end
 	-- end)
-
+	Cron.After(3, function()
+		self.engine_obj:SetForce(Vector3.new(0, 0, 10000))
+	end)
 end
 
 function Vehicle:Despawn()
@@ -327,7 +329,7 @@ function Vehicle:Operate(action_commands)
 		return false
 	end
 
-	self.position_obj:AddVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
+	-- self.position_obj:AddVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
 
 	return true
 

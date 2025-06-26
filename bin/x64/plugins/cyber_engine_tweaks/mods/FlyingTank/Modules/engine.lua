@@ -24,6 +24,10 @@ function Engine:New(position_obj, all_models)
     obj.current_speed = 0
     obj.is_falling = false
 
+    obj.fly_tank_system = nil
+    obj.force = Vector3.new(0, 0, 0)
+    obj.torque = Vector3.new(0, 0, 0)
+
     return setmetatable(obj, self)
 end
 
@@ -34,7 +38,18 @@ function Engine:SetModel(index)
     self.reset_pitch_speed = self.all_models[index].reset_pitch_speed
 end
 
-function Engine:Init()
+function Engine:Init(entity)
+    if entity == nil then
+        self.log_obj:Record(LogLevel.Warning, "Entity is nil for SetEntity")
+    end
+    self.entity = entity
+    self.fly_tank_system = FlyTankSystem.new()
+    local entity_id_hash = entity:GetEntityID().hash
+    self.fly_tank_system:SetVehicle(entity_id_hash)
+
+    self.force = Vector3.new(0, 0, 0)
+    self.torque = Vector3.new(0, 0, 0)
+
     if not self.is_finished_init then
         self.base_angle = self.position_obj:GetEulerAngles()
     end
@@ -43,6 +58,23 @@ function Engine:Init()
     self.horizenal_y_speed = 0
     self.vertical_speed = 0
     self.is_finished_init = true
+end
+
+function Engine:Update()
+    self:UnsetPhysicsState()
+    self:ChangeForce(self.force, self.torque)
+end
+
+function Engine:UnsetPhysicsState()
+    self.fly_tank_system:UnsetPhysicsState()
+end
+
+function Engine:ChangeForce(force, torque)
+    self.fly_tank_system:ChangeForce(force, torque, 0)
+end
+
+function Engine:SetForce(force)
+    self.force = force
 end
 
 function Engine:GetNextPosition(movement)
@@ -54,20 +86,20 @@ function Engine:GetNextPosition(movement)
 
     local angle_pitch = self.position_obj:GetEulerAngles().pitch
     if angle_pitch > self.max_pitch or angle_pitch < -self.max_pitch then
-        self.position_obj:ChangeVelocity(0, 0, 0, 0, 0, 0, 2)
+        -- self.position_obj:ChangeVelocity(0, 0, 0, 0, 0, 0, 2)
     end
 
     if movement == Def.ActionList.Up then
-        local vec3 = self.position_obj.fly_tank_system:GetVelocity()
-        if vec3.z > 40 then
-            return 0, 0, 0, 0, 0, 0
-        end
+        -- local vec3 = self.position_obj.fly_tank_system:GetVelocity()
+        -- if vec3.z > 40 then
+        --     return 0, 0, 0, 0, 0, 0
+        -- end
         return 0, 0, self.up_down_speed, 0, 0, 0
     elseif movement == Def.ActionList.Down then
-        local vec3 = self.position_obj.fly_tank_system:GetVelocity()
-        if vec3.z < -40 then
-            return 0, 0, 0, 0, 0, 0
-        end
+        -- local vec3 = self.position_obj.fly_tank_system:GetVelocity()
+        -- if vec3.z < -40 then
+        --     return 0, 0, 0, 0, 0, 0
+        -- end
         return 0, 0, -self.up_down_speed, 0, 0, 0
     elseif movement == Def.ActionList.PitchUp then
         if angle_pitch > self.pitch_limit then

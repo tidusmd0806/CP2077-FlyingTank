@@ -71,19 +71,15 @@ function Position:SetModel(index)
     }
 end
 
-function Position:SetEntity(entity)
-    if entity == nil then
-        self.log_obj:Record(LogLevel.Warning, "Entity is nil for SetEntity")
-    end
-    self.entity = entity
-    self.fly_tank_system = FlyTankSystem.new()
-    local entity_id_hash = entity:GetEntityID().hash
-    self.fly_tank_system:SetVehicle(entity_id_hash)
-end
-
-function Position:UnsetPhysicsState()
-    self.fly_tank_system:UnsetPhysicsState()
-end
+-- function Position:SetEntity(entity)
+--     if entity == nil then
+--         self.log_obj:Record(LogLevel.Warning, "Entity is nil for SetEntity")
+--     end
+--     self.entity = entity
+--     self.fly_tank_system = FlyTankSystem.new()
+--     local entity_id_hash = entity:GetEntityID().hash
+--     self.fly_tank_system:SetVehicle(entity_id_hash)
+-- end
 
 function Position:ChangeWorldCordinate(basic_vector ,point_list)
     local quaternion = self:GetQuaternion()
@@ -195,18 +191,18 @@ function Position:ChangePosition()
 
 end
 
-function Position:AddVelocity(x,y,z,roll,pitch,yaw)
-    local pos = Vector3.new(x, y, z)
-    local delta_roll, delta_pitch, delta_yaw = self:EulerAngleChange(roll, pitch, yaw)
-    local angle = Vector3.new(delta_pitch, delta_roll, delta_yaw)
-    self.fly_tank_system:AddVelocity(pos, angle)
-end
+-- function Position:AddVelocity(x,y,z,roll,pitch,yaw)
+--     local pos = Vector3.new(x, y, z)
+--     local delta_roll, delta_pitch, delta_yaw = self:EulerAngleChange(roll, pitch, yaw)
+--     local angle = Vector3.new(delta_pitch, delta_roll, delta_yaw)
+--     self.fly_tank_system:AddVelocity(pos, angle)
+-- end
 
-function Position:ChangeVelocity(x,y,z,roll,pitch,yaw,type)
-    local pos = Vector3.new(x, y, z)
-    local angle = Vector3.new(roll, pitch, yaw)
-    self.fly_tank_system:ChangeVelocity(pos, angle, type)
-end
+-- function Position:ChangeVelocity(x,y,z,roll,pitch,yaw,type)
+--     local pos = Vector3.new(x, y, z)
+--     local angle = Vector3.new(roll, pitch, yaw)
+--     self.fly_tank_system:ChangeVelocity(pos, angle, type)
+-- end
 
 function Position:EulerAngleChange(local_roll, local_pitch, local_yaw)
 
