@@ -1,4 +1,4 @@
-local Utils = require("Tools/utils")
+local Utils = require("Etc/utils")
 
 local Sound = {}
 Sound.__index = Sound
@@ -21,7 +21,7 @@ end
 
 function Sound:PlaySound(sound_name)
     if self:CheckRestriction(sound_name) then
-        if not FlyingTank.core_obj.vehicle_obj.position_obj:IsPlayerAround() and self:GetIdentificationNumber(sound_name) >= 200 then
+        if not FlyingTank.core_obj.vehicle_obj:IsPlayerAround() and self:GetIdentificationNumber(sound_name) >= 200 then
             return
         end
         Game.GetPlayer():PlaySoundEvent(self.sound_data[sound_name])

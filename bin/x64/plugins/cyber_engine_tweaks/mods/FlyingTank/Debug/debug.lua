@@ -1,4 +1,4 @@
-local Utils = require("Tools/utils.lua")
+local Utils = require("Etc/utils.lua")
 local Debug = {}
 Debug.__index = Debug
 
@@ -12,14 +12,11 @@ function Debug:New(core_obj)
     obj.is_im_gui_vehicle_info = false
     obj.is_im_gui_situation = false
     obj.is_im_gui_player_position = false
-    obj.is_im_gui_av_position = false
-    obj.is_im_gui_heli_info = false
-    obj.is_im_gui_spinner_info = false
+    obj.is_im_gui_tank_position = false
     obj.is_im_gui_engine_info = false
     obj.is_im_gui_sound_check = false
     obj.selected_sound = "100_call_vehicle"
     obj.is_im_gui_radio_info = false
-    obj.is_im_gui_measurement = false
 
     return setmetatable(obj, self)
 end
@@ -36,10 +33,9 @@ function Debug:ImGuiMain()
     self:ImGuiVehicleInfo()
     self:ImGuiSituation()
     self:ImGuiPlayerPosition()
-    self:ImGuiAVPosition()
+    self:ImGuiTankPosition()
     self:ImGuiSoundCheck()
     self:ImGuiRadioInfo()
-    self:ImGuiMeasurement()
     self:ImGuiExcuteFunction()
 
     ImGui.End()
@@ -115,6 +111,11 @@ function Debug:ImGuiVehicleInfo()
         local speed_y = string.format("%.2f", speed.y)
         local speed_z = string.format("%.2f", speed.z)
         ImGui.Text("Speed : X:" .. speed_x .. ", Y:" .. speed_y .. ", Z:" .. speed_z)
+        local acceleration = self.core_obj.vehicle_obj.engine_obj:GetAcceleration()
+        local acceleration_x = string.format("%.2f", acceleration.x)
+        local acceleration_y = string.format("%.2f", acceleration.y)
+        local acceleration_z = string.format("%.2f", acceleration.z)
+        ImGui.Text("Acceleration : X:" .. acceleration_x .. ", Y:" .. acceleration_y .. ", Z:" .. acceleration_z)
         local force = self.core_obj.vehicle_obj.engine_obj.fly_tank_system:GetForce()
         local force_x = string.format("%.2f", force.x)
         local force_y = string.format("%.2f", force.y)
@@ -145,51 +146,16 @@ function Debug:ImGuiPlayerPosition()
     end
 end
 
-function Debug:ImGuiAVPosition()
-    self.is_im_gui_av_position = ImGui.Checkbox("[ImGui] AV Position Angle", self.is_im_gui_av_position)
-    if self.is_im_gui_av_position then
-        if self.core_obj.vehicle_obj.position_obj.entity == nil then
+function Debug:ImGuiTankPosition()
+    self.is_im_gui_tank_position = ImGui.Checkbox("[ImGui] Tank Position Angle", self.is_im_gui_tank_position)
+    if self.is_im_gui_tank_position then
+        if self.core_obj.vehicle_obj.entity_id == nil then
             return
         end
-        local x = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetPosition().x)
-        local y = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetPosition().y)
-        local z = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetPosition().z)
-        local roll = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetEulerAngles().roll)
-        local pitch = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetEulerAngles().pitch)
-        local yaw = string.format("%.2f", self.core_obj.vehicle_obj.position_obj:GetEulerAngles().yaw)
+        local x = string.format("%.2f", self.core_obj.vehicle_obj:GetPosition().x)
+        local y = string.format("%.2f", self.core_obj.vehicle_obj:GetPosition().y)
+        local z = string.format("%.2f", self.core_obj.vehicle_obj:GetPosition().z)
         ImGui.Text("X: " .. x .. ", Y: " .. y .. ", Z: " .. z)
-        ImGui.Text("Roll:" .. roll .. ", Pitch:" .. pitch .. ", Yaw:" .. yaw)
-    end
-end
-
-function Debug:ImGuiHeliInfo()
-    self.is_im_gui_heli_info = ImGui.Checkbox("[ImGui] Heli Info", self.is_im_gui_heli_info)
-    if self.is_im_gui_heli_info then
-        if self.core_obj.vehicle_obj.position_obj.entity == nil then
-            return
-        end
-        local f = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.lift_force)
-        local v_x = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_x_speed)
-        local v_y = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_y_speed)
-        local v_z = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.vertical_speed)
-        ImGui.Text("F: " .. f .. ", v_x: " .. v_x .. ", v_y: " .. v_y .. ", v_z: " .. v_z)
-    end
-end
-
-function Debug:ImGuiSpinnerInfo()
-    self.is_im_gui_spinner_info = ImGui.Checkbox("[ImGui] Spinner Info", self.is_im_gui_spinner_info)
-    if self.is_im_gui_spinner_info then
-        if self.core_obj.vehicle_obj.position_obj.entity == nil then
-            return
-        end
-        local f_h = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.spinner_horizenal_force)
-        local f_v = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.spinner_vertical_force)
-        local v_x = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_x_speed)
-        local v_y = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.horizenal_y_speed)
-        local v_z = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.vertical_speed)
-        local v_angle = string.format("%.2f", self.core_obj.vehicle_obj.engine_obj.spinner_speed_angle * 180 / Pi())
-        ImGui.Text("F_h: " .. f_h .. ", F_v : " .. f_v)
-        ImGui.Text("v_x: " .. v_x .. ", v_y: " .. v_y .. ", v_z: " .. v_z .. ", v_angle: " .. v_angle)
     end
 end
 
@@ -238,41 +204,6 @@ function Debug:ImGuiRadioInfo()
     end
 end
 
-function Debug:ImGuiMeasurement()
-    self.is_im_gui_measurement = ImGui.Checkbox("[ImGui] Measurement", self.is_im_gui_measurement)
-    if self.is_im_gui_measurement then
-        -- local res_x, res_y = GetDisplayResolution()
-        -- ImGui.SetNextWindowPos((res_x / 2) - 20, (res_y / 2) - 20)
-        -- ImGui.SetNextWindowSize(40, 40)
-        -- ImGui.SetNextWindowSizeConstraints(40, 40, 40, 40)
-        -- ---
-        -- ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 10)
-        -- ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 5)
-        -- ---
-        -- ImGui.Begin("FlyingTankDebugCrosshair", ImGuiWindowFlags.NoMove + ImGuiWindowFlags.NoCollapse + ImGuiWindowFlags.NoTitleBar + ImGuiWindowFlags.NoResize)
-        -- ImGui.End()
-        -- ---
-        -- ImGui.PopStyleVar(2)
-        -- ImGui.PopStyleColor(1)
-        local look_at_pos = Game.GetTargetingSystem():GetLookAtPosition(Game.GetPlayer())
-        if self.core_obj.vehicle_obj.position_obj.entity == nil then
-            return
-        end
-        local origin = self.core_obj.vehicle_obj.position_obj:GetPosition()
-        local right = self.core_obj.vehicle_obj.position_obj.entity:GetWorldRight()
-        local forward = self.core_obj.vehicle_obj.position_obj.entity:GetWorldForward()
-        local up = self.core_obj.vehicle_obj.position_obj.entity:GetWorldUp()
-        local relative = Vector4.new(look_at_pos.x - origin.x, look_at_pos.y - origin.y, look_at_pos.z - origin.z, 1)
-        local x = Vector4.Dot(relative, right)
-        local y = Vector4.Dot(relative, forward)
-        local z = Vector4.Dot(relative, up)
-        local absolute_position_x = string.format("%.2f", x)
-        local absolute_position_y = string.format("%.2f", y)
-        local absolute_position_z = string.format("%.2f", z)
-        ImGui.Text("[LookAt]X:" .. absolute_position_x .. ", Y:" .. absolute_position_y .. ", Z:" .. absolute_position_z)
-    end
-end
-
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
         local sys = self.core_obj.vehicle_obj.engine_obj.fly_tank_system
@@ -284,6 +215,16 @@ function Debug:ImGuiExcuteFunction()
         local sys = self.core_obj.vehicle_obj.engine_obj.fly_tank_system
         sys:UnsetPhysicsState()
         print("Excute Test Function 2")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF3") then
+        local entity = self.core_obj.vehicle_obj.engine_obj.entity
+        local comp = entity:FindComponentByName("magnetic_light_01")
+        local evt = ToggleLightEvent.new()
+        evt.loop = true
+        evt.toggle = true
+        comp:OnToggleLight(evt)
+        print("Excute Test Function 3")
     end
 end
 

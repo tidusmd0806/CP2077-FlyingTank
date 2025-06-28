@@ -31,13 +31,6 @@ Def.DoorOperation = {
 	Close = 2,
 }
 
-Def.TeleportResult = {
-    Error = -1,
-    Collision = 0,
-    Success = 1,
-    AvoidStack = 2,
-}
-
 Def.SoundRestrictionLevel = {
     None = -1,
     Mute = 0,

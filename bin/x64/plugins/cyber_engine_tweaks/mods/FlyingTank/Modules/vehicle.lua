@@ -1,29 +1,33 @@
 local Position = require("Modules/position.lua")
 local Engine = require("Modules/engine.lua")
 local Radio = require("Modules/radio.lua")
-local Utils = require("Tools/utils.lua")
+local Utils = require("Etc/utils.lua")
 local Vehicle = {}
 Vehicle.__index = Vehicle
 
 function Vehicle:New(all_models)
 	---instance---
 	local obj = {}
-	obj.position_obj = Position:New(all_models)
-	obj.engine_obj = Engine:New(obj.position_obj, all_models)
-	obj.radio_obj = Radio:New(obj.position_obj)
+	obj.engine_obj = Engine:New(all_models)
+	obj.radio_obj = Radio:New()
 	obj.log_obj = Log:New()
 	obj.log_obj:SetLevel(LogLevel.Info, "Vehicle")
 	---static---
 	obj.all_models = all_models
 	-- summon
 	obj.spawn_distance = 5.5
-	obj.spawn_high = 25
+	obj.spawn_height = 25
 	obj.spawn_wait_count = 150
 	obj.down_time_count = 300
 	obj.land_offset = -1.0
-	obj.door_open_time = 0.5
-	-- collision
-	obj.max_collision_count = obj.position_obj.collision_max_count
+	obj.search_ground_offset = 2
+	obj.search_ground_distance = 100
+	obj.collision_filters =  {"Static", "Terrain", "Water"}
+	obj.near_ground_distance = 0.5
+	obj.max_down_speed = 10
+	obj.min_down_speed = 1
+	obj.down_decrease_speed = 0.05
+	obj.far_distance = 100
 	---dynamic---
 	-- summon
 	obj.entity_id = nil
@@ -31,24 +35,10 @@ function Vehicle:New(all_models)
 	obj.vehicle_model_type = nil
 	obj.active_seat = nil
 	obj.active_door = nil
-	obj.seat_index = 1
-	obj.is_crystal_dome = false
-	-- speed
-	obj.current_speed = 0
-	-- collision
-	obj.is_collision = false
-	obj.colison_count = 0
 	-- status
-	obj.is_player_in = false
 	obj.is_landed = false
-	obj.is_leaving = false
-	obj.is_unmounting = false
 	obj.is_spawning = false
-	-- for spawning vehicle and pedistrian
-	obj.freeze_count = 0
-	obj.max_freeze_count = 30
-	obj.min_freeze_count = 8
-	obj.max_speed_for_freezing = 100
+
 	return setmetatable(obj, self)
 end
 
@@ -61,7 +51,6 @@ function Vehicle:Init()
 	self.active_seat = self.all_models[index].actual_allocated_seat
 	self.active_door = self.all_models[index].actual_allocated_door
 	self.engine_obj:SetModel(index)
-	self.position_obj:SetModel(index)
 
 end
 
@@ -93,8 +82,61 @@ function Vehicle:IsDespawned()
 	end
 end
 
-function Vehicle:Spawn(position, angle)
+function Vehicle:GetPosition()
+	local entity = Game.FindEntityByID(self.entity_id)
+	if entity == nil then
+		self.log_obj:Record(LogLevel.Warning, "No entity to get position")
+		return nil
+	end
+	return entity:GetWorldPosition()
+end
 
+function Vehicle:GetEulerAngles()
+	local entity = Game.FindEntityByID(self.entity_id)
+	if entity == nil then
+		self.log_obj:Record(LogLevel.Warning, "No entity to get angle")
+		return nil
+	end
+	return entity:GetWorldOrientation():ToEulerAngles()
+end
+
+function Vehicle:IsPlayerAround()
+    local player_pos = Game.GetPlayer():GetWorldPosition()
+	local vehicle_pos = self:GetPosition()
+	if player_pos == nil or vehicle_pos == nil then
+		self.log_obj:Record(LogLevel.Warning, "No position to check player around")
+		return false
+	end
+    if vehicle_pos:IsZero() then
+        return true
+    end
+    local distance = Vector4.Distance(player_pos, vehicle_pos)
+    if distance < self.far_distance then
+        return true
+    else
+        return false
+    end
+end
+
+--- Get Ground Position
+---@return number z
+function Vehicle:GetGroundPosition()
+    local current_position = self:GetPosition()
+	if current_position == nil then
+		self.log_obj:Record(LogLevel.Warning, "No position to get ground position")
+		return 0
+	end
+    current_position.z = current_position.z + self.search_ground_offset
+    for _, filter in ipairs(self.collision_filters) do
+        local is_success, trace_result = Game.GetSpatialQueriesSystem():SyncRaycastByCollisionGroup(current_position, Vector4.new(current_position.x, current_position.y, current_position.z - self.search_ground_distance, 1.0), filter, false, false)
+        if is_success then
+            return trace_result.position.z
+        end
+    end
+    return current_position.z - self.search_ground_distance - 1
+end
+
+function Vehicle:Spawn(position, angle)
 	if self.entity_id ~= nil then
 		self.log_obj:Record(LogLevel.Info, "Entity already spawned")
 		return false
@@ -118,42 +160,61 @@ function Vehicle:Spawn(position, angle)
 		local entity = Game.FindEntityByID(self.entity_id)
 		if entity ~= nil then
 			self.is_spawning = false
-			-- self.position_obj:SetEntity(entity)
 			self.engine_obj:Init(entity)
-			-- self.position_obj:UnsetPhysicsState()
+			self.engine_obj:SetControlType(Engine.ControlType.ChangeVelocity)
 			Cron.Halt(timer)
 		end
 	end)
 
 	return true
-
 end
 
 function Vehicle:SpawnToSky()
-
-	local position = self.position_obj:GetSpawnPosition(self.spawn_distance, 0.0)
-	position.z = position.z + self.spawn_high
-	local angle = self.position_obj:GetSpawnOrientation(90.0)
+	local position = self:GetSpawnPosition(self.spawn_distance, 0.0)
+	position.z = position.z + self.spawn_height
+	local angle = self:GetSpawnOrientation(90.0)
 	self:Spawn(position, angle)
-	-- Cron.Every(0.01, { tick = 1 }, function(timer)
-	-- 	if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
-	-- 		timer.tick = timer.tick + 1
-	-- 		if timer.tick == self.spawn_wait_count then
-	-- 			self:LockDoor()
-	-- 		elseif timer.tick > self.spawn_wait_count then
-	-- 			if not self:Move(0.0, 0.0, Utils:CalculationQuadraticFuncSlope(self.down_time_count, self.land_offset ,self.spawn_high , timer.tick - self.spawn_wait_count + 1), 0.0, 0.0, 0.0) then
-	-- 				self.is_landed = true
-	-- 				Cron.Halt(timer)
-	-- 			elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
-	-- 				self.is_landed = true
-	-- 				Cron.Halt(timer)
-	-- 			end
-	-- 		end
-	-- 	end
-	-- end)
-	Cron.After(3, function()
-		self.engine_obj:SetForce(Vector3.new(0, 0, 10000))
+	local down_speed = -self.max_down_speed
+	Cron.Every(0.01, { tick = 1 }, function(timer)
+		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
+			timer.tick = timer.tick + 1
+			if timer.tick == self.spawn_wait_count then
+				self:LockDoor()
+			elseif timer.tick > self.spawn_wait_count then
+				local ground_position_z = self:GetGroundPosition()
+				local vehicle_position_z = self:GetPosition().z
+				if vehicle_position_z - ground_position_z < self.near_ground_distance then
+					self.is_landed = true
+					self.engine_obj:SetVelocity(Vector3.new(0, 0, 0))
+					Cron.Halt(timer)
+				elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
+					self.is_landed = true
+					self.engine_obj:SetVelocity(Vector3.new(0, 0, 0))
+					Cron.Halt(timer)
+				else
+					down_speed = down_speed + self.down_decrease_speed
+					if down_speed > -self.min_down_speed then
+						down_speed = -self.min_down_speed
+					end
+					self.engine_obj:SetVelocity(Vector3.new(0, 0, down_speed))
+				end
+			end
+		end
 	end)
+end
+
+function Vehicle:GetSpawnPosition(distance, angle)
+    local pos = Game.GetPlayer():GetWorldPosition()
+    local heading = self:GetPlayerAroundDirection(angle)
+    return Vector4.new(pos.x + (heading.x * distance), pos.y + (heading.y * distance), pos.z + heading.z, pos.w + heading.w)
+end
+
+function Vehicle:GetSpawnOrientation(angle)
+    return EulerAngles.ToQuat(Vector4.ToRotation(self:GetPlayerAroundDirection(angle)))
+end
+
+function Vehicle:GetPlayerAroundDirection(angle)
+    return Vector4.RotateAxis(Game.GetPlayer():GetWorldForward(), Vector4.new(0, 0, 1, 0), angle / 180.0 * Pi())
 end
 
 function Vehicle:Despawn()
@@ -170,20 +231,25 @@ function Vehicle:Despawn()
 end
 
 function Vehicle:DespawnFromGround()
-
+	self.engine_obj:SetControlType(Engine.ControlType.ChangeVelocity)
+	local up_speed = self.min_down_speed
 	Cron.Every(0.01, { tick = 1 }, function(timer)
 		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
 			timer.tick = timer.tick + 1
 			if timer.tick > self.spawn_wait_count then
-				self:Move(0.0, 0.0, Utils:CalculationQuadraticFuncSlope(self.down_time_count, self.land_offset ,self.spawn_high , timer.tick - self.spawn_wait_count + 1 + self.down_time_count), 0.0, 0.0, 0.0)
 				if timer.tick >= self.spawn_wait_count + self.down_time_count then
 					self:Despawn()
 					Cron.Halt(timer)
+				else
+					up_speed = up_speed + self.down_decrease_speed
+					if up_speed > self.max_down_speed then
+						up_speed = self.max_down_speed
+					end
+					self.engine_obj:SetVelocity(Vector3.new(0, 0, up_speed))
 				end
 			end
 		end
 	end)
-
 end
 
 function Vehicle:UnlockDoor()
@@ -280,18 +346,7 @@ function Vehicle:ChangeDoorState(door_state)
 
 end
 
-function Vehicle:Move(x, y, z, roll, pitch, yaw)
-
-	if self.position_obj:SetNextPosition(x, y, z, roll, pitch, yaw) == Def.TeleportResult.Collision then
-		return false
-	end
-
-	return true
-
-end
-
 function Vehicle:Operate(action_commands)
-
 	if #action_commands == 1 and action_commands[1] == Def.ActionList.Nothing then
 		return false
 	end
@@ -329,10 +384,9 @@ function Vehicle:Operate(action_commands)
 		return false
 	end
 
-	-- self.position_obj:AddVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
+	self.engine_obj:AddVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
 
 	return true
-
 end
 
 return Vehicle

@@ -1,4 +1,4 @@
-local Utils = require("Tools/utils.lua")
+local Utils = require("Etc/utils.lua")
 local UI = {}
 UI.__index = UI
 

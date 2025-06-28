@@ -133,7 +133,7 @@ function HUD:UpdateTankHUD()
 
     -- Attitude Indicator
     local attitude_indicator = root_widget:GetWidget(CName.new("ruler_right")):GetWidget(CName.new("value"))
-    local attitude_num = self.vehicle_obj.position_obj:GetPosition().z
+    local attitude_num = self.vehicle_obj:GetPosition().z
     local attitude_num_int = math.floor(attitude_num)
     if attitude_num_int < 10 then
         attitude_indicator:SetText("00" .. tostring(attitude_num_int))
@@ -149,7 +149,7 @@ function HUD:UpdateTankHUD()
     local boost_gauge_slide_bar = boost_gauge_widget:GetWidget(CName.new("inkMaskWidget48"))
     local boost_gauge_bar_base = boost_gauge_widget:GetWidget(0)
     local boost_gauge_max_value = boost_gauge_widget:GetWidget(5)
-    local pitch_value = self.vehicle_obj.position_obj:GetEulerAngles().pitch
+    local pitch_value = self.vehicle_obj:GetEulerAngles().pitch
     local pitch_value_int = math.floor(pitch_value)
     boost_gauge_header:SetText(FlyingTank.core_obj:GetTranslationText("hud_pitch_header") .. "[" .. tostring(pitch_value_int) .. "]")
     if pitch_value_int > self.shown_max_pitch then
@@ -178,7 +178,7 @@ function HUD:UpdateTankHUD()
     -- YAW Indicator
     local yaw_indicator_header = root_widget:GetWidget(CName.new("ruler_yaw")):GetWidget(CName.new("yaw_descr"))
     local yaw_indicator_value = root_widget:GetWidget(CName.new("ruler_yaw")):GetWidget(CName.new("yaw_hori")):GetWidget(CName.new("yawCounter"))
-    local yaw_value = self.vehicle_obj.position_obj:GetEulerAngles().yaw
+    local yaw_value = self.vehicle_obj:GetEulerAngles().yaw
     local yaw_value_int = math.floor(yaw_value)
     if yaw_value_int < 0 then
         yaw_value_int = -yaw_value_int
@@ -212,9 +212,9 @@ function HUD:UpdateTankHUD()
         if district_list_num >= 2 then
             right_bottom_text_top:SetText(district_list[2])
         end
-        local x = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().x)
-        local y = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().y)
-        local z = string.format("%.2f", self.vehicle_obj.position_obj:GetPosition().z)
+        local x = string.format("%.2f", self.vehicle_obj:GetPosition().x)
+        local y = string.format("%.2f", self.vehicle_obj:GetPosition().y)
+        local z = string.format("%.2f", self.vehicle_obj:GetPosition().z)
         right_bottom_text_bottom:SetText("X: " .. x .. "  Y: " .. y .. "  Z: " .. z)
         right_bottom_text_bottom:SetFontSize(18)
     elseif self.hud_mode_list[FlyingTank.user_setting_table.hud_mode] == "KillCounter" then

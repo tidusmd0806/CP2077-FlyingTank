@@ -1,7 +1,7 @@
 local Vehicle = require("Modules/vehicle.lua")
 local Event = require("Modules/event.lua")
-local Queue = require("Tools/queue.lua")
-local Utils = require("Tools/utils.lua")
+local Queue = require("Etc/queue.lua")
+local Utils = require("Etc/utils.lua")
 
 local Core = {}
 Core.__index = Core
@@ -557,7 +557,7 @@ function Core:OperateVehicle(actions)
         if self.event_obj:IsInVehicle() then
             self.vehicle_obj:Operate(actions)
         elseif self.event_obj:IsWaiting() then
-            -- self.vehicle_obj:Move(0,0,0,0,0,0)
+            -- reserve
         end
     end
 

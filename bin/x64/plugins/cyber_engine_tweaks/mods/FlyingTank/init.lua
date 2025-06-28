@@ -5,8 +5,8 @@
 --------------------------------------------------------
 
 Cron = require('External/Cron.lua')
-Def = require("Tools/def.lua")
-Log = require("Tools/log.lua")
+Def = require("Etc/def.lua")
+Log = require("Etc/log.lua")
 
 local Core = require('Modules/core.lua')
 local Debug = require('Debug/debug.lua')
@@ -78,27 +78,65 @@ FlyingTank.user_setting_table = {
 registerForEvent("onTweak",function ()
 
     -- Icon
-    TweakDB:CloneRecord("UIIcon.basilisk_dummy", "UIIcon.quadra_sport_r7_chiaroscuro")
+    if TweakDB:GetRecord("UIIcon.basilisk_dummy") == nil then
+        TweakDB:CloneRecord("UIIcon.basilisk_dummy", "UIIcon.quadra_sport_r7_chiaroscuro")
+    end
     TweakDB:SetFlat(TweakDBID.new("UIIcon.basilisk_dummy.atlasResourcePathacturer"), "base/gameplay/gui/common/icons/weapon_manufacturers.inkatlas")
     TweakDB:SetFlat(TweakDBID.new("UIIcon.basilisk_dummy.icon.atlasPartName"), "militech_l")
 
     -- Vehicle Parameters
-    TweakDB:CloneRecord("Vehicle.v_militech_basilisk_inline5_fly", "Vehicle.v_militech_basilisk_inline5")
+    if TweakDB:GetRecord("Vehicle.v_militech_basilisk_inline5_fly") == nil then
+        TweakDB:CloneRecord("Vehicle.v_militech_basilisk_inline5_fly", "Vehicle.v_militech_basilisk_inline5")
+    end
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankGravityMul"), 0)
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankMaxSpeed"), 58) -- do not increase over 100
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankAcceleration"), 30)
     TweakDB:SetFlat(TweakDBID.new("Vehicle.v_militech_basilisk_inline5_fly.tankDeceleration"), 15)
 
     -- Custom Aldecaldos Basilisk Record
-    TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")
+    if TweakDB:GetRecord(FlyingTank.basilisk_aldecaldos_fly_record) == nil then
+        TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")
+    end
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
     -- Custom Militech Basilisk Record
-    TweakDB:CloneRecord(FlyingTank.basilisk_militech_fly_record, "Vehicle.v_militech_basilisk_militech")
+    if TweakDB:GetRecord(FlyingTank.basilisk_militech_fly_record) == nil then
+        TweakDB:CloneRecord(FlyingTank.basilisk_militech_fly_record, "Vehicle.v_militech_basilisk_militech")
+    end
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record ..".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
     -- Destruction Dummy Parameters
-    TweakDB:CreateRecord("Vehicle.TankDestructionParamsNone", "gamedataVehicleDestruction_Record")
+    if TweakDB:GetRecord("Vehicle.TankDestructionParamsNone") == nil then
+        TweakDB:CreateRecord("Vehicle.TankDestructionParamsNone", "gamedataVehicleDestruction_Record")
+    end
+
+    -- Tpp Camera Parameters
+    if TweakDB:GetRecord("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close_fly") == nil then
+        TweakDB:CloneRecord("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close_fly", "Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close")
+    end
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close_fly.baseBoomLength"), 6)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close_fly.boomLengthOffset"), 2)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close_fly.lookAtOffset"), Vector3.new(0, 2, 5.75))
+
+    if TweakDB:GetRecord("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium_fly") == nil then
+        TweakDB:CloneRecord("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium_fly", "Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium")
+    end
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium_fly.baseBoomLength"), 6)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium_fly.boomLengthOffset"), 5)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium_fly.lookAtOffset"), Vector3.new(0, 2, 5.75))
+
+    if TweakDB:GetRecord("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far_fly") == nil then
+        TweakDB:CloneRecord("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far_fly", "Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far")
+    end
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far_fly.baseBoomLength"), 6)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far_fly.boomLengthOffset"), 10)
+    TweakDB:SetFlat(TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far_fly.lookAtOffset"), Vector3.new(0, 2, 5.75))
+
+     local tpp_camera_list = {TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Close_fly"),
+                              TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Medium_fly"),
+                              TweakDBID.new("Vehicle.VehicleTPP_v_militech_basilisk_CameraPreset_High_Far_fly")}
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".tppCameraPresets"), tpp_camera_list)
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record .. ".tppCameraPresets"), tpp_camera_list)
 
 end)
 
@@ -162,9 +200,10 @@ end)
 
 registerForEvent('onUpdate', function(delta)
     Cron.Update(delta)
-    if FlyingTank.core_obj.vehicle_obj.engine_obj.fly_tank_system ~= nil then
-        FlyingTank.core_obj.vehicle_obj.engine_obj:Update()
+    if FlyingTank.core_obj.vehicle_obj.engine_obj == nil then
+        return
     end
+    FlyingTank.core_obj.vehicle_obj.engine_obj:Update(delta)
 end)
 
 registerForEvent('onShutdown', function()

@@ -1,12 +1,11 @@
 local Radio = {}
 Radio.__index = Radio
 
-function Radio:New(position_obj)
+function Radio:New()
     -- instance --
     local obj = {}
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Radio")
-    obj.position_obj = position_obj
     -- sttatic --
     obj.radio_ent_path = "base\\quest\\main_quests\\prologue\\q000\\entities\\q000_invisible_radio.ent"
     obj.volume_ajustment_resolution = 20
@@ -54,11 +53,7 @@ function Radio:Spawn()
 
     self.log_obj:Record(LogLevel.Trace, "Radio Obj Create")
     local radio_transform = Transform.new()
-    if self.position_obj == nil then
-        self.log_obj:Record(LogLevel.Critical, "Position object is nil")
-        return false
-    end
-    local av_pos = self.position_obj:GetPosition()
+    local av_pos = FlyingTank.core_obj.vehicle_obj:GetPosition()
     radio_transform:SetPosition(av_pos)
     local radio_entity_id = exEntitySpawner.Spawn(self.radio_ent_path, radio_transform, '')
     Cron.Every(FlyingTank.time_resolution, {tick = 1} , function(timer)
@@ -91,7 +86,7 @@ function Radio:Move()
         return false
     end
     for i = 1, #self.radio_entity_list do
-        Game.GetTeleportationFacility():Teleport(self.radio_entity_list[i], self.position_obj:GetPosition(), EulerAngles.new(0, 0, 0))
+        Game.GetTeleportationFacility():Teleport(self.radio_entity_list[i], FlyingTank.core_obj.vehicle_obj:GetPosition(), EulerAngles.new(0, 0, 0))
     end
     return true
 
