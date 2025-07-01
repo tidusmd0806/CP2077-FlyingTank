@@ -219,12 +219,14 @@ function Debug:ImGuiExcuteFunction()
     ImGui.SameLine()
     if ImGui.Button("TF3") then
         local entity = self.core_obj.vehicle_obj.engine_obj.entity
-        local comp = entity:FindComponentByName("magnetic_light_01")
-        local evt = ToggleLightEvent.new()
-        evt.loop = true
-        evt.toggle = true
-        comp:OnToggleLight(evt)
+        entity:TurnEngineOn(true)
         print("Excute Test Function 3")
+    end
+    ImGui.SameLine()
+    if ImGui.Button("TF4") then
+        local entity = self.core_obj.vehicle_obj.engine_obj.entity
+        GameObjectEffectHelper.StopEffectEvent(entity, CName.new("exhaust_start"))
+        print("Excute Test Function 4")
     end
 end
 

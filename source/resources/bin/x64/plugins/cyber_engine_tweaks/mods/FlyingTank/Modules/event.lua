@@ -205,6 +205,7 @@ function Event:CheckInAV()
             self:SetSituation(Def.Situation.Waiting)
             self:StopRadio()
             self.vehicle_obj.engine_obj:SetControlType(Engine.ControlType.ChangeVelocity)
+            self.vehicle_obj.engine_obj.entity:TurnEngineOn(true)
             SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank"))
         end
     end

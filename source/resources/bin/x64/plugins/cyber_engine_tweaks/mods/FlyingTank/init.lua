@@ -97,12 +97,14 @@ registerForEvent("onTweak",function ()
     if TweakDB:GetRecord(FlyingTank.basilisk_aldecaldos_fly_record) == nil then
         TweakDB:CloneRecord(FlyingTank.basilisk_aldecaldos_fly_record, "Vehicle.v_militech_basilisk")
     end
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".entityTemplatePath"), "base/vehicles/special/v_militech_basilisk_01__basic_01_fly.ent")
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_aldecaldos_fly_record .. ".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
     -- Custom Militech Basilisk Record
     if TweakDB:GetRecord(FlyingTank.basilisk_militech_fly_record) == nil then
         TweakDB:CloneRecord(FlyingTank.basilisk_militech_fly_record, "Vehicle.v_militech_basilisk_militech")
     end
+    TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record .. ".entityTemplatePath"), "base/vehicles/special/v_militech_basilisk_01__basic_01_fly.ent")
     TweakDB:SetFlat(TweakDBID.new(FlyingTank.basilisk_militech_fly_record ..".tankDriveModelData"), "Vehicle.v_militech_basilisk_inline5_fly")
 
     -- Destruction Dummy Parameters

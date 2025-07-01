@@ -12,22 +12,17 @@ function Engine:New(all_models)
     local obj = {}
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Engine")
+    ---static---
     obj.all_models = all_models
     obj.model_index = 1
-
     obj.pitch_limit = 35
     obj.max_pitch = 70
     obj.reset_pitch_exception_area = 0.1
-
+    obj.gravitational_acceleration = 9.8
+    ---dynamic---
     -- set default parameters
     obj.next_indication = {roll = 0, pitch = 0, yaw = 0}
     obj.is_finished_init = false
-    obj.horizenal_x_speed = 0
-    obj.horizenal_y_speed = 0
-    obj.horizenal_speed = 0
-    obj.vertical_speed = 0
-    obj.current_speed = 0
-    obj.is_falling = false
 
     obj.entity = nil
     obj.fly_tank_system = nil
@@ -38,8 +33,6 @@ function Engine:New(all_models)
     obj.acceleration = Vector3.new(0, 0, 0)
     obj.velocity = Vector3.new(0, 0, 0)
     obj.angular_velocity = Vector3.new(0, 0, 0)
-
-    obj.gravitational_acceleration = 9.8
     obj.control_type = Engine.ControlType.None
 
     return setmetatable(obj, self)
@@ -57,6 +50,7 @@ function Engine:Init(entity)
         self.log_obj:Record(LogLevel.Warning, "Entity is nil for SetEntity")
     end
     self.entity = entity
+    entity:TurnEngineOn(true)
     self.fly_tank_system = FlyTankSystem.new()
     local entity_id_hash = entity:GetEntityID().hash
     self.fly_tank_system:SetVehicle(entity_id_hash)
@@ -64,9 +58,6 @@ function Engine:Init(entity)
     self:SetForce(Vector3.new(0, 0, 0))
     self:SetTorque(Vector3.new(0, 0, 0))
 
-    self.horizenal_x_speed = 0
-    self.horizenal_y_speed = 0
-    self.vertical_speed = 0
     self.is_finished_init = true
 end
 

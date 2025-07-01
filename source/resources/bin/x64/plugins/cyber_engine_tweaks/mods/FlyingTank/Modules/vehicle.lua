@@ -18,7 +18,7 @@ function Vehicle:New(all_models)
 	obj.spawn_distance = 5.5
 	obj.spawn_height = 25
 	obj.spawn_wait_count = 150
-	obj.down_time_count = 300
+	obj.down_time_count = 450
 	obj.land_offset = -1.0
 	obj.search_ground_offset = 2
 	obj.search_ground_distance = 100
