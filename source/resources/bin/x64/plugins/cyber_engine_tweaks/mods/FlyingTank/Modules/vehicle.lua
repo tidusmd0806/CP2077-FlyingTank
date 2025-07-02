@@ -1,7 +1,5 @@
-local Position = require("Modules/position.lua")
 local Engine = require("Modules/engine.lua")
 local Radio = require("Modules/radio.lua")
-local Utils = require("Etc/utils.lua")
 local Vehicle = {}
 Vehicle.__index = Vehicle
 
@@ -18,15 +16,15 @@ function Vehicle:New(all_models)
 	obj.spawn_distance = 5.5
 	obj.spawn_height = 25
 	obj.spawn_wait_count = 150
-	obj.down_time_count = 450
+	obj.down_time_count = 300
 	obj.land_offset = -1.0
 	obj.search_ground_offset = 2
 	obj.search_ground_distance = 100
 	obj.collision_filters =  {"Static", "Terrain", "Water"}
 	obj.near_ground_distance = 0.5
 	obj.max_down_speed = 10
-	obj.min_down_speed = 1
-	obj.down_decrease_speed = 0.05
+	obj.min_down_speed = 3
+	obj.down_decrease_speed = 0.06
 	obj.far_distance = 100
 	---dynamic---
 	-- summon
@@ -161,7 +159,7 @@ function Vehicle:Spawn(position, angle)
 		if entity ~= nil then
 			self.is_spawning = false
 			self.engine_obj:Init(entity)
-			self.engine_obj:SetControlType(Engine.ControlType.ChangeVelocity)
+			self.engine_obj:SetControlType(Def.ControlType.ChangeVelocity)
 			Cron.Halt(timer)
 		end
 	end)
@@ -231,7 +229,7 @@ function Vehicle:Despawn()
 end
 
 function Vehicle:DespawnFromGround()
-	self.engine_obj:SetControlType(Engine.ControlType.ChangeVelocity)
+	self.engine_obj:SetControlType(Def.ControlType.ChangeVelocity)
 	local up_speed = self.min_down_speed
 	Cron.Every(0.01, { tick = 1 }, function(timer)
 		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then

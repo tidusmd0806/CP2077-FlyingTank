@@ -1,13 +1,6 @@
 Engine = {}
 Engine.__index = Engine
 
-Engine.ControlType =
-{
-    None = -1,
-    ChangeVelocity = 0,
-    AddVelocity = 1,
-}
-
 function Engine:New(all_models)
     local obj = {}
     obj.log_obj = Log:New()
@@ -33,7 +26,7 @@ function Engine:New(all_models)
     obj.acceleration = Vector3.new(0, 0, 0)
     obj.velocity = Vector3.new(0, 0, 0)
     obj.angular_velocity = Vector3.new(0, 0, 0)
-    obj.control_type = Engine.ControlType.None
+    obj.control_type = Def.ControlType.None
 
     return setmetatable(obj, self)
 end
@@ -71,9 +64,9 @@ function Engine:Update(delta)
     --     self:ChangeForce(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0))
     --     return
     -- end
-    if self.control_type == Engine.ControlType.ChangeVelocity then
+    if self.control_type == Def.ControlType.ChangeVelocity then
         self:ChangeVelocity(self.velocity, self.angular_velocity)
-    elseif self.control_type == Engine.ControlType.AddVelocity then
+    elseif self.control_type == Def.ControlType.AddVelocity then
         -- reserve
     else
         self.log_obj:Record(LogLevel.Error, "Unknown control type")
@@ -86,9 +79,9 @@ end
 
 function Engine:SetControlType(control_type)
     self.control_type = control_type
-    if control_type == Engine.ControlType.ChangeVelocity and self:HasGravity() then
+    if control_type == Def.ControlType.ChangeVelocity and self:HasGravity() then
         self:EnableGravity(false)
-    elseif control_type == Engine.ControlType.AddVelocity and not self:HasGravity() then
+    elseif control_type == Def.ControlType.AddVelocity and not self:HasGravity() then
         self:EnableGravity(true)
     end
 end

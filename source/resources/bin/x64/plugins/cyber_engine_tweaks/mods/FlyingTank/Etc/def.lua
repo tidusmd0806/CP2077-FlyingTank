@@ -37,4 +37,11 @@ Def.SoundRestrictionLevel = {
     PriorityRadio = 1,
 }
 
+Def.ControlType =
+{
+    None = -1,
+    ChangeVelocity = 0,
+    AddVelocity = 1,
+}
+
 return Def
