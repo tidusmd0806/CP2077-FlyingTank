@@ -131,6 +131,16 @@ function Core:LoadSetting()
     end
     if setting_data.version == FlyingTank.version then
         FlyingTank.user_setting_table = setting_data
+    else
+        self.log_obj:Record(LogLevel.Info, "Different version detected. Regenerate user_setting.json")
+        for key, _ in pairs(self.initial_user_setting_table) do
+            if setting_data[key] ~= nil and key ~= "version" then
+                FlyingTank.user_setting_table[key] = setting_data[key]
+            else
+                FlyingTank.user_setting_table[key] = self.initial_user_setting_table[key]
+            end
+        end
+        Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
     end
     self:SetDestructibility(FlyingTank.user_setting_table.is_enable_destory)
 
@@ -145,7 +155,7 @@ end
 
 function Core:SetSummonTrigger()
 
-    Override("VehicleSystem", "SpawnPlayerVehicle", function(this, vehicle_type, wrapped_method)
+    Override("VehicleSystem", "SpawnActivePlayerVehicle", function(this, vehicle_type, wrapped_method)
         local record_id = this:GetActivePlayerVehicle(vehicle_type).recordID
 
         if TweakDBID.new(FlyingTank.basilisk_aldecaldos_record).hash == record_id.hash then

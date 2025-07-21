@@ -26,6 +26,7 @@ function Vehicle:New(all_models)
 	obj.min_down_speed = 3
 	obj.down_decrease_speed = 0.06
 	obj.far_distance = 100
+	obj.minimum_distance_to_ground = 1.2
 	---dynamic---
 	-- summon
 	obj.entity_id = nil
@@ -87,6 +88,15 @@ function Vehicle:GetPosition()
 		return nil
 	end
 	return entity:GetWorldPosition()
+end
+
+function Vehicle:GetHeightFromGround()
+	local current_position = self:GetPosition()
+	if current_position == nil then
+		self.log_obj:Record(LogLevel.Warning, "No position to get height from ground")
+		return 0
+	end
+	return current_position.z - self:GetGroundPosition()
 end
 
 function Vehicle:GetEulerAngles()
@@ -159,7 +169,7 @@ function Vehicle:Spawn(position, angle)
 		if entity ~= nil then
 			self.is_spawning = false
 			self.engine_obj:Init(entity)
-			self.engine_obj:SetControlType(Def.ControlType.ChangeVelocity)
+			self.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
 			Cron.Halt(timer)
 		end
 	end)
@@ -169,34 +179,26 @@ end
 
 function Vehicle:SpawnToSky()
 	local position = self:GetSpawnPosition(self.spawn_distance, 0.0)
+	local dist_position = Vector4.new(position.x, position.y, position.z, 1)
 	position.z = position.z + self.spawn_height
 	local angle = self:GetSpawnOrientation(90.0)
 	self:Spawn(position, angle)
-	local down_speed = -self.max_down_speed
 	Cron.Every(0.01, { tick = 1 }, function(timer)
-		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
-			timer.tick = timer.tick + 1
-			if timer.tick == self.spawn_wait_count then
-				self:LockDoor()
-			elseif timer.tick > self.spawn_wait_count then
-				local ground_position_z = self:GetGroundPosition()
-				local vehicle_position_z = self:GetPosition().z
-				if vehicle_position_z - ground_position_z < self.near_ground_distance then
-					self.is_landed = true
-					self.engine_obj:SetVelocity(Vector3.new(0, 0, 0))
-					Cron.Halt(timer)
-				elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
-					self.is_landed = true
-					self.engine_obj:SetVelocity(Vector3.new(0, 0, 0))
-					Cron.Halt(timer)
-				else
-					down_speed = down_speed + self.down_decrease_speed
-					if down_speed > -self.min_down_speed then
-						down_speed = -self.min_down_speed
-					end
-					self.engine_obj:SetVelocity(Vector3.new(0, 0, down_speed))
-				end
+		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() and not self.is_spawning then
+			if timer.tick == 1 then
+				self.engine_obj:SetlinearlyAutopilotMode(true, dist_position, 10, 0.5, 2, 2, 6, true)
+			elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
+				self.engine_obj:SetDirectionVelocity(Vector3.new(0.0, 0.0, 0.0))
+				self.is_landed = true
+				self.log_obj:Record(LogLevel.Info, "Spawn to sky timeout")
+				Cron.Halt(timer)
+			elseif self:GetHeightFromGround() < self.minimum_distance_to_ground then
+				self.engine_obj:SetDirectionVelocity(Vector3.new(0.0, 0.0, 0.0))
+				self.is_landed = true
+				self.log_obj:Record(LogLevel.Info, "Spawn to sky success")
+				Cron.Halt(timer)
 			end
+			timer.tick = timer.tick + 1
 		end
 	end)
 end
@@ -229,22 +231,19 @@ function Vehicle:Despawn()
 end
 
 function Vehicle:DespawnFromGround()
-	self.engine_obj:SetControlType(Def.ControlType.ChangeVelocity)
-	local up_speed = self.min_down_speed
+	local position = self:GetPosition()
+	if position == nil then
+		self.log_obj:Record(LogLevel.Warning, "No position to despawn")
+		return
+	end
+	local dist_position = Vector4.new(position.x, position.y, position.z + self.spawn_height, 1)
+	self.engine_obj:SetlinearlyAutopilotMode(true, dist_position, 10, 5, 0, 1, 6, true)
 	Cron.Every(0.01, { tick = 1 }, function(timer)
 		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
 			timer.tick = timer.tick + 1
-			if timer.tick > self.spawn_wait_count then
-				if timer.tick >= self.spawn_wait_count + self.down_time_count then
-					self:Despawn()
-					Cron.Halt(timer)
-				else
-					up_speed = up_speed + self.down_decrease_speed
-					if up_speed > self.max_down_speed then
-						up_speed = self.max_down_speed
-					end
-					self.engine_obj:SetVelocity(Vector3.new(0, 0, up_speed))
-				end
+			if timer.tick >= self.down_time_count then
+				self:Despawn()
+				Cron.Halt(timer)
 			end
 		end
 	end)

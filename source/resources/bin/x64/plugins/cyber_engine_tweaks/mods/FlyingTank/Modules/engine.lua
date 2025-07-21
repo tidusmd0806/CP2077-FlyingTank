@@ -21,12 +21,11 @@ function Engine:New(all_models)
     obj.fly_tank_system = nil
     obj.force = Vector3.new(0, 0, 0)
     obj.torque = Vector3.new(0, 0, 0)
-    obj.limited_speed = 10
     obj.prev_velocity = Vector3.new(0, 0, 0)
     obj.acceleration = Vector3.new(0, 0, 0)
-    obj.velocity = Vector3.new(0, 0, 0)
+    obj.direction_velocity = Vector3.new(0, 0, 0)
     obj.angular_velocity = Vector3.new(0, 0, 0)
-    obj.control_type = Def.ControlType.None
+    obj.control_type = Def.EngineControlType.None
 
     return setmetatable(obj, self)
 end
@@ -60,14 +59,13 @@ function Engine:Update(delta)
     end
     self:UnsetPhysicsState()
     self:SetAcceleration(delta)
-    -- if self:IsOverLimitedVelocity() then
-    --     self:ChangeForce(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0))
-    --     return
-    -- end
-    if self.control_type == Def.ControlType.ChangeVelocity then
-        self:ChangeVelocity(self.velocity, self.angular_velocity)
-    elseif self.control_type == Def.ControlType.AddVelocity then
+
+    if self.control_type == Def.EngineControlType.ChangeVelocity then
+        self:ChangeVelocity(Def.ChangeVelocityType.Both ,self.direction_velocity, self.angular_velocity)
+    elseif self.control_type == Def.EngineControlType.AddForce then
         -- reserve
+    elseif self.control_type == Def.EngineControlType.LinearlyAutopilot then
+        self:OperateLinelyAutopilot(delta)
     else
         self.log_obj:Record(LogLevel.Error, "Unknown control type")
     end
@@ -79,9 +77,9 @@ end
 
 function Engine:SetControlType(control_type)
     self.control_type = control_type
-    if control_type == Def.ControlType.ChangeVelocity and self:HasGravity() then
+    if control_type == Def.EngineControlType.ChangeVelocity and self:HasGravity() then
         self:EnableGravity(false)
-    elseif control_type == Def.ControlType.AddVelocity and not self:HasGravity() then
+    elseif control_type == Def.EngineControlType.AddVelocity and not self:HasGravity() then
         self:EnableGravity(true)
     end
 end
@@ -100,8 +98,12 @@ function Engine:AddForce(delta, force, torque)
     self.fly_tank_system:AddForce(delta_force, delta_torque)
 end
 
-function Engine:ChangeVelocity(velocity, angular_velocity)
-    self.fly_tank_system:ChangeVelocity(velocity, angular_velocity, 0)
+--- Change velocity
+---@param type integer
+---@param direction_velocity Vector3
+---@param angular_velocity Vector3
+function Engine:ChangeVelocity(type, direction_velocity, angular_velocity)
+    self.fly_tank_system:ChangeVelocity(direction_velocity, angular_velocity, type)
 end
 
 function Engine:SetForce(force)
@@ -112,30 +114,25 @@ function Engine:SetTorque(torque)
     self.torque = torque
 end
 
-function Engine:SetVelocity(velocity)
-    self.velocity = velocity
+function Engine:GetDirectionVelocity()
+    return self.direction_velocity
+end
+
+function Engine:GetAngularVelocity()
+    return self.angular_velocity
+end
+
+function Engine:SetDirectionVelocity(direction_velocity)
+    self.direction_velocity = direction_velocity
 end
 
 function Engine:SetAngularVelocity(angular_velocity)
     self.angular_velocity = angular_velocity
 end
 
-function Engine:SetLimitedVelocity(limited_speed)
-    self.limited_speed = limited_speed
-end
-
 function Engine:GetGravitationalForce()
     local mass = self.fly_tank_system:GetMass()
     return -self.gravitational_acceleration * mass
-end
-
-function Engine:IsOverLimitedVelocity()
-    local vec3 = self.fly_tank_system:GetVelocity()
-    local speed = math.sqrt(vec3.x * vec3.x + vec3.y * vec3.y + vec3.z * vec3.z)
-    if self.limited_speed < speed then
-        return true
-    end
-    return false
 end
 
 function Engine:GetAcceleration()
@@ -259,6 +256,89 @@ function Engine:GetNextPosition(movement)
         return 0, 0, 0, 0, 0, 0
     end
 
+end
+
+--- Set linearly autopilot mode
+---@param enable boolean
+---@param end_point Vector4
+---@param end_decreased_distance number
+---@param first_increased_time number
+---@param end_decreased_time number
+---@param min_speed number
+---@param max_speed number
+---@param is_rocked_angle boolean
+function Engine:SetlinearlyAutopilotMode(enable, end_point, end_decreased_distance, first_increased_time, end_decreased_time, min_speed, max_speed, is_rocked_angle)
+    if enable then
+        self:SetControlType(Def.EngineControlType.LinearlyAutopilot)
+        self.end_point_for_linearly_autopilot = end_point
+        self.end_decreased_distance_for_linearly_autopilot = end_decreased_distance
+        self.first_increased_time_for_linearly_autopilot = first_increased_time
+        self.end_decreased_time_for_linearly_autopilot = end_decreased_time
+        self.min_speed_for_linearly_autopilot = min_speed
+        self.max_speed_for_linearly_autopilot = max_speed
+        self.is_rocked_angle_for_linearly_autopilot = is_rocked_angle
+        self.is_enable_limearly_autopilot = true
+        self.autopilot_time = 0
+    else
+        self:SetControlType(Def.EngineControlType.ChangeVelocity)
+        self:SetDirectionVelocity(Vector3.new(0, 0, 0))
+        self:SetAngularVelocity(Vector3.new(0, 0, 0))
+        self.autopilot_time = 0
+        self.is_enable_limearly_autopilot = false
+    end
+end
+
+--- Operate linely autopilot
+---@param delta number
+function Engine:OperateLinelyAutopilot(delta)
+    if not self.is_enable_limearly_autopilot then
+        self.log_obj:Record(LogLevel.Critical, "Don't operate because linely autopilot is not enabled")
+        return
+    end
+    local av_position = Game.FindEntityByID(self.entity:GetEntityID()):GetWorldPosition()
+    local direction_vector = Vector4.new(self.end_point_for_linearly_autopilot.x - av_position.x,
+                                            self.end_point_for_linearly_autopilot.y - av_position.y,
+                                            self.end_point_for_linearly_autopilot.z - av_position.z, 1)
+    local direcrtion_vector_normalized = Vector4.Normalize(direction_vector)
+    local gradient_start
+    if self.first_increased_time_for_linearly_autopilot == 0 then
+         gradient_start = 0
+    else
+        gradient_start = (self.max_speed_for_linearly_autopilot - self.min_speed_for_linearly_autopilot) / self.first_increased_time_for_linearly_autopilot
+    end
+    local gradient_end
+    if self.end_decreased_time_for_linearly_autopilot == 0 then
+        gradient_end = 0
+    else
+        gradient_end = (self.min_speed_for_linearly_autopilot - self.max_speed_for_linearly_autopilot) / self.end_decreased_time_for_linearly_autopilot
+    end
+    local remaining_distance = Vector4.Distance(av_position, self.end_point_for_linearly_autopilot)
+    local current_velocity = self:GetDirectionVelocity()
+    local current_velocity_norm = math.sqrt(current_velocity.x * current_velocity.x + current_velocity.y * current_velocity.y + current_velocity.z * current_velocity.z)
+    if self.autopilot_time < self.first_increased_time_for_linearly_autopilot then
+        local direction_velocity = Vector3.new(current_velocity.x + direcrtion_vector_normalized.x * gradient_start * delta, current_velocity.y + direcrtion_vector_normalized.y * gradient_start * delta, current_velocity.z + direcrtion_vector_normalized.z * gradient_start * delta)
+        local direction_velocity_norm = math.sqrt(direction_velocity.x * direction_velocity.x + direction_velocity.y * direction_velocity.y + direction_velocity.z * direction_velocity.z)
+        if direction_velocity_norm > self.max_speed_for_linearly_autopilot then
+            direction_velocity.x = direction_velocity.x / direction_velocity_norm * self.max_speed_for_linearly_autopilot
+            direction_velocity.y = direction_velocity.y / direction_velocity_norm * self.max_speed_for_linearly_autopilot
+            direction_velocity.z = direction_velocity.z / direction_velocity_norm * self.max_speed_for_linearly_autopilot
+        end
+        self:SetDirectionVelocity(direction_velocity)
+    elseif remaining_distance < 1 or current_velocity_norm == 0 then
+        self:SetlinearlyAutopilotMode(false, Vector4.new(0, 0, 0, 1), 0, 0, 0, 0, 0, false)
+        return
+    elseif remaining_distance < self.end_decreased_distance_for_linearly_autopilot then
+        local direction_velocity = Vector3.new(current_velocity.x + direcrtion_vector_normalized.x * gradient_end * delta, current_velocity.y + direcrtion_vector_normalized.y * gradient_end * delta, current_velocity.z + direcrtion_vector_normalized.z * gradient_end * delta)
+        local direction_velocity_norm = math.sqrt(direction_velocity.x * direction_velocity.x + direction_velocity.y * direction_velocity.y + direction_velocity.z * direction_velocity.z)
+        if direction_velocity_norm < self.min_speed_for_linearly_autopilot then
+            direction_velocity.x = direction_velocity.x / direction_velocity_norm * self.min_speed_for_linearly_autopilot
+            direction_velocity.y = direction_velocity.y / direction_velocity_norm * self.min_speed_for_linearly_autopilot
+            direction_velocity.z = direction_velocity.z / direction_velocity_norm * self.min_speed_for_linearly_autopilot
+        end
+        self:SetDirectionVelocity(direction_velocity)
+    end
+    self:ChangeVelocity(Def.ChangeVelocityType.Both ,self.direction_velocity, self.angular_velocity)
+    self.autopilot_time = self.autopilot_time + delta
 end
 
 return Engine

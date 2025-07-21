@@ -37,11 +37,17 @@ Def.SoundRestrictionLevel = {
     PriorityRadio = 1,
 }
 
-Def.ControlType =
-{
+Def.ChangeVelocityType = {
+    Both = 0,
+    Direction = 1,
+    Angular = 2,
+}
+
+Def.EngineControlType = {
     None = -1,
     ChangeVelocity = 0,
-    AddVelocity = 1,
+    AddForce = 1,
+    LinearlyAutopilot = 2,
 }
 
 return Def

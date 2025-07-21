@@ -194,7 +194,7 @@ function Event:CheckInAV()
             self.log_obj:Record(LogLevel.Info, "Enter In AV")
             SaveLocksManager.RequestSaveLockAdd(CName.new("FlyingTank"))
             self.sound_obj:PlaySound("230_fly_loop")
-            self.vehicle_obj.engine_obj:SetControlType(Def.ControlType.AddVelocity)
+            self.vehicle_obj.engine_obj:SetControlType(Def.EngineControlType.AddVelocity)
             self:SetSituation(Def.Situation.InVehicle)
         end
     else
@@ -204,7 +204,7 @@ function Event:CheckInAV()
             self.sound_obj:StopSound("230_fly_loop")
             self:SetSituation(Def.Situation.Waiting)
             self:StopRadio()
-            self.vehicle_obj.engine_obj:SetControlType(Def.ControlType.ChangeVelocity)
+            self.vehicle_obj.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
             self.vehicle_obj.engine_obj.entity:TurnEngineOn(true)
             SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank"))
         end
