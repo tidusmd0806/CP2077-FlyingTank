@@ -207,7 +207,6 @@ end
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
         local sys = self.core_obj.vehicle_obj.engine_obj.fly_tank_system
-        sys:AddForce(Vector3.new(0, 0, 1000000), Vector3.new(0, 0, 0))
         print("Excute Test Function 1")
     end
     ImGui.SameLine()

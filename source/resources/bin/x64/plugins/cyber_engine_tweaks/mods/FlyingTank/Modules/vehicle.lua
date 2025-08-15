@@ -21,12 +21,11 @@ function Vehicle:New(all_models)
 	obj.search_ground_offset = 2
 	obj.search_ground_distance = 100
 	obj.collision_filters =  {"Static", "Terrain", "Water"}
-	obj.near_ground_distance = 0.5
-	obj.max_down_speed = 10
-	obj.min_down_speed = 3
-	obj.down_decrease_speed = 0.06
 	obj.far_distance = 100
 	obj.minimum_distance_to_ground = 1.2
+	obj.down_timeout = 5 -- s
+	obj.up_timeout = 350
+	obj.down_speed = -5.0
 	---dynamic---
 	-- summon
 	obj.entity_id = nil
@@ -179,21 +178,22 @@ end
 
 function Vehicle:SpawnToSky()
 	local position = self:GetSpawnPosition(self.spawn_distance, 0.0)
-	local dist_position = Vector4.new(position.x, position.y, position.z, 1)
 	position.z = position.z + self.spawn_height
 	local angle = self:GetSpawnOrientation(90.0)
 	self:Spawn(position, angle)
-	Cron.Every(0.01, { tick = 1 }, function(timer)
+	Cron.Every(FlyingTank.time_resolution, { tick = 1 }, function(timer)
 		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() and not self.is_spawning then
+			local height = self:GetHeightFromGround()
+			self.log_obj:Record(LogLevel.Trace, "Current Height In Spawning: " .. height)
 			if timer.tick == 1 then
-				self.engine_obj:SetlinearlyAutopilotMode(true, dist_position, 10, 0.5, 2, 2, 6, true)
-			elseif timer.tick >= self.spawn_wait_count + self.down_time_count then
-				self.engine_obj:SetDirectionVelocity(Vector3.new(0.0, 0.0, 0.0))
-				self.is_landed = true
-				self.log_obj:Record(LogLevel.Info, "Spawn to sky timeout")
-				Cron.Halt(timer)
-			elseif self:GetHeightFromGround() < self.minimum_distance_to_ground then
-				self.engine_obj:SetDirectionVelocity(Vector3.new(0.0, 0.0, 0.0))
+				self.engine_obj:SetDirectionVelocity(Vector3.new(0, 0, self.down_speed))
+				self.log_obj:Record(LogLevel.Info, "Initial Spawn Velocity: " .. self.engine_obj:GetDirectionVelocity().z)
+			elseif height < 10 and self.engine_obj:GetControlType() ~= Def.EngineControlType.FluctuationVelocity then
+				self.engine_obj:SetFluctuationVelocityParams(-2, 1)
+				self.log_obj:Record(LogLevel.Info, "Fluctuation Velocity")
+			elseif height < self.minimum_distance_to_ground or timer.tick > (self.down_timeout / FlyingTank.time_resolution) or FlyingTank.core_obj.event_obj.current_situation ~= Def.Situation.Landing then
+				self.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
+				self.engine_obj:SetDirectionVelocity(Vector3.new(0, 0, 0))
 				self.is_landed = true
 				self.log_obj:Record(LogLevel.Info, "Spawn to sky success")
 				Cron.Halt(timer)
@@ -231,20 +231,23 @@ function Vehicle:Despawn()
 end
 
 function Vehicle:DespawnFromGround()
-	local position = self:GetPosition()
-	if position == nil then
-		self.log_obj:Record(LogLevel.Warning, "No position to despawn")
-		return
-	end
-	local dist_position = Vector4.new(position.x, position.y, position.z + self.spawn_height, 1)
-	self.engine_obj:SetlinearlyAutopilotMode(true, dist_position, 10, 5, 0, 1, 6, true)
 	Cron.Every(0.01, { tick = 1 }, function(timer)
 		if not FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
-			timer.tick = timer.tick + 1
-			if timer.tick >= self.down_time_count then
-				self:Despawn()
+			if timer.tick == 1 then
+				self.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
+				self.engine_obj:SetDirectionVelocity(Vector3.new(0, 0, 1))
+				self.log_obj:Record(LogLevel.Info, "Initial Despawn Velocity: " .. self.engine_obj:GetDirectionVelocity().z)
+			elseif timer.tick == 2 then
+				self.engine_obj:SetFluctuationVelocityParams(1, math.abs(self.down_speed))
+				self.log_obj:Record(LogLevel.Info, "Fluctuation Velocity")
+			elseif timer.tick >= self.up_timeout then
+				self.log_obj:Record(LogLevel.Info, "Despawn Timeout")
+				Cron.After(1.5, function()
+					self:Despawn()
+				end)
 				Cron.Halt(timer)
 			end
+			timer.tick = timer.tick + 1
 		end
 	end)
 end
