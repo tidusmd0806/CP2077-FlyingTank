@@ -6,12 +6,12 @@ Vehicle.__index = Vehicle
 function Vehicle:New(all_models)
 	---instance---
 	local obj = {}
-	obj.engine_obj = Engine:New(all_models)
+	obj.all_models = all_models
+	obj.engine_obj = Engine:New(obj)
 	obj.radio_obj = Radio:New()
 	obj.log_obj = Log:New()
 	obj.log_obj:SetLevel(LogLevel.Info, "Vehicle")
 	---static---
-	obj.all_models = all_models
 	-- summon
 	obj.spawn_distance = 5.5
 	obj.spawn_height = 25
@@ -22,7 +22,7 @@ function Vehicle:New(all_models)
 	obj.search_ground_distance = 100
 	obj.collision_filters =  {"Static", "Terrain", "Water"}
 	obj.far_distance = 100
-	obj.minimum_distance_to_ground = 1.2
+	obj.minimum_distance_to_ground = 0.6
 	obj.down_timeout = 5 -- s
 	obj.up_timeout = 350
 	obj.down_speed = -5.0
@@ -387,6 +387,12 @@ function Vehicle:Operate(action_commands)
 	self.engine_obj:AddVelocity(x_total, y_total, z_total, roll_total, pitch_total, yaw_total)
 
 	return true
+end
+
+--- This function returns collision status.
+---@return boolean
+function Vehicle:IsCollision()
+    return self.engine_obj:IsOnGround()
 end
 
 return Vehicle

@@ -3,6 +3,7 @@ Def = {}
 Def.__index = Def
 
 Def.ActionList = {
+    Idle = -1,
     Nothing = 0,
     Up = 1,
     Down = 2,

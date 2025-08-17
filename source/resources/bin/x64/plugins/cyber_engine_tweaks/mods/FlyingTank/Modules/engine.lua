@@ -1,17 +1,18 @@
 Engine = {}
 Engine.__index = Engine
 
-function Engine:New(all_models)
+function Engine:New(vehicle_obj)
     local obj = {}
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Engine")
+    obj.vehicle_obj = vehicle_obj
     ---static---
-    obj.all_models = all_models
+    obj.all_models = vehicle_obj.all_models
     obj.model_index = 1
     obj.pitch_limit = 35
     obj.max_pitch = 70
     obj.reset_pitch_exception_area = 0.1
-    obj.gravitational_acceleration = 9.8
+    obj.reset_pitch_speed = 0.03
     ---dynamic---
     -- set default parameters
     obj.next_indication = {roll = 0, pitch = 0, yaw = 0}
@@ -64,6 +65,10 @@ function Engine:Update(delta)
         self.log_obj:Record(LogLevel.Trace, "Unset DAV physics")
     end
 
+    if FlyingTank.core_obj.event_obj.current_situation == Def.Situation.Waiting then
+        return
+    end
+
     if self.engine_control_type == Def.EngineControlType.ChangeVelocity then
         self.force = Vector3.new(0, 0, 0)
         self.torque = Vector3.new(0, 0, 0)
@@ -102,6 +107,10 @@ function Engine:GetPhysicsState()
     return self.fly_tank_system:GetPhysicsState()
 end
 
+function Engine:GetControlType()
+    return self.engine_control_type
+end
+
 function Engine:SetControlType(control_type)
     self.engine_control_type = control_type
     if control_type == Def.EngineControlType.ChangeVelocity and self:HasGravity() then
@@ -109,6 +118,13 @@ function Engine:SetControlType(control_type)
     elseif control_type == Def.EngineControlType.AddForce and not self:HasGravity() then
         self:EnableGravity(true)
     end
+end
+
+function Engine:IsOnGround()
+    if not self.is_finished_init then
+        return false
+    end
+    return self.fly_tank_system:IsOnGround()
 end
 
 function Engine:HasGravity()
@@ -228,9 +244,52 @@ function Engine:GetNextPosition(movement)
         return 0, 0, 0, 0, 0, 0
     end
 
+    if movement == Def.ActionList.Idle and FlyingTank.core_obj.event_obj.current_situation == Def.Situation.Waiting then
+        local x, y, z, roll, pitch, yaw = 0, 0, 0, 0, 0, 0
+
+        local vel_vec, _ = self:GetDirectionAndAngularVelocity()
+
+        if not self.vehicle_obj:IsCollision() then
+            -- Height control
+            local height = self.vehicle_obj:GetHeightFromGround()
+            local dest_height = self.vehicle_obj.minimum_distance_to_ground
+
+            local damping = 0.9
+            local height_gain = 0.4
+
+            z = z - vel_vec.z * damping
+            if math.abs(height - dest_height) > 0.05 then
+                z = z + (dest_height - height) * height_gain
+            end
+        end
+
+        -- roll and pitch control
+        local current_angle = self.vehicle_obj:GetEulerAngles()
+        local damping_angle = 0.2
+
+        if math.abs(current_angle.roll) > 0.1 then
+            roll = roll + current_angle.roll * damping_angle
+        elseif math.abs(current_angle.roll) < -0.1 then
+            roll = roll + current_angle.roll * damping_angle
+        end
+
+        if math.abs(current_angle.pitch) > 0.1 then
+            pitch = pitch - current_angle.pitch * damping_angle
+        elseif math.abs(current_angle.pitch) < -0.1 then
+            pitch = pitch + current_angle.pitch * damping_angle
+        end
+
+        self:ChangeVelocity(Def.ChangeVelocityType.Angular ,Vector3.new(0, 0, 0), Vector3.new(roll, pitch, 0))
+        roll = 0
+        pitch = 0
+
+
+        return x, y, z, roll, pitch, yaw
+    end
+
     local angle_pitch = self.entity:GetWorldOrientation():ToEulerAngles().pitch
     if angle_pitch > self.max_pitch or angle_pitch < -self.max_pitch then
-        self.fly_tank_system:ChangeVelocity(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0),2)
+        self:ChangeVelocity(Def.ChangeVelocityType.Angular ,Vector3.new(0, 0, 0), Vector3.new(0, 0, 0))
     end
 
     if movement == Def.ActionList.Up then

@@ -178,7 +178,7 @@ function Event:CheckCallVehicle()
 end
 
 function Event:CheckLanded()
-    if self.vehicle_obj.is_landed then
+    if self.vehicle_obj:IsCollision() or self.vehicle_obj.is_landed then
         self.log_obj:Record(LogLevel.Trace, "Landed detected")
         self.sound_obj:StopSound("210_landing")
         self.sound_obj:PlaySound("110_arrive_vehicle")
