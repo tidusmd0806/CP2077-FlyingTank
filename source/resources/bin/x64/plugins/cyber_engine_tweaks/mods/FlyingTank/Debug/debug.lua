@@ -111,11 +111,6 @@ function Debug:ImGuiVehicleInfo()
         local speed_y = string.format("%.2f", speed.y)
         local speed_z = string.format("%.2f", speed.z)
         ImGui.Text("Speed : X:" .. speed_x .. ", Y:" .. speed_y .. ", Z:" .. speed_z)
-        local acceleration = self.core_obj.vehicle_obj.engine_obj:GetAcceleration()
-        local acceleration_x = string.format("%.2f", acceleration.x)
-        local acceleration_y = string.format("%.2f", acceleration.y)
-        local acceleration_z = string.format("%.2f", acceleration.z)
-        ImGui.Text("Acceleration : X:" .. acceleration_x .. ", Y:" .. acceleration_y .. ", Z:" .. acceleration_z)
         local force = self.core_obj.vehicle_obj.engine_obj.fly_tank_system:GetForce()
         local force_x = string.format("%.2f", force.x)
         local force_y = string.format("%.2f", force.y)
@@ -207,7 +202,6 @@ end
 function Debug:ImGuiExcuteFunction()
     if ImGui.Button("TF1") then
         local sys = self.core_obj.vehicle_obj.engine_obj.fly_tank_system
-        sys:AddForce(Vector3.new(0, 0, 1000000), Vector3.new(0, 0, 0))
         print("Excute Test Function 1")
     end
     ImGui.SameLine()

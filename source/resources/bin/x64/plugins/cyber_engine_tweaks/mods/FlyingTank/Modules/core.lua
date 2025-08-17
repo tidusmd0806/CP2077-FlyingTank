@@ -567,7 +567,7 @@ function Core:OperateVehicle(actions)
         if self.event_obj:IsInVehicle() then
             self.vehicle_obj:Operate(actions)
         elseif self.event_obj:IsWaiting() then
-            -- reserve
+            self.vehicle_obj:Operate({Def.ActionList.Idle})
         end
     end
 
