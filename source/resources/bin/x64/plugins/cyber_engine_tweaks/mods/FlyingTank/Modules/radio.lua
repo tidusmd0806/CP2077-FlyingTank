@@ -56,6 +56,9 @@ function Radio:Spawn()
     local av_pos = FlyingTank.core_obj.vehicle_obj:GetPosition()
     radio_transform:SetPosition(av_pos)
     local radio_entity_id = exEntitySpawner.Spawn(self.radio_ent_path, radio_transform, '')
+    if radio_entity_id == nil then 
+        return false
+    end
     Cron.Every(FlyingTank.time_resolution, {tick = 1} , function(timer)
         local radio_entity = Game.FindEntityByID(radio_entity_id)
         if radio_entity ~= nil then
