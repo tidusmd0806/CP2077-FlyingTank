@@ -73,6 +73,9 @@ function Vehicle:IsSpawning()
 end
 
 function Vehicle:IsDespawned()
+	if self.entity_id == nil then
+		return true
+	end
 	if Game.FindEntityByID(self.entity_id) == nil then
 		return true
 	else
@@ -81,6 +84,9 @@ function Vehicle:IsDespawned()
 end
 
 function Vehicle:GetPosition()
+	if self.entity_id == nil then
+		return nil
+	end
 	local entity = Game.FindEntityByID(self.entity_id)
 	if entity == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to get position")
@@ -99,6 +105,9 @@ function Vehicle:GetHeightFromGround()
 end
 
 function Vehicle:GetEulerAngles()
+	if self.entity_id == nil then
+		return nil
+	end
 	local entity = Game.FindEntityByID(self.entity_id)
 	if entity == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to get angle")
@@ -161,7 +170,9 @@ function Vehicle:Spawn(position, angle)
 	entity_spec.persistState = false
 	entity_spec.persistSpawn = false
 	self.entity_id = entity_system:CreateEntity(entity_spec)
-
+	if self.entity_id == nil then
+		return false
+	end
 	-- set entity id to position object
 	Cron.Every(0.1, {tick = 1}, function(timer)
 		local entity = Game.FindEntityByID(self.entity_id)
@@ -275,9 +286,8 @@ function Vehicle:LockDoor()
 end
 
 ---@param e_veh_door EVehicleDoor
----@return string
+---@return string | nil
 function Vehicle:GetDoorState(e_veh_door)
-
 	if self.entity_id == nil then
 		self.log_obj:Record(LogLevel.Warning, "No entity to get door state")
 		return nil
@@ -285,11 +295,10 @@ function Vehicle:GetDoorState(e_veh_door)
 	local entity = Game.FindEntityByID(self.entity_id)
 	local vehicle_ps = entity:GetVehiclePS()
 	return vehicle_ps:GetDoorState(e_veh_door).value
-
 end
 
 ---@param door_state Def.DoorOperation
----@return number
+---@return number | nil
 function Vehicle:ChangeDoorState(door_state)
 
 	local change_counter = 0

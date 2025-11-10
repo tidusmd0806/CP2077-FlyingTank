@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.2.1",
+	version = "1.2.2",
     -- system
     is_ready = false,
     time_resolution = 0.01,
@@ -30,10 +30,10 @@ FlyingTank = {
     basilisk_aldecaldos_record = "Vehicle.basilisk_aldecaldos",
     basilisk_militech_record = "Vehicle.basilisk_militech",
     -- version check
-    cet_required_version = 32.1, -- 1.32.1
-    cet_recommended_version = 32.2, -- 1.32.2
-    codeware_required_version = 8.2, -- 1.8.2
-    codeware_recommended_version = 9.2, -- 1.9.2
+    cet_required_version = 37.1, -- 1.37.1
+    cet_recommended_version = 37.1, -- 1.37.1
+    codeware_required_version = 18.0, -- 1.18.0
+    codeware_recommended_version = 18.0, -- 1.18.0
     native_settings_required_version = 1.96,
     cet_version_num = 0,
     codeware_version_num = 0,
