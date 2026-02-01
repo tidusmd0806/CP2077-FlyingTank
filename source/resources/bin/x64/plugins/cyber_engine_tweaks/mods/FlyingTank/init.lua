@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.2.2",
+	version = "1.2.3",
     -- system
     is_ready = false,
     time_resolution = 0.01,
