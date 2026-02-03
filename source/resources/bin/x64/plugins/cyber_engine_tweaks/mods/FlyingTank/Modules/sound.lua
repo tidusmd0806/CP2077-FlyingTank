@@ -8,6 +8,7 @@ function Sound:New()
     local obj = {}
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Sound")
+    obj.vehicle_obj = nil
     -- dynamic --
     obj.sound_data = {}
     obj.playing_sound = {}
@@ -15,20 +16,19 @@ function Sound:New()
     return setmetatable(obj, self)
 end
 
-function Sound:Init()
+function Sound:Init(vehicle_obj)
     self.sound_data = Utils:ReadJson("Data/sound.json")
+    self.vehicle_obj = vehicle_obj
 end
 
 function Sound:PlaySound(sound_name)
     if self:CheckRestriction(sound_name) then
-        if not FlyingTank.core_obj.vehicle_obj:IsPlayerAround() and self:GetIdentificationNumber(sound_name) >= 200 then
-            return
-        end
         Game.GetPlayer():PlaySoundEvent(self.sound_data[sound_name])
     end
 end
 
 function Sound:StopSound(sound_name)
+    print("Stopping Sound: " .. sound_name)
     Game.GetPlayer():StopSoundEvent(self.sound_data[sound_name])
 end
 
@@ -36,7 +36,8 @@ function Sound:SetRestriction(level)
     self.sound_restriction = level
 end
 
----@return boolean -- true: play, false: mute
+---@return boolean 
+--- true: play, false: mute
 function Sound:CheckRestriction(sound)
     if self.sound_restriction == Def.SoundRestrictionLevel.None then
         return true

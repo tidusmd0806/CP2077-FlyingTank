@@ -90,6 +90,9 @@ function Debug:ImGuiVehicleInfo()
         if self.core_obj.vehicle_obj == nil then
             return
         end
+        if self.core_obj.vehicle_obj.entity_id == nil then
+            return
+        end
         local left_door_state = self.core_obj.vehicle_obj:GetDoorState(EVehicleDoor.seat_front_left)
         ImGui.Text("Door State : " .. tostring(left_door_state) )
         if self.core_obj.vehicle_obj.engine_obj.fly_tank_system == nil then
@@ -167,7 +170,7 @@ function Debug:ImGuiSoundCheck()
         end
 
         if ImGui.Button("Play", 150, 60) then
-            self.core_obj.event_obj.sound_obj:PlaySound(self.selected_sound)
+            self.core_obj.event_obj.sound_obj:PlaySound(self.selected_sound, true)
         end
 
         if ImGui.Button("Stop", 150, 60) then

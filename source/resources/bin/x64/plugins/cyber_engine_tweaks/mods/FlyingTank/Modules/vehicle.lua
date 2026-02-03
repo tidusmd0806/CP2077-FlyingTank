@@ -17,7 +17,6 @@ function Vehicle:New(all_models)
 	obj.spawn_height = 25
 	obj.spawn_wait_count = 150
 	obj.down_time_count = 300
-	obj.land_offset = -1.0
 	obj.search_ground_offset = 2
 	obj.search_ground_distance = 100
 	obj.collision_filters =  {"Static", "Terrain", "Water"}
@@ -36,6 +35,7 @@ function Vehicle:New(all_models)
 	-- status
 	obj.is_landed = false
 	obj.is_spawning = false
+	obj.spawn_time = 0
 
 	return setmetatable(obj, self)
 end
@@ -159,6 +159,7 @@ function Vehicle:Spawn(position, angle)
 	end
 
 	self.is_spawning = true
+	self.spawn_time = os.clock()
 
 	local entity_system = Game.GetDynamicEntitySystem()
 	local entity_spec = DynamicEntitySpec.new()

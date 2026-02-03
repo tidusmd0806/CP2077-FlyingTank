@@ -216,7 +216,7 @@ function Event:CheckReturnVehicle()
         self.log_obj:Record(LogLevel.Trace, "Vehicle return detected")
         self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
         self.sound_obj:PlaySound("240_leaving")
-        self.sound_obj:PlaySound("104_call_vehicle")
+        self.sound_obj:PlaySound("100_call_vehicle")
         self:SetSituation(Def.Situation.TalkingOff)
         self.vehicle_obj:DespawnFromGround()
     end

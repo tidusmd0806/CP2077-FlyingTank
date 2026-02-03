@@ -17,6 +17,7 @@ function Engine:New(vehicle_obj)
     -- set default parameters
     obj.next_indication = {roll = 0, pitch = 0, yaw = 0}
     obj.is_finished_init = false
+    obj.ground_check_delay = 3
 
     obj.entity = nil
     obj.fly_tank_system = nil
@@ -25,7 +26,7 @@ function Engine:New(vehicle_obj)
     obj.direction_velocity = Vector3.new(0, 0, 0)
     obj.angular_velocity = Vector3.new(0, 0, 0)
     obj.engine_control_type = Def.EngineControlType.None
-    
+
 
     return setmetatable(obj, self)
 end
@@ -74,14 +75,7 @@ function Engine:Update(delta)
         self.torque = Vector3.new(0, 0, 0)
         self:ChangeVelocity(Def.ChangeVelocityType.Both ,self.direction_velocity, self.angular_velocity)
     elseif self.engine_control_type == Def.EngineControlType.AddForce then
-        -- local direction_velocity = self:GetDirectionVelocity()
-        -- local angular_velocity = self:GetAngularVelocity()
-        -- local _, actual_angular_velocity = self:GetDirectionAndAngularVelocity()
-        -- local angular_velocity_diff = Vector3.new(angular_velocity.x - actual_angular_velocity.x, angular_velocity.y - actual_angular_velocity.y, angular_velocity.z - actual_angular_velocity.z)
-        -- local mass = self.mass
-        -- self.force = Vector3.new(direction_velocity.x * mass, direction_velocity.y * mass, direction_velocity.z * mass)
-        -- self.torque = Vector3.new(angular_velocity_diff.x * self.torque_gain, angular_velocity_diff.y * self.torque_gain, angular_velocity_diff.z * self.torque_gain)
-        -- self:AddForce(self.force, self.torque)
+        -- Nothing to do, just add force and torque
     elseif self.engine_control_type == Def.EngineControlType.FluctuationVelocity then
         self.force = Vector3.new(0, 0, 0)
         self.torque = Vector3.new(0, 0, 0)
@@ -122,6 +116,11 @@ end
 
 function Engine:IsOnGround()
     if not self.is_finished_init then
+        return false
+    end
+    -- Ignore ground checks for a short time after initialization (prevent false detections from physics engine initialization)
+    local elapsed_time = os.clock() - self.vehicle_obj.spawn_time
+    if elapsed_time < self.ground_check_delay then
         return false
     end
     return self.fly_tank_system:IsOnGround()
