@@ -6,7 +6,6 @@ local Event = {}
 Event.__index = Event
 
 function Event:New()
-
     local obj = {}
     obj.log_obj = Log:New()
     obj.log_obj:SetLevel(LogLevel.Info, "Event")
@@ -25,7 +24,6 @@ function Event:New()
     obj.selected_seat_index = 1
 
     return setmetatable(obj, self)
-
 end
 
 function Event:Init(vehicle_obj)
