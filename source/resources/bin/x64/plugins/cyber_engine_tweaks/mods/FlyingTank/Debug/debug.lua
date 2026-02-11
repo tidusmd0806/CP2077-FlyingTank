@@ -80,7 +80,7 @@ end
 function Debug:ImGuiShowRWCount()
     self.is_im_gui_rw_count = ImGui.Checkbox("[ImGui] R/W Count", self.is_im_gui_rw_count)
     if self.is_im_gui_rw_count then
-        ImGui.Text("Read : " .. READ_COUNT .. ", Write : " .. WRITE_COUNT)
+        ImGui.Text("Read : " .. Utils.read_count .. ", Write : " .. Utils.write_count)
     end
 end
 
@@ -119,7 +119,7 @@ function Debug:ImGuiVehicleInfo()
         local force_y = string.format("%.2f", force.y)
         local force_z = string.format("%.2f", force.z)
         ImGui.Text("Force : X:" .. force_x .. ", Y:" .. force_y .. ", Z:" .. force_z)
-
+        ImGui.Text("Engine Control Type : " .. Utils:GetKeyFromValue(Def.EngineControlType, self.core_obj.vehicle_obj.engine_obj.engine_control_type))
     end
 end
 

@@ -142,7 +142,7 @@ function Core:LoadSetting()
         end
         Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
     end
-    self:SetDestructibility(FlyingTank.user_setting_table.is_enable_destory)
+    self:SetDestructibility(FlyingTank.user_setting_table.is_enable_destroy)
 
 end
 

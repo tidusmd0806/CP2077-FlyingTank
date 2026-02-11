@@ -28,7 +28,6 @@ function Sound:PlaySound(sound_name)
 end
 
 function Sound:StopSound(sound_name)
-    print("Stopping Sound: " .. sound_name)
     Game.GetPlayer():StopSoundEvent(self.sound_data[sound_name])
 end
 

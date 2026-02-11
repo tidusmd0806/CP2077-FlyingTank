@@ -4,8 +4,8 @@ Utils.__index = Utils
 Utils.log_obj = Log:New()
 Utils.log_obj:SetLevel(LogLevel.Info, "Utils")
 
-READ_COUNT = 0
-WRITE_COUNT = 0
+Utils.read_count = 0
+Utils.write_count = 0
 
 function Utils:GetKeyFromValue(table_, target_value)
    for key, value in pairs(table_) do
@@ -32,7 +32,7 @@ function Utils:Normalize(v)
    return v
 end
 
--- wheather table2 elements are in table1
+-- whether table2 elements are in table1
 function Utils:IsTablesNearlyEqual(big_table, small_table)
    for key, value in pairs(small_table) do
       if value ~= big_table[key] then
@@ -45,7 +45,7 @@ end
 ---@param fill_path string
 ---@return table | nil
 function Utils:ReadJson(fill_path)
-   READ_COUNT = READ_COUNT + 1
+   Utils.read_count = Utils.read_count + 1
    local success, result = pcall(function()
       local file = io.open(fill_path, "r")
       if file then
@@ -69,7 +69,7 @@ end
 ---@param write_data table
 ---@return boolean
 function Utils:WriteJson(fill_path, write_data)
-   WRITE_COUNT = WRITE_COUNT + 1
+   Utils.write_count = Utils.write_count + 1
    local success, result = pcall(function()
       local file = io.open(fill_path, "w")
       if file then

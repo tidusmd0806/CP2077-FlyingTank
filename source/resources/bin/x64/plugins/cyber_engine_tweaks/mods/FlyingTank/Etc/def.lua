@@ -17,12 +17,12 @@ Def.ActionList = {
 }
 
 Def.Situation = {
-    Idel = -1,
+    Idle = -1,
     Normal = 0,
     Landing = 1,
     Waiting = 2,
     InVehicle = 3,
-    TalkingOff = 4,
+    TakingOff = 4,
 }
 
 ---@enum Def.DoorOperation
@@ -50,7 +50,8 @@ Def.EngineControlType = {
     ChangeVelocity = 0,
     AddForce = 1,
     FluctuationVelocity = 2,
-    Blocking = 3
+    Blocking = 3,
+    HoldAltitude = 4
 }
 
 return Def

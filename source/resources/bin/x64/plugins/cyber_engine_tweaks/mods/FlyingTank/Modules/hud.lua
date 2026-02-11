@@ -46,7 +46,7 @@ function HUD:SetOverride()
     if not FlyingTank.is_ready then
         Override("VehicleComponent", "EvaluateDamageLevel", function(this, destruction, wrapped_method)
             if this.mounted and FlyingTank.core_obj.event_obj.current_situation == Def.Situation.InVehicle then
-                if not FlyingTank.user_setting_table.is_enable_destory then
+                if not FlyingTank.user_setting_table.is_enable_destroy then
                     destruction = 100
                 end
                 self.vehicle_hp = destruction

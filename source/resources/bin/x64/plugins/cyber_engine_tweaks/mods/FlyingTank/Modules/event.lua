@@ -17,7 +17,7 @@ function Event:New()
 
     -- set default parameters
     obj.is_initial_load = false
-    obj.current_situation = Def.Situation.Idel
+    obj.current_situation = Def.Situation.Idle
     obj.is_in_menu = false
     obj.is_in_popup = false
     obj.is_in_photo = false
@@ -85,7 +85,7 @@ function Event:SetObserve()
 
     GameUI.Observe("SessionEnd", function()
         self.log_obj:Record(LogLevel.Info, "Session end detected")
-        self.current_situation = Def.Situation.Idel
+        self.current_situation = Def.Situation.Idle
     end)
 end
 
@@ -102,7 +102,7 @@ function Event:SetOverride()
 end
 
 function Event:SetSituation(situation)
-    if self.current_situation == Def.Situation.Idel then
+    if self.current_situation == Def.Situation.Idle then
         return false
     elseif self.current_situation == Def.Situation.Normal and situation == Def.Situation.Landing then
         self.log_obj:Record(LogLevel.Info, "Landing detected")
@@ -116,15 +116,15 @@ function Event:SetSituation(situation)
         self.log_obj:Record(LogLevel.Info, "InVehicle detected")
         self.current_situation = Def.Situation.InVehicle
         return true
-    elseif (self.current_situation == Def.Situation.Waiting and situation == Def.Situation.TalkingOff) then
-        self.log_obj:Record(LogLevel.Info, "TalkingOff detected")
-        self.current_situation = Def.Situation.TalkingOff
+    elseif (self.current_situation == Def.Situation.Waiting and situation == Def.Situation.TakingOff) then
+        self.log_obj:Record(LogLevel.Info, "TakingOff detected")
+        self.current_situation = Def.Situation.TakingOff
         return true
     elseif (self.current_situation == Def.Situation.InVehicle and situation == Def.Situation.Waiting) then
         self.log_obj:Record(LogLevel.Info, "Waiting detected")
         self.current_situation = Def.Situation.Waiting
         return true
-    elseif (self.current_situation == Def.Situation.TalkingOff and situation == Def.Situation.Normal) then
+    elseif (self.current_situation == Def.Situation.TakingOff and situation == Def.Situation.Normal) then
         self.log_obj:Record(LogLevel.Info, "Normal detected")
         self.current_situation = Def.Situation.Normal
         return true
@@ -155,7 +155,7 @@ function Event:CheckAllEvents()
         self:CheckInAV()
         self:CheckCommonEvent()
         self:CheckTankHUD()
-    elseif self.current_situation == Def.Situation.TalkingOff then
+    elseif self.current_situation == Def.Situation.TakingOff then
         self:CheckDespawn()
         self:CheckCommonEvent()
         self:CheckLockedSave()
@@ -204,7 +204,21 @@ function Event:CheckInAV()
             self.sound_obj:StopSound("230_fly_loop")
             self:SetSituation(Def.Situation.Waiting)
             self:StopRadio()
-            self.vehicle_obj.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
+            
+            -- Enable hold altitude if the feature is enabled
+            if FlyingTank.user_setting_table.is_enable_hold_altitude then
+                local current_pos = self.vehicle_obj:GetPosition()
+                if current_pos ~= nil then
+                    self.vehicle_obj.engine_obj:SetHoldAltitude(current_pos.z)
+                    self.vehicle_obj.engine_obj:SetControlType(Def.EngineControlType.HoldAltitude)
+                    self.log_obj:Record(LogLevel.Info, "Hold altitude enabled at: " .. tostring(current_pos.z))
+                else
+                    self.vehicle_obj.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
+                end
+            else
+                self.vehicle_obj.engine_obj:SetControlType(Def.EngineControlType.ChangeVelocity)
+            end
+            
             self.vehicle_obj.engine_obj.entity:TurnEngineOn(true)
             SaveLocksManager.RequestSaveLockRemove(CName.new("FlyingTank"))
         end
@@ -217,7 +231,7 @@ function Event:CheckReturnVehicle()
         self.vehicle_obj:ChangeDoorState(Def.DoorOperation.Close)
         self.sound_obj:PlaySound("240_leaving")
         self.sound_obj:PlaySound("100_call_vehicle")
-        self:SetSituation(Def.Situation.TalkingOff)
+        self:SetSituation(Def.Situation.TakingOff)
         self.vehicle_obj:DespawnFromGround()
     end
 end
