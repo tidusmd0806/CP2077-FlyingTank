@@ -17,7 +17,7 @@ function Engine:New(vehicle_obj)
     -- set default parameters
     obj.next_indication = {roll = 0, pitch = 0, yaw = 0}
     obj.is_finished_init = false
-    obj.ground_check_delay = 2.0 -- seconds
+    obj.ground_check_delay = 3.0 -- seconds
 
     obj.entity = nil
     obj.fly_tank_system = nil
@@ -388,42 +388,35 @@ function Engine:HoldAltitude()
     if current_pos == nil then
         return
     end
-    
-    -- Check if we're in the initial stabilization period
-    local elapsed = os.clock() - self.hold_altitude_start_time
-    local is_stabilizing = elapsed < self.hold_altitude_stabilize_duration
-    
-    local target_z = self.hold_altitude
+
+    local target_z = self.hold_altitude - 0.5
     local current_z = current_pos.z
     local z_velocity = 0
-    
-    -- Apply stronger damping during initial stabilization
-    local velocity_damping = is_stabilizing and 0.85 or self.hold_altitude_damping
-    local altitude_gain = is_stabilizing and 1.0 or self.hold_altitude_gain
-    
+
+    local velocity_damping = self.hold_altitude_damping
+    local altitude_gain = self.hold_altitude_gain
+
     -- Apply damping to current vertical velocity
     z_velocity = -vel_vec.z * velocity_damping
-    
+
     -- Add position correction for altitude
     local height_diff = target_z - current_z
     if math.abs(height_diff) > 0.02 then
         z_velocity = z_velocity + height_diff * altitude_gain
     end
-    
-    -- Apply gentle angular velocity damping to reduce oscillation
-    -- Use a small damping factor to gradually reduce angular velocity without causing counter-oscillation
-    local angular_damping = 0.5  -- Gentle damping factor (0.3 = 30% counter-force)
-    local roll_damping = -ang_vec.x * angular_damping
-    local pitch_damping = -ang_vec.y * angular_damping
-    local yaw_damping = -ang_vec.z * angular_damping
-    
+
+    local roll_velocity = 0
+    local pitch_velocity = 0
+    local yaw_velocity = 0
+
     -- Apply horizontal damping (stronger during stabilization)
-    local horizontal_damping = is_stabilizing and 0.9 or 0.8
+    -- local horizontal_damping = is_stabilizing and 0.9 or 0.8
+    local horizontal_damping = 0.8
     local x_velocity = -vel_vec.x * horizontal_damping
     local y_velocity = -vel_vec.y * horizontal_damping
-    
+
     self:SetDirectionVelocity(Vector3.new(x_velocity, y_velocity, z_velocity))
-    self:SetAngularVelocity(Vector3.new(roll_damping, pitch_damping, yaw_damping))
+    self:SetAngularVelocity(Vector3.new(roll_velocity, pitch_velocity, yaw_velocity))
     self:ChangeVelocity(Def.ChangeVelocityType.Both, self.direction_velocity, self.angular_velocity)
 end
 
