@@ -17,7 +17,6 @@ function Vehicle:New(all_models)
 	obj.spawn_height = 25
 	obj.spawn_wait_count = 150
 	obj.down_time_count = 300
-	obj.land_offset = -1.0
 	obj.search_ground_offset = 2
 	obj.search_ground_distance = 100
 	obj.collision_filters =  {"Static", "Terrain", "Water"}
@@ -36,6 +35,7 @@ function Vehicle:New(all_models)
 	-- status
 	obj.is_landed = false
 	obj.is_spawning = false
+	obj.spawn_time = 0
 
 	return setmetatable(obj, self)
 end
@@ -159,6 +159,7 @@ function Vehicle:Spawn(position, angle)
 	end
 
 	self.is_spawning = true
+	self.spawn_time = os.clock()
 
 	local entity_system = Game.GetDynamicEntitySystem()
 	local entity_spec = DynamicEntitySpec.new()
@@ -265,10 +266,14 @@ end
 
 function Vehicle:UnlockDoor()
 	if self.entity_id == nil then
-		self.log_obj:Record(LogLevel.Warning, "No entity to change door lock")
+		self.log_obj:Record(LogLevel.Warning, "No entity id to change door lock")
 		return false
 	end
 	local entity = Game.FindEntityByID(self.entity_id)
+	if entity == nil then
+		self.log_obj:Record(LogLevel.Warning, "No entity to change door lock")
+		return false
+	end
 	local vehicle_ps = entity:GetVehiclePS()
 	vehicle_ps:UnlockAllVehDoors()
 	return true
@@ -276,23 +281,31 @@ end
 
 function Vehicle:LockDoor()
 	if self.entity_id == nil then
-		self.log_obj:Record(LogLevel.Warning, "No entity to change door lock")
+		self.log_obj:Record(LogLevel.Warning, "No entity id to change door lock")
 		return false
 	end
 	local entity = Game.FindEntityByID(self.entity_id)
+	if entity == nil then
+		self.log_obj:Record(LogLevel.Warning, "No entity to change door lock")
+		return false
+	end
 	local vehicle_ps = entity:GetVehiclePS()
 	vehicle_ps:QuestLockAllVehDoors()
 	return true
 end
 
 ---@param e_veh_door EVehicleDoor
----@return string | nil
+---@return string
 function Vehicle:GetDoorState(e_veh_door)
 	if self.entity_id == nil then
-		self.log_obj:Record(LogLevel.Warning, "No entity to get door state")
-		return nil
+		self.log_obj:Record(LogLevel.Warning, "No entity id to get door state")
+		return "no_entity_id"
 	end
 	local entity = Game.FindEntityByID(self.entity_id)
+	if entity == nil then
+		self.log_obj:Record(LogLevel.Warning, "No entity to get door state")
+		return "no_entity"
+	end
 	local vehicle_ps = entity:GetVehiclePS()
 	return vehicle_ps:GetDoorState(e_veh_door).value
 end

@@ -19,7 +19,7 @@ Log.__index = Log
 
 function Log:New()
     local obj = {}
-    obj.setting_level = LogLevel.INFO
+    obj.setting_level = LogLevel.Info
     obj.setting_file_name = "No Setting"
     return setmetatable(obj, self)
 end

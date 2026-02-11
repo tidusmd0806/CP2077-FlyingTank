@@ -125,7 +125,7 @@ function Core:LoadSetting()
 
     local setting_data = Utils:ReadJson(FlyingTank.user_setting_path)
     if setting_data == nil then
-        self.log_obj:Record(LogLevel.Error, "Failed to load setting data. Restore default setting")
+        self.log_obj:Record(LogLevel.Warning, "Failed to load setting data. Restore default setting")
         Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
         return
     end
@@ -142,7 +142,7 @@ function Core:LoadSetting()
         end
         Utils:WriteJson(FlyingTank.user_setting_path, FlyingTank.user_setting_table)
     end
-    self:SetDestructibility(FlyingTank.user_setting_table.is_enable_destory)
+    self:SetDestructibility(FlyingTank.user_setting_table.is_enable_destroy)
 
 end
 

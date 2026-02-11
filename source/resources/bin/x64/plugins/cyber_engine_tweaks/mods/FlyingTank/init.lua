@@ -13,7 +13,7 @@ local Debug = require('Debug/debug.lua')
 
 FlyingTank = {
 	description = "Flying Tank - Enhanced Militech Basilisk",
-	version = "1.2.3",
+	version = "1.2.4",
     -- system
     is_ready = false,
     time_resolution = 0.01,
@@ -21,7 +21,7 @@ FlyingTank = {
     -- common
     user_setting_path = "Data/user_setting.json",
     language_path = "Language",
-    -- grobal index
+    -- global index
     model_index = 1,
 	model_type_index = 1,
     -- vehicle record
@@ -52,11 +52,7 @@ FlyingTank = {
         {name = "pitch_reset", key = "IK_G", pad = "IK_Pad_X_SQUARE"},
         {name = "toggle_door", key = "IK_X", pad = "IK_Pad_DigitLeft"},
         {name = "toggle_radio", key = "IK_Z", pad = "IK_Pad_LeftShoulder"},
-    },
-    -- HUD
-    is_active_hud = true,
-    -- general
-    is_enable_destory = true,
+    }
 }
 
 -- initial settings
@@ -67,7 +63,8 @@ FlyingTank.user_setting_table = {
     language_index = 1,
     hud_mode = 1, -- #1: District, #2: KillCounter
     is_active_hud = true,
-    is_enable_destory = true,
+    is_enable_destroy = true,
+    is_enable_hold_altitude = false,
     is_mute_all = false, -- hidden
     is_mute_flight = false, -- hidden
     --- input

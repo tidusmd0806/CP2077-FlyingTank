@@ -17,6 +17,7 @@ function Engine:New(vehicle_obj)
     -- set default parameters
     obj.next_indication = {roll = 0, pitch = 0, yaw = 0}
     obj.is_finished_init = false
+    obj.ground_check_delay = 2.0 -- seconds
 
     obj.entity = nil
     obj.fly_tank_system = nil
@@ -25,7 +26,13 @@ function Engine:New(vehicle_obj)
     obj.direction_velocity = Vector3.new(0, 0, 0)
     obj.angular_velocity = Vector3.new(0, 0, 0)
     obj.engine_control_type = Def.EngineControlType.None
-    
+    -- Hold altitude parameters
+    obj.hold_altitude = 0
+    obj.hold_altitude_damping = 0.7
+    obj.hold_altitude_gain = 1.5
+    obj.hold_altitude_start_time = 0
+    obj.hold_altitude_stabilize_duration = 1.0
+
 
     return setmetatable(obj, self)
 end
@@ -66,7 +73,10 @@ function Engine:Update(delta)
     end
 
     if FlyingTank.core_obj.event_obj.current_situation == Def.Situation.Waiting then
-        return
+        -- Allow HoldAltitude mode to work in Waiting state
+        if self.engine_control_type ~= Def.EngineControlType.HoldAltitude then
+            return
+        end
     end
 
     if self.engine_control_type == Def.EngineControlType.ChangeVelocity then
@@ -74,14 +84,7 @@ function Engine:Update(delta)
         self.torque = Vector3.new(0, 0, 0)
         self:ChangeVelocity(Def.ChangeVelocityType.Both ,self.direction_velocity, self.angular_velocity)
     elseif self.engine_control_type == Def.EngineControlType.AddForce then
-        -- local direction_velocity = self:GetDirectionVelocity()
-        -- local angular_velocity = self:GetAngularVelocity()
-        -- local _, actual_angular_velocity = self:GetDirectionAndAngularVelocity()
-        -- local angular_velocity_diff = Vector3.new(angular_velocity.x - actual_angular_velocity.x, angular_velocity.y - actual_angular_velocity.y, angular_velocity.z - actual_angular_velocity.z)
-        -- local mass = self.mass
-        -- self.force = Vector3.new(direction_velocity.x * mass, direction_velocity.y * mass, direction_velocity.z * mass)
-        -- self.torque = Vector3.new(angular_velocity_diff.x * self.torque_gain, angular_velocity_diff.y * self.torque_gain, angular_velocity_diff.z * self.torque_gain)
-        -- self:AddForce(self.force, self.torque)
+        -- Nothing to do, just add force and torque
     elseif self.engine_control_type == Def.EngineControlType.FluctuationVelocity then
         self.force = Vector3.new(0, 0, 0)
         self.torque = Vector3.new(0, 0, 0)
@@ -89,6 +92,10 @@ function Engine:Update(delta)
     elseif self.engine_control_type == Def.EngineControlType.Blocking then
         -- Do nothing, just block the physics
         self.log_obj:Record(LogLevel.Trace, "Blocking DAV physics")
+    elseif self.engine_control_type == Def.EngineControlType.HoldAltitude then
+        self.force = Vector3.new(0, 0, 0)
+        self.torque = Vector3.new(0, 0, 0)
+        self:HoldAltitude()
     else
         self.log_obj:Record(LogLevel.Error, "Unknown control type")
     end
@@ -115,13 +122,18 @@ function Engine:SetControlType(control_type)
     self.engine_control_type = control_type
     if control_type == Def.EngineControlType.ChangeVelocity and self:HasGravity() then
         self:EnableGravity(false)
-    elseif control_type == Def.EngineControlType.AddForce and not self:HasGravity() then
+    elseif (control_type == Def.EngineControlType.AddForce or control_type == Def.EngineControlType.HoldAltitude) and not self:HasGravity() then
         self:EnableGravity(true)
     end
 end
 
 function Engine:IsOnGround()
     if not self.is_finished_init then
+        return false
+    end
+    -- Ignore ground checks for a short time after initialization (prevent false detections from physics engine initialization)
+    local elapsed_time = os.clock() - self.vehicle_obj.spawn_time
+    if elapsed_time < self.ground_check_delay then
         return false
     end
     return self.fly_tank_system:IsOnGround()
@@ -367,6 +379,65 @@ function Engine:FluctuationVelocity(delta)
     self.direction_velocity.y = self.direction_velocity.y / velocity * (velocity + self.step_width_per_second * delta)
     self.direction_velocity.z = self.direction_velocity.z / velocity * (velocity + self.step_width_per_second * delta)
     self:ChangeVelocity(Def.ChangeVelocityType.Both ,self.direction_velocity, self.angular_velocity)
+end
+
+--- Hold altitude at the remembered height
+function Engine:HoldAltitude()
+    local vel_vec, ang_vec = self:GetDirectionAndAngularVelocity()
+    local current_pos = self.vehicle_obj:GetPosition()
+    if current_pos == nil then
+        return
+    end
+    
+    -- Check if we're in the initial stabilization period
+    local elapsed = os.clock() - self.hold_altitude_start_time
+    local is_stabilizing = elapsed < self.hold_altitude_stabilize_duration
+    
+    local target_z = self.hold_altitude
+    local current_z = current_pos.z
+    local z_velocity = 0
+    
+    -- Apply stronger damping during initial stabilization
+    local velocity_damping = is_stabilizing and 0.85 or self.hold_altitude_damping
+    local altitude_gain = is_stabilizing and 1.0 or self.hold_altitude_gain
+    
+    -- Apply damping to current vertical velocity
+    z_velocity = -vel_vec.z * velocity_damping
+    
+    -- Add position correction for altitude
+    local height_diff = target_z - current_z
+    if math.abs(height_diff) > 0.02 then
+        z_velocity = z_velocity + height_diff * altitude_gain
+    end
+    
+    -- Apply gentle angular velocity damping to reduce oscillation
+    -- Use a small damping factor to gradually reduce angular velocity without causing counter-oscillation
+    local angular_damping = 0.5  -- Gentle damping factor (0.3 = 30% counter-force)
+    local roll_damping = -ang_vec.x * angular_damping
+    local pitch_damping = -ang_vec.y * angular_damping
+    local yaw_damping = -ang_vec.z * angular_damping
+    
+    -- Apply horizontal damping (stronger during stabilization)
+    local horizontal_damping = is_stabilizing and 0.9 or 0.8
+    local x_velocity = -vel_vec.x * horizontal_damping
+    local y_velocity = -vel_vec.y * horizontal_damping
+    
+    self:SetDirectionVelocity(Vector3.new(x_velocity, y_velocity, z_velocity))
+    self:SetAngularVelocity(Vector3.new(roll_damping, pitch_damping, yaw_damping))
+    self:ChangeVelocity(Def.ChangeVelocityType.Both, self.direction_velocity, self.angular_velocity)
+end
+
+--- Set the altitude to hold
+---@param altitude number
+function Engine:SetHoldAltitude(altitude)
+    self.hold_altitude = altitude
+    self.hold_altitude_start_time = os.clock()
+end
+
+--- Get the altitude to hold
+---@return number
+function Engine:GetHoldAltitude()
+    return self.hold_altitude
 end
 
 return Engine
