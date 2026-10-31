@@ -67,10 +67,6 @@ function Engine:Update(delta)
     if FlyingTank.core_obj.event_obj:IsInMenuOrPopupOrPhoto() then
         return
     end
-    if self:GetPhysicsState() ~= 0 then
-        self:UnsetPhysicsState()
-        self.log_obj:Record(LogLevel.Trace, "Unset DAV physics")
-    end
 
     if FlyingTank.core_obj.event_obj.current_situation == Def.Situation.Waiting then
         -- Allow HoldAltitude mode to work in Waiting state
@@ -99,10 +95,6 @@ function Engine:Update(delta)
     else
         self.log_obj:Record(LogLevel.Error, "Unknown control type")
     end
-end
-
-function Engine:UnsetPhysicsState()
-    self.fly_tank_system:UnsetPhysicsState()
 end
 
 --- Get Physics state
